@@ -7,7 +7,19 @@
 <ion-header>
 
   <ion-navbar>
-    <ion-title>mode-manual</ion-title>
+
+      <ion-buttons start>
+        <button ion-button icon-only color="royal">
+                <ion-icon name="search"></ion-icon>
+              </button>
+      </ion-buttons>
+      <ion-title>mode-manual</ion-title>
+      <ion-buttons end>
+        <button ion-button icon-only color="royal" (click)="openBleModal('11','22','33')">
+          <ion-icon name="bluetooth" ></ion-icon>
+        </button>
+      </ion-buttons>
+
   </ion-navbar>
 
 </ion-header>
@@ -17,7 +29,7 @@
   <ion-list>
 
     <ion-item>
-        <ion-icon name="ios-pricetags-outline" item-start></ion-icon>
+      <ion-icon name="ios-pricetags-outline" item-start></ion-icon>
       <ion-label>群組</ion-label>
       <ion-select interface="alert" multiple="true" cancelText="取消" [(ngModel)]="deviceMeta.groups">
         <ion-option *ngFor="let type of lightsGroups; let i = index" value="{{type.id}}">{{type.name}} (#{{type.id}})</ion-option>

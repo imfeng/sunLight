@@ -1,7 +1,9 @@
 import { Component } from '@angular/core';
-import { NavController,NavParams } from 'ionic-angular';
+import { ModalController, NavController,NavParams } from 'ionic-angular';
 import { ToastController } from 'ionic-angular';
 import { IonicPage } from 'ionic-angular';  // LazyLoading
+import { BleOperatorPage } from '../ble-operator/ble-operator';
+
 
 import { LightsInfoProvider } from  '../../providers/lights-info/lights-info'
 @IonicPage()
@@ -19,14 +21,18 @@ export class ModeManual {
   lightsGroups : Array<object>=[
     {'id':1,'name':'測試'}
   ];
-  constructor(private lightsInfo: LightsInfoProvider, public navCtrl: NavController,public navParams: NavParams,public toastCtrl:ToastController) {
+  constructor(public modalCtrl: ModalController, private lightsInfo: LightsInfoProvider, public navCtrl: NavController,public navParams: NavParams,public toastCtrl:ToastController) {
     
   // 
   }
   ngOnInit() {
     this.lightsType = this.lightsInfo.getTypes();
   }
-
+  openBleModal(...characterNum){
+    console.log(characterNum);
+    let modal = this.modalCtrl.create(BleOperatorPage, characterNum);
+    modal.present();
+  }
   ionViewDidLoad() {
     console.log('ionViewDidLoad ModeManual');
   }

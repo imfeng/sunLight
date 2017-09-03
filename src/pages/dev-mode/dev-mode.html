@@ -12,10 +12,44 @@
 
 </ion-header>
 
+<!--  <ng-template [ngIf]="((i+1)%6 == 0)">   
+        </ng-template>-->
 
 <ion-content padding>
-  <ion-item *ngFor="let i of test">
-    <p>{{i.name}}</p>
-  </ion-item>
+  <ion-grid class="cont-lines">
+    <ion-row align-items-center justify-content-center>
+      <ng-container *ngFor="let line of lightLinesArr.slice(0,4); let i = index; trackBy: trackById">
+
+        <ion-col align-self-center>
+          <number-picker [(ngModel)]="lightLinesArr[i+0].value" [customClick]="testNumWheel" [description]="'No.'+(i+1)" [width]="'3rem'"
+            [min]="0" [max]="100" [step]="1" [precision]="1" [inputDisabled]="false" (onChange)="onNumberChanged($event)"></number-picker>
+        </ion-col>
+
+      </ng-container>
+    </ion-row>
+    <hr>
+    <ion-row align-items-center justify-content-center>
+      <ng-container *ngFor="let line of lightLinesArr.slice(4,8); let i = index">
+
+        <ion-col align-self-center>
+          <number-picker [(ngModel)]="lightLinesArr[i+4].value" [customClick]="testNumWheel" [description]="'No.'+(i+1)" [width]="'3rem'"
+            [min]="0" [max]="100" [step]="1" [precision]="1" [inputDisabled]="false" (onChange)="onNumberChanged($event)"></number-picker>
+        </ion-col>
+
+      </ng-container>
+    </ion-row>
+    <hr>
+    <ion-row align-items-center justify-content-center>
+      <ng-container *ngFor="let line of lightLinesArr.slice(8,12); let i = index">
+
+        <ion-col align-self-center>
+          <number-picker [(ngModel)]="lightLinesArr[i+8].value" [customClick]="testNumWheel" [description]="'No.'+(i+1)" [width]="'3rem'"
+            [min]="0" [max]="100" [step]="1" [precision]="1" [inputDisabled]="false" (change)="onNumberChanged($event)"></number-picker>
+        </ion-col>
+
+      </ng-container>
+    </ion-row>
+  </ion-grid>
+  <hr>
   <button ion-button block color="dark" (click)="selectANumber()">select</button>
 </ion-content>

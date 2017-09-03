@@ -1,0 +1,88 @@
+number-picker {
+
+
+  $size: 5rem; //change this to change size of picker
+  $border-radius: 3px; //set to 0 if not required
+  $content: "QTY";
+  margin: 0 auto;
+  display: flex;
+  position: relative;
+  font-size: 0;
+  overflow: hidden;
+  border-radius: $border-radius;
+  width: $size;
+  height: ($size*3*0.9);
+  button {
+    display: block;
+    width: $size;
+    height: $size*0.73;
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: #e0e0e0;
+    color: #515151;
+    font-size: ($size * 0.7);
+    line-height: 1;
+    font-family: bonds, sans-serif;
+    cursor: pointer;
+    //@include transition(color 200ms);
+    &:focus {
+      outline: none;
+      color: #2bebaf;
+    }
+    &:disabled {
+      background: #999;
+      color: #ccc;
+      cursor: default;
+    }
+    &:first-child {
+      bottom: 0;
+      &:before {
+        content: "-";
+      }
+    }
+    &:last-child {
+      top: 0;
+      &:before {
+        content: "+";
+      }
+      &:focus {
+        color: #ff6367;
+      }
+    }
+  }
+  input[type="number"] {
+    position: absolute;
+    width: $size;
+    height: $size*1.27;
+    top: $size*0.73;
+    margin: 0;
+    padding: 0 0 ($size/2.6);
+    border: 1px solid #e0e0e0;
+    font-size: ($size * 0.4);
+    font-weight: bold;
+    text-align: center;
+    -moz-appearance:textfield;
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
+  ion-label.description{
+    content: $content;
+    position: absolute;
+    font-size: ($size * 0.25);
+    left: 0;
+    right: 0;
+    line-height: 1;
+    padding: ($size * 0.08) 0 ($size * 0.08) 0;
+    width: $size;
+    margin: 0 auto;
+    border-top: 1px solid #e0e0e0;
+    color: #888;
+    text-align: center;
+    bottom: 26.5%;
+  }
+}

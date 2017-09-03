@@ -10,28 +10,38 @@ import { WheelSelector } from '@ionic-native/wheel-selector';
   templateUrl: 'dev-mode.html',
 })
 export class DevMode {
+  numTest: object = {'0':99};
+  ggg: object = {value:1};
+  testNumWheel : Function =function(){
+    console.log('testNumWheel!');
+  }
   test : any;
   lightDataForWheel : Array<object>= Array.from( new Array(101),((val,index) => ({'description':index})));
-  lightLine : object = {
-    0:0,
-    1:0,
-    2:0,
-    3:0,
-    4:0,
-    5:0,
-    6:0,
-    7:0,
-    8:0,
-    9:0,
-    10:0,
-    11:0,
-    12:0,
+  lightLinesObj : object = {
+    0:1,
+    1:2,
+    2:3,
+    3:4,
+    4:5,
+    5:6,
+    6:7,
+    7:8,
+    8:9,
+    9:10,
+    10:11,
+    11:12
   }
+  lightLinesArr : Array<object>= Array.from( new Array(12),((val,index) => ({'value':index+1}) )); // [1 to 12]
+
   constructor(private numSelector: WheelSelector, public navCtrl: NavController, private lightsInfo: LightsInfoProvider) {
     this.test = lightsInfo.getTypes();
   }
 
+  onNumberChanged(event){
+    console.log(event);
+  }
   selectANumber() {
+    console.log(this.lightLinesArr);
     this.numSelector.show({
       title: "How Many?",
       items: [

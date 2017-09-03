@@ -1,0 +1,10 @@
+<div class="input-group" [style.width]="width" [ngStyle]="">	
+
+		
+	<button class="btn btn-primary picker-sub" (click)="decreaseValue()"></button>
+	<input (click)="customClick()" [formControl]="numberPicker" class="form-control" type="number" min="{{min}}" max="{{max}}" pattern="{{pattern}}"/>	
+	<button class="btn btn-primary picker-plus" (click)="increaseValue()"></button>
+	
+
+</div>
+<ion-label class="description">{{description}}</ion-label>
