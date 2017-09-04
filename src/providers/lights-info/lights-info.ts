@@ -15,7 +15,7 @@ import 'rxjs/add/operator/map';
 export class LightsInfoProvider {
 
   constructor() {
-    console.log('Hello LightsInfoProvider Provider');
+    //console.log('Hello LightsInfoProvider Provider');
   }
   getTypes(index = 'all'){
     switch(index){
@@ -32,25 +32,31 @@ export class LightsInfoProvider {
   const li_types : Array<object> =[{
     "value": 1,
     "name": "太陽光5m",
-    "slug": "5m"
+    "slug": "5m",
+    "color": "rgb(54, 235, 186)",
   },{
     "value": 2,
     "name": "太陽光10m",
-    "slug": "10m"
+    "slug": "10m",
+    "color": "rgb(9, 230, 232)",
   },{
     "value": 3,
     "name": "太陽光15m",
-    "slug": "15m"
+    "slug": "15m",
+    "color": "rgb(9, 148, 232)",
   },{
     "value": 4,
     "name": "太陽光20m",
-    "slug": "20m"
+    "slug": "20m",
+    "color": "rgb(54, 92, 235)",
   },{
     "value": 5,
     "name": "高演色性太陽光",
-    "slug": "cri"
+    "slug": "cri",
+    "color": "rgb(86, 9, 232)",
   },{
     "value": 6,
     "name": "藍光",
-    "slug": "blue"
+    "slug": "blue",
+    "color": "rgb(9, 25, 232)",
   }]

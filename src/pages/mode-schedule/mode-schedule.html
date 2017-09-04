@@ -1,0 +1,89 @@
+<!--
+  Generated template for the ModeSchedulePage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar>
+    <ion-title>燈光排程</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content class="card-bg outer-content">
+  <ion-fab top right edge>
+    <button ion-fab color="vibrant" mini (click)="addLightsGroup()"><ion-icon name="add"></ion-icon></button>
+    <!--<ion-fab-list>
+      <button ion-fab><ion-icon name="logo-facebook"></ion-icon></button>
+      <button ion-fab><ion-icon name="logo-twitter"></ion-icon></button>
+      <button ion-fab><ion-icon name="logo-vimeo"></ion-icon></button>
+      <button ion-fab><ion-icon name="logo-googleplus"></ion-icon></button>
+    </ion-fab-list>-->
+  </ion-fab>
+  <!-- CARD START ngFor-->
+  <ng-container *ngFor="let item of groupsInfo;let idx = index">
+  <ion-card>
+      <!-- ROW_1-->
+      <ion-item>
+        <ion-avatar item-start>
+          <ion-icon name="quote"></ion-icon>
+          <!-- R<span class="gidTitle">#1</span>-->
+        </ion-avatar>
+        <h2>{{item.name}} - #{{item.gid}}</h2>
+        <p>{{item.lastSended}}</p>
+        <button clear ion-button outline item-end><ion-icon name="more"></ion-icon></button>
+      </ion-item>
+      <!-- ROW_2 -->
+      <div class="lightsChart-cont">
+        <canvas height="110px" baseChart [chartType]="'bar'" [datasets]="item.chartDatas.datasets" [labels]="chartLabels" [options]="chartOptions"
+          [legend]="false" [colors]="item.chartDatas.colors" (chartClick)="onChartClick($event)">
+        </canvas>
+      </div>
+      <!-- ROW_3
+      <ion-card-content>
+        <p>Wait a minute. Wait a minute, Doc. Uhhh... Are you telling me that you built a time machine... out of a DeLorean?!
+          Whoa. This is heavy.</p>
+      </ion-card-content>-->
+      <!-- ROW_4 -->
+      <ion-row>
+        <ion-col>
+          <button ion-button color="primary" clear small icon-start>
+              <ion-icon name="bulb"></ion-icon> 
+              {{item.devicesTotal}} devices
+          </button>
+        </ion-col>
+  
+        <ion-col>
+          <!-- 
+          <button ion-button color="primary" clear small icon-start>
+              <ion-icon name='text'></ion-icon>
+              4 Comments
+            </button>-->
+        </ion-col>
+        <ion-col align-self-center text-center>
+          <!-- <ion-note>
+              11h ago sended
+            </ion-note >-->
+        </ion-col>
+      </ion-row>
+      <div style="position: relative">
+  
+        <ion-fab right bottom>
+          <button ion-fab mini class="fab-map" color="light">
+              <ion-icon name="arrow-forward"></ion-icon>            
+            </button>
+        </ion-fab>
+      </div>
+      <!-- -->
+      <!-- END ROWS -->
+    
+    </ion-card>
+    <!-- CARD END-->
+  </ng-container>
+
+
+
+</ion-content>

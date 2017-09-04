@@ -6,6 +6,7 @@
 
 'use strict';
 importScripts('./build/sw-toolbox.js');
+importScripts('../node_modules/chart.js/dist/Chart.min.js');
 
 self.toolbox.options.cache = {
   name: 'ionic-cache'

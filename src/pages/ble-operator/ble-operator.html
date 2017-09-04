@@ -27,7 +27,7 @@
     <ion-item>
       <ion-icon name="bluetooth" item-start></ion-icon>
       <ion-label>開啟藍芽</ion-label>
-      <ion-toggle checked="false"></ion-toggle>
+      <ion-toggle checked="false" [(ngModel)]="blueInfo.enabled" (ionChange)="enableBl()"></ion-toggle>
     </ion-item>
     <ion-list-header>
       正在連接中的裝置

@@ -1,0 +1,18 @@
+page-mode-schedule {
+    div.lightsChart-cont{
+        width: 102%;
+        margin-left: -0.5%;
+        padding: 10px 0;
+        background: rgba(0,0,0,0.01);
+    }
+    ion-item{
+
+        .gidTitle{
+            font-weight: bold;
+        }
+        ion-label.label>h2{
+            font-weight: bold;
+        }
+    }
+
+}

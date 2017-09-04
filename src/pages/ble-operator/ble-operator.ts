@@ -1,6 +1,8 @@
-import { NgZone, ViewChild, Component } from '@angular/core';
+import { OnInit,NgZone, ViewChild, Component } from '@angular/core';
 import { ToastController, Content, Refresher,NavController, Platform, IonicPage, NavParams,ViewController } from 'ionic-angular';
 import { BLE } from '@ionic-native/ble';
+import { BluetoothSerial } from '@ionic-native/bluetooth-serial';
+
 /**
  * Generated class for the BleOperatorPage page.
  *
@@ -13,20 +15,54 @@ import { BLE } from '@ionic-native/ble';
   selector: 'page-ble-operator',
   templateUrl: 'ble-operator.html',
 })
-export class BleOperatorPage {
-
+export class BleOperatorPage implements OnInit{
+  blueInfo : object = {
+    'enabled' : false
+  }
+  that =this;
   constructor(
+    private bl:BluetoothSerial,
     public platform: Platform,
     public viewCtrl: ViewController,
     public navCtrl: NavController,
     public navParams: NavParams) {
     console.log(this.navParams.data);
   }
+  ngOnInit(){
+
+  }
+  setBleInfo(s:boolean){
+    this.blueInfo['enabled'] = s;
+    console.log(this.blueInfo['enabled']);
+  }
+  toggle(){
+    this.blueInfo['enabled'] = !this.blueInfo['enabled'];
+  }
+  enableBl() {
+    //console.log(this.blueInfo['enabled']);
+    if (this.blueInfo['enabled']) {
+      this.bl.enable().then(
+        () => {
+          console.log('enabled');
+          console.log(this.blueInfo);
+        },
+        () => {
+          console.log('NOT enabled');
+          this.setBleInfo(false);
+          console.log(this);
+        }
+      );
+    }
+
+  }
+
+  
   openBleListNav(item){
     this.navCtrl.push(bleListPage, { item: item });
   }
 
   ionViewDidLoad() {
+    this.blueInfo['enabled'] = true;
     console.log('ionViewDidLoad BleOperatorPage');
   }
 
@@ -41,6 +77,7 @@ export class bleListPage {
   item;
   devices: any[] = [];
   statusMessage: string;
+
   @ViewChild(Content) content: Content;
   @ViewChild(Refresher) refresher: Refresher;
 
@@ -48,6 +85,7 @@ export class bleListPage {
     private ngZone: NgZone,
     private toastCtrl: ToastController,
     private ble: BLE,
+
     private params: NavParams) {
     
     this.item = params.data.item;
@@ -90,6 +128,7 @@ export class bleListPage {
     this.refresher.state = 'ready';
     this.refresher._onEnd();
   }
+
 
     // If location permission is denied, you'll end up here
     scanError(error) {

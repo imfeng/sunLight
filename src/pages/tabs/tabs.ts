@@ -1,19 +1,17 @@
 import { Component } from '@angular/core';
 
-import { AboutPage } from '../about/about';
 import { ContactPage } from '../contact/contact';
-import { HomePage } from '../home/home';
 
-import { DevMode } from '../dev-mode//dev-mode';
+import { DevMode } from '../dev-mode/dev-mode';
 import { ModeManual } from '../mode-manual/mode-manual';
-
+import { ModeSchedulePage } from '../mode-schedule/mode-schedule';
 
 @Component({
   templateUrl: 'tabs.html'
 })
 export class TabsPage {
 
-  tab1Root = HomePage;
+  tab1Root = ModeSchedulePage;
   tab2Root = ModeManual;
   tab3Root = ContactPage;
   tab4Root = DevMode;
