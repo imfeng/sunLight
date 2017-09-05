@@ -91,10 +91,10 @@ export class NumberPickerComponent implements ControlValueAccessor, OnChanges,On
       disabled: this.inputDisabled
     });
   }
-  private inputOnChange():void{
+  inputOnChange():void{
     this.onChange.emit(this.numberPicker.value);
   }
-  private increaseValue(): void {
+  increaseValue(): void {
     var currentValue = this.numberPicker.value;
     if (currentValue < this.max) {
       currentValue = currentValue + this.step;
@@ -107,7 +107,7 @@ export class NumberPickerComponent implements ControlValueAccessor, OnChanges,On
     }
   }
 
-  private decreaseValue(): void {
+  decreaseValue(): void {
     var currentValue = this.numberPicker.value;
     if (currentValue > this.min) {
       currentValue = currentValue - this.step;

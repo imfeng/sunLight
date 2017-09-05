@@ -14,10 +14,12 @@ import { NumberPickerComponent } from '../components/number-picker/number-picker
 import { LightsChartComponent } from '../components/lights-chart/lights-chart';
 
 import { BleOperatorPageModule } from '../pages/ble-operator/ble-operator.module';
+
 /* PAGES */
 import { DevMode } from '../pages/dev-mode/dev-mode';
 import { ModeManual } from '../pages/mode-manual/mode-manual';
-import { ModeSchedulePage } from '../pages/mode-schedule/mode-schedule';
+import { ModeSchedulePageModule } from '../pages/mode-schedule/mode-schedule.module';
+import { ModeDevicesPage } from '../pages/mode-devices/mode-devices';
 
 
 import { ContactPage } from '../pages/contact/contact';
@@ -44,17 +46,19 @@ class WheelSelectorBrowser extends WheelSelector {
     NumberPickerComponent,
     LightsChartComponent,
 
-    ModeSchedulePage,
+    
     ModeManual,
+    ModeDevicesPage,
     DevMode,
 
     MyApp,
     ContactPage,
     TabsPage,
+    
 
   ],
   imports: [
-    ChartsModule,
+    ModeSchedulePageModule,
 
     FormsModule,
     BrowserModule,
@@ -66,8 +70,9 @@ class WheelSelectorBrowser extends WheelSelector {
   ],
   bootstrap: [IonicApp],
   entryComponents: [
-    ModeSchedulePage,
+    
     ModeManual,
+    ModeDevicesPage,
     DevMode,
 
     MyApp,

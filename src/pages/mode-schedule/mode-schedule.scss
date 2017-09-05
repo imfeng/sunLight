@@ -15,4 +15,22 @@ page-mode-schedule {
         }
     }
 
+
+}
+/* pr1-patterns */
+ion-grid.patterns-grid {
+    ion-row{
+        ion-col{
+            padding: 1.3rem;
+            button.parttern-cell{
+                min-height: 120px;
+                margin: 0!important;
+                margin-top: 0;
+                margin-bottom: 0;
+                padding: 0;
+                box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+                border-radius: 1.3rem;
+            }
+        }
+    }
 }

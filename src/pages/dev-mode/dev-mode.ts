@@ -34,7 +34,7 @@ export class DevMode {
   lightLinesArr : Array<object>= Array.from( new Array(12),((val,index) => ({'value':index+1}) )); // [1 to 12]
 
   constructor(private numSelector: WheelSelector, public navCtrl: NavController, private lightsInfo: LightsInfoProvider) {
-    this.test = lightsInfo.getTypes();
+    this.test = this.lightsInfo.getTypes();
   }
 
   onNumberChanged(event){

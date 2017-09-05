@@ -88,7 +88,7 @@ export class bleListPage {
 
     private params: NavParams) {
     
-    this.item = params.data.item;
+    this.item = this.params.data.item;
   }
   scan(){
     this.setStatus('Scanning for Bluetooth LE Devices');

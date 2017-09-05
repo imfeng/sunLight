@@ -10,6 +10,12 @@ import 'rxjs/add/operator/map';
   for more info on providers and Angular DI.
 */
 
+export interface lightsType {
+  "value": number,
+  "name": string,
+  "slug": string,
+  "color": string,
+}
 
 @Injectable()
 export class LightsInfoProvider {
@@ -29,7 +35,7 @@ export class LightsInfoProvider {
   }
 
 }
-  const li_types : Array<object> =[{
+  const li_types : Array<lightsType> =[{
     "value": 1,
     "name": "太陽光5m",
     "slug": "5m",

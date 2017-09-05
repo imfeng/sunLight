@@ -2,6 +2,7 @@ import { OnInit, Component } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
 import { LightsInfoProvider } from '../../providers/lights-info/lights-info'
 import { LightsGoupsProvider,lightsGroupsInfos } from '../../providers/lights-goups/lights-goups'
+import * as subMain from './nav-main'
 
 import { Observable } from 'rxjs/Observable';
 /**
@@ -39,32 +40,32 @@ export class ModeSchedulePage implements OnInit{
       ]
     }]
   ];
-  groupsInfo: Array < object > = [{
-    "gid": "1",
+  groupsInfo: Array < lightsGroupsInfos > = [{
+    "gid": 1,
     "name": "養殖區A",
     "lastSended": "11min ago command sended",
     "devicesTotal": 22,
     "chartDatas": {
-      "colors": this.getRandomColorsArr(),
+      "colors": [this.getRandomColorsArr()],
       "datasets": this.chartDatasArr[0]
     }
   }, {
-    "gid": "2",
+    "gid": 2,
     "name": "養殖區B",
     "lastSended": "1day ago command sended",
     "devicesTotal": 10,
     "chartDatas": {
-      "colors": this.getRandomColorsArr(),
-      "datasets": this.getRandomDatasetArr()
+      "colors": [this.getRandomColorsArr()],
+      "datasets": [this.getRandomDatasetArr()]
     }
   }, {
-    "gid": "3",
+    "gid": 3,
     "name": "養殖區C",
     "lastSended": "1month ago command sended",
     "devicesTotal": 31,
     "chartDatas": {
-      "colors": this.getRandomColorsArr(),
-      "datasets": this.getRandomDatasetArr()
+      "colors": [this.getRandomColorsArr()],
+      "datasets": [this.getRandomDatasetArr()]
     }
   }, ]
 
@@ -90,7 +91,14 @@ export class ModeSchedulePage implements OnInit{
       v => {console.log('GO!!!!!!!!!!!!!!!!!!!!!!!');console.log(v);}
     );
   }
+  
   /** */
+  goPatterns(goGid:number){   // lightsGroupsInfos .getGid(gid)
+    this.navCtrl.push(subMain.pr1patternsNav, { "gid": goGid });
+  }
+  goDevices(goGid:number){
+    this.navCtrl.push(subMain.pr1patternsNav, { "gid": goGid });
+  }
   addLightsGroup(){
 
     let cursor = this.groupsInfo.length+1;
@@ -107,8 +115,8 @@ export class ModeSchedulePage implements OnInit{
         "lastSended": this.getRandomInt(1,59)+"min",
         "devicesTotal": 0,
         "chartDatas": {
-          "colors": this.getRandomColorsArr(),
-          "datasets": this.getRandomDatasetArr()
+          "colors": [this.getRandomColorsArr()],
+          "datasets": [this.getRandomDatasetArr()]
         }
       }
     );
@@ -116,15 +124,15 @@ export class ModeSchedulePage implements OnInit{
   /** */
 
   getRandomDatasetArr(){
-    return [{
-      data: Array.from( new Array(16), ()=>(this.getRandomInt(0,100)) )
-    }]
+    return {
+      "data": Array.from( new Array(16), ()=>(this.getRandomInt(0,100)) )
+    }
   }
   getRandomColorsArr(){
-    return [{
+    return {
       "backgroundColor":
         Array.from(new Array(16) , (val,idx) => (this.lightsColor[this.getRandomInt(0,5)]) )
-    }]
+    }
   }
   getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;

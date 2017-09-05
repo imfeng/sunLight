@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
 
-import { ContactPage } from '../contact/contact';
-
 import { DevMode } from '../dev-mode/dev-mode';
 import { ModeManual } from '../mode-manual/mode-manual';
+import { ModeDevicesPage } from '../mode-devices/mode-devices';
 import { ModeSchedulePage } from '../mode-schedule/mode-schedule';
 
 @Component({
@@ -13,7 +12,7 @@ export class TabsPage {
 
   tab1Root = ModeSchedulePage;
   tab2Root = ModeManual;
-  tab3Root = ContactPage;
+  tab3Root = ModeDevicesPage;
   tab4Root = DevMode;
 
   constructor() {
