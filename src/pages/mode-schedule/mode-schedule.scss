@@ -1,10 +1,12 @@
 page-mode-schedule {
+    
     div.lightsChart-cont{
         width: 102%;
         margin-left: -0.5%;
         padding: 10px 0;
         background: rgba(0,0,0,0.01);
     }
+
     ion-item{
 
         .gidTitle{
@@ -17,8 +19,85 @@ page-mode-schedule {
 
 
 }
+.modal-section{
+    .ios ion-header > .toolbar.statusbar-padding:first-child{
+        min-height: auto!important;
+        padding: 0!important;
+    }
+    .ios .modal-wrapper > .ion-page > ion-header > .toolbar.statusbar-padding:first-child ion-segment, .ios .modal-wrapper > .ion-page > ion-header > .toolbar.statusbar-padding:first-child ion-title{
+        padding: 0;
+        height: 100%;
+        min-height: inherit;
+    }
+    background-color: rgba(0,0,0,.26);
+    .modal-wrapper{
+
+        position: absolute;
+        width: 100%;
+        height: 43%;
+        min-height: 260px;
+        bottom: 0;
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        /* overflow: hidden; */
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -webkit-flex-direction: column;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        max-width: 500px;
+        contain: strict;
+        contain: strict;
+        .toolbar{
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            height: 44px;
+            border-bottom: 0.55px solid #c8c7cc;
+            .toolbar-content{
+                text-align: center;
+            }
+        }
+    }
+}
 /* pr1-patterns */
+#schedule-nav-sctions{
+    
+    ion-item.item p{
+        font-size: 1.1rem;
+    }
+    ion-list{
+        border: 1px solid #dedede;
+        ion-list-header.list-header{
+            background: #f9fafb;
+        }
+    }
+    button.btn-remove{
+        position: absolute;
+        right: 1rem;
+        top: 0;
+        bottom: 0;
+        height: inherit;
+    }
+}
+#schedule-nav-main{
+
+    ion-note.note-time {
+        position: absolute;
+        right: 0;
+        top: 0;
+        font-size: 1rem;
+        margin-top: 3px;
+    }
+
+
+}
+
 ion-grid.patterns-grid {
+
     ion-row{
         ion-col{
             padding: 1.3rem;

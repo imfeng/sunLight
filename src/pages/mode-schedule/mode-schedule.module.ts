@@ -4,24 +4,22 @@ import { ModeSchedulePage } from './mode-schedule';
 
 import { ChartsModule } from 'ng2-charts';
 
-import * as subMain from './nav-main'
+import {NavMainModule} from './nav-main.module'
 
 @NgModule({
   declarations: [
     ModeSchedulePage,
 
-    subMain.pr1patternsNav,
-    subMain.pr2ModesNav
-    
+
   ],
   imports: [
     IonicPageModule.forChild(ModeSchedulePage),
+    NavMainModule,
     ChartsModule
   ],
   entryComponents:[
     ModeSchedulePage,
-    subMain.pr1patternsNav,
-    subMain.pr2ModesNav
+
   ],
 })
 export class ModeSchedulePageModule {}

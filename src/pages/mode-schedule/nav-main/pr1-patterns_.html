@@ -1,0 +1,56 @@
+<ion-header>
+  <ion-navbar>
+
+
+    <ion-title>
+      掃描附近裝置
+    </ion-title>
+    <ion-buttons end>
+      <button clear outline ion-button icon-only color="royal">
+            <ion-icon name="search"></ion-icon>
+          </button>
+      <button ion-button (click)="refreshScan()">
+            <ion-icon  name="refresh-circle-outline"></ion-icon>
+          </button>
+    </ion-buttons>
+  </ion-navbar>
+
+</ion-header>
+
+<ion-content class="outer-content">
+
+  <ion-grid class="patterns-grid">
+    <!-- ROW -->
+
+      <ion-row>
+        <ion-col col-6 col-md-4 col-lg-3 col-xl-2 *ngFor="let item of patternsStore.list; let idx = index">
+          <button (click)="goNavSections(item.patternId)" class="parttern-cell" color="{{ (item.isSended)?'primary':'light' }}" ion-button full>{{ item.name }}</button>
+        </ion-col>
+        
+      </ion-row>
+  
+<!--
+      <ng-container >
+    </ng-container>
+  <ion-col>
+          <button class="parttern-cell" color="{{ (patternsStore.list[idx+1].isSended)?'primary':'light' }}" ion-button full>{{ patternsStore.list[idx+1].name }}</button>
+        </ion-col>-->
+    <!-- -->
+    
+  </ion-grid>
+</ion-content>
+<ion-footer>
+  <ion-toolbar>
+    <p>TEST FOOTER</p>
+  </ion-toolbar>
+</ion-footer>
+<!-- ROW
+    <ion-row>
+      <ion-col>
+        <button class="parttern-cell" ion-button full>Full Button</button>
+      </ion-col>
+      <ion-col>
+        <button class="parttern-cell" ion-button full>Full Button</button>
+      </ion-col>
+    </ion-row>
+    -->

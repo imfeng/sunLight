@@ -1,7 +1,11 @@
 import { OnInit, Component } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
 import { LightsInfoProvider } from '../../providers/lights-info/lights-info'
-import { LightsGoupsProvider,lightsGroupsInfos } from '../../providers/lights-goups/lights-goups'
+import { LightsGoupsProvider,lightsGroupsData } from '../../providers/lights-goups/lights-goups'
+
+
+
+
 import * as subMain from './nav-main'
 
 import { Observable } from 'rxjs/Observable';
@@ -40,7 +44,7 @@ export class ModeSchedulePage implements OnInit{
       ]
     }]
   ];
-  groupsInfo: Array < lightsGroupsInfos > = [{
+  groupsInfo: Array < lightsGroupsData > = [{
     "gid": 1,
     "name": "養殖區A",
     "lastSended": "11min ago command sended",
@@ -71,43 +75,52 @@ export class ModeSchedulePage implements OnInit{
 
 
   /** IONIC lifeCycle*/
-  testGroups:Observable<lightsGroupsInfos[]>;
+  testGroups:Observable<lightsGroupsData[]>;
   constructor(
     private lightsGroups:LightsGoupsProvider,
     private lightsInfo:LightsInfoProvider,
     public navCtrl: NavController,
     public navParams: NavParams) {
+      this.testGroups = this.lightsGroups.infos;
   }
   ngOnInit(){
-    this.lightsGroups.set(this.groupsInfo,(isScc)=>{if(isScc)console.log('setOK!!!!!!!!!!!!!!')});
-    this.testGroups = this.lightsGroups.infos;
     this.lightsGroups.loadAll();
+    //this.lightsGroups.set(this.groupsInfo,(isScc)=>{if(isScc)console.log('lightsGroups.set OK!!!!!!!!!!!!!!')});
+    
+    
   }
   onChartClick(event) {
     console.log(event);
   }
   ionViewDidLoad() {
-    this.testGroups.subscribe(
-      v => {console.log('GO!!!!!!!!!!!!!!!!!!!!!!!');console.log(v);}
-    );
+
+  }
+  ionViewDidEnter(){
+    console.log('ionViewDidEnter "Schedule tab"');
   }
   
   /** */
-  goPatterns(goGid:number){   // lightsGroupsInfos .getGid(gid)
+  goPatterns(goGid:number){   // lightsGroupsData .getGid(gid)
     this.navCtrl.push(subMain.pr1patternsNav, { "gid": goGid });
   }
-  goDevices(goGid:number){
+  goDevices(goGid:number){  //TODO
     this.navCtrl.push(subMain.pr1patternsNav, { "gid": goGid });
   }
   addLightsGroup(){
-
+    // TODO : show moda to config group name and id
     let cursor = this.groupsInfo.length+1;
+    //avoidRepeatGid(this.lightsGroups.getList(),gid);
     this.lightsGroups.addNew(
-      cursor,
-      "養殖區"+cursor,
-      (isScc,res)=>{if(isScc)console.log('YEAAAAAA');console.log(res);}
+      cursor,  //TODO choose gid
+      "養殖區"+cursor
+    ).subscribe(
+      (isScc,res)=>{
+        if(isScc)console.log('addLightsGroup() Done!');
+        else {console.log('addLightsGroup() Failed!'); console.log(res)};
+      }
     );
-
+    
+    //DEBUG
     this.groupsInfo.unshift(
       {
         "gid": cursor,

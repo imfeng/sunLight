@@ -20,6 +20,7 @@
     "@angular/http": "4.1.3",
     "@angular/platform-browser": "4.1.3",
     "@angular/platform-browser-dynamic": "4.1.3",
+    "@ionic-native/android-permissions": "^4.2.1",
     "@ionic-native/ble": "^4.2.1",
     "@ionic-native/bluetooth-serial": "^4.2.1",
     "@ionic-native/core": "^3.12.1",
@@ -43,6 +44,7 @@
     "typescript": "2.3.4"
   },
   "cordovaPlugins": [
+    "cordova-plugin-bluetoothle",
     "cordova-plugin-whitelist",
     "cordova-plugin-console",
     "cordova-plugin-statusbar",

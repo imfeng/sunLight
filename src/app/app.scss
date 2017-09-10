@@ -12,7 +12,59 @@
 // To declare rules for a specific mode, create a child rule
 // for the .md, .ios, or .wp mode classes. The mode class is
 // automatically applied to the <body> element in the app.
+.scroll-content{
+    /*overflow: hidden;*/
+}
 
+/* OVERRIDE IONIC-MD */
+ion-action-sheet.action-sheet-md{
+    .action-sheet-group{
+        &:nth-of-type(1){
+            .action-sheet-title{
+                text-align: center;
+                font-size: 1.4rem;
+            }
+            button:nth-of-type(1){
+                border-top: 1px solid rgb(220, 220, 220);
+            }
+        }
+        .button-inner{
+            align-items: center;
+            -webkit-box-pack: center;
+            -webkit-justify-content: center;
+            -ms-flex-pack: start;
+            justify-content: center;
+        }
+        .action-sheet-cancel{
+            border-top: 1px solid rgb(220, 220, 220);
+            /*border-bottom: 1px solid rgb(220, 220, 220);*/
+            width: 85%;
+            margin: 0 auto;
+            display: flex;
+            text-align: center;
+            .button-inner{
+                display: inline;
+                /*font-weight: bold;
+                color: darkgrey;
+                letter-spacing: .3rem;
+                text-indent: .3rem;
+                margin: 0 auto;*/
+            }
+            
+        }
+    }
+
+}
+
+    
+
+
+.action-sheet-md .action-sheet-title{
+    text-align: center;
+    font-size: 1.4rem;
+}
+
+/**/
 .outer-content {
   background: #efeff4;
 }
@@ -34,7 +86,7 @@
 
     margin-bottom: 0;
     min-height: 4rem;
-}
+}/*
 .toolbar-md ion-title {
     left: 0;
     top: 0;
@@ -52,4 +104,4 @@
     font-weight: 600;
     color: #000;
     pointer-events: auto
-}
+}*/

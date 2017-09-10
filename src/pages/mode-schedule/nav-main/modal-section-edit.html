@@ -1,0 +1,38 @@
+  <ion-header>
+<ion-toolbar>
+  <ion-buttons left>
+    <button ion-button (click)="dismiss()">
+      <span ion-text color="primary">Cancel</span>
+    </button>
+  </ion-buttons>
+  <ion-title>模式設置</ion-title>
+  <ion-buttons right>
+  <button ion-button (click)="add()">
+    <span ion-text color="primary">ADD</span>
+  </button>
+</ion-buttons>
+</ion-toolbar>
+</ion-header>>
+<ion-content>
+<ion-list>
+  <ion-item>
+      <ion-icon name="ios-sunny-outline" item-start></ion-icon>
+      <ion-label>發光模式</ion-label>
+      <ion-select interface="action-sheet" cancelText="取消" [(ngModel)]="settings.mode">
+        <ion-option *ngFor="let type of lightsTypes;" value="{{type.value}}">{{type.name}}</ion-option>
+      </ion-select>
+    </ion-item>
+  <ion-item>
+      <ion-icon name="time" item-start></ion-icon>
+    <ion-label>起始時間</ion-label>
+    <ion-datetime displayFormat="HH:mm" [(ngModel)]="settings.time" color="primary"></ion-datetime>
+  </ion-item>
+  <ion-item>
+  <ion-range min="0" max="100" pin="true" [(ngModel)]="settings.multiple">
+    <ion-icon range-left small name="sunny"></ion-icon>
+    <ion-icon range-right name="sunny"></ion-icon>
+  </ion-range>
+</ion-item>
+</ion-list>
+  <p>{{inputDate}}</p>
+</ion-content>

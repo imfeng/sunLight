@@ -9,12 +9,15 @@ import { Observable } from 'rxjs/Observable';
 
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { NativeStorage } from '@ionic-native/native-storage';
+import { PatternsDataProvider } from '../patterns-data/patterns-data'
+const __REF_BASE = 'lightsGroupsDataArr';
+
 
 const __defaultBgColorArr = Array.from(new Array(16) , () => 'rgb(0,0,0)' ) ; 
 const __defaultDatasetArr = Array.from( new Array(16), ()=>0 ) ; 
 //Array.from(new Array(16) , (val,idx) => (this.lightsColor[this.getRandomInt(0,5)]) )
 //Array.from( new Array(16), ()=>(this.getRandomInt(0,100)) )
-export interface lightsGroupsInfos {
+export interface lightsGroupsData {
   "gid": number,
   "name": string, // NAME
   "lastSended": string, // TIME
@@ -30,24 +33,28 @@ export interface lightsGroupsInfos {
 
 @Injectable()
 export class LightsGoupsProvider {
-  infos: Observable<lightsGroupsInfos[]>;
-  private _infos:BehaviorSubject<lightsGroupsInfos[]>;
+  infos: Observable<lightsGroupsData[]>;
+  private _infos:BehaviorSubject<lightsGroupsData[]>;
   private baseUrl: string; 
   dataStore: {
-    infos: lightsGroupsInfos[]
+    infos: lightsGroupsData[]
   };
 
   constructor(
+    private PatternsDataProvider:PatternsDataProvider,
     private lightsInfo:LightsInfoProvider,
     private storage:NativeStorage
   ) {
     this.baseUrl = '';// Strorage
-    this.dataStore = { infos: [] };
-    this._infos = <BehaviorSubject<lightsGroupsInfos[]>>new BehaviorSubject([]);
+    this.dataStore = { "infos": [] };
+    this._infos = <BehaviorSubject<lightsGroupsData[]>>new BehaviorSubject([]);
     this.infos = this._infos.asObservable();
   }
+  getList(){
+    return this.dataStore.infos;
+  }
   loadAll() {
-    let sub = Observable.fromPromise(this.storage.getItem('lightsGroupsInfosArr'));
+    let sub = Observable.fromPromise(this.storage.getItem(__REF_BASE));
     sub.subscribe(
       arr => {
         if(typeof arr != 'object') JSON.parse(arr);
@@ -76,17 +83,20 @@ export class LightsGoupsProvider {
    return subTemp;
   }
   set(obj,trackFn){
-    let sub = Observable.fromPromise(this.storage.setItem('lightsGroupsInfosArr',obj));
+    let sub = Observable.fromPromise(this.storage.setItem(__REF_BASE,obj));
     sub.subscribe(
       res =>{trackFn(true,res)},
       err => {trackFn(false,err)}
     );
   }
-  addNew(gid:number,name:string="無群組名",trackFn:Function) {
-
+  addNew(gid:number,name:string="無群組名") {
+    let tmpOb = Observable.create( observer => {
+      
+      
+      // ADD *"lightsGroupsDataArr"*
       this.dataStore.infos.unshift(
         {
-          "gid": gid,
+          "gid": gid,  
           "name": name, // NAME
           "lastSended": 'Command never sended', // TIME
           "devicesTotal": 0, //0
@@ -98,11 +108,16 @@ export class LightsGoupsProvider {
             }
         }
       );
-      let sub = Observable.fromPromise(this.storage.setItem('lightsGroupsInfosArr',this.dataStore.infos));
-      sub.subscribe(
-        res =>{trackFn(true,res)},
-        err => {trackFn(false,err)}
+      let sub = Observable.fromPromise(this.storage.setItem(__REF_BASE,this.dataStore.infos));
+      // ADD *"patternsArr-_GID_"*
+      let sub_2 =this.PatternsDataProvider.createNull(gid);
+      sub.withLatestFrom( sub_2 ).subscribe(
+        res =>{ this._infos.next(this.dataStore.infos); observer.next(true,res);},
+        err =>{ observer.next(false,err)}
       );
+
+    });
+    return tmpOb;
   }
   lightsColor : any = this.lightsInfo.getTypes('color');
   getRandomDatasetArr(){

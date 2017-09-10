@@ -4,9 +4,10 @@ import { IonicApp, IonicModule, IonicErrorHandler } from 'ionic-angular';
 
 import { FormsModule } from '@angular/forms';
 import { BLE } from '@ionic-native/ble';
-import { BluetoothSerial } from '@ionic-native/bluetooth-serial';
-import { ChartsModule } from 'ng2-charts';
+//import { BluetoothSerial } from '@ionic-native/bluetooth-serial';
+import { AndroidPermissions } from '@ionic-native/android-permissions';
 
+import { HttpModule } from '@angular/http';
 
 /* COMPONENT */
 import { MyApp } from './app.component';
@@ -34,8 +35,14 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 import { NativeStorage } from '@ionic-native/native-storage';
 
 /* PROVIDERS */
-import { LightsInfoProvider } from '../providers/lights-info/lights-info';
+//import { LightsInfoProvider,lightsTypesPipe } from '../providers/lights-info/lights-info';
 import { LightsGoupsProvider } from '../providers/lights-goups/lights-goups';
+
+import { PatternsDataProvider } from '../providers/patterns-data/patterns-data';
+import { StorageMetaProvider } from '../providers/storage-meta/storage-meta';
+import { SectionsDataProvider } from '../providers/sections-data/sections-data';
+import { ToastCtrlProvider } from '../providers/toast-ctrl/toast-ctrl';
+import { BleCtrlProvider } from '../providers/ble-ctrl/ble-ctrl';
 
 class WheelSelectorBrowser extends WheelSelector {
 
@@ -57,7 +64,11 @@ class WheelSelectorBrowser extends WheelSelector {
     
 
   ],
+  exports:[
+
+  ],
   imports: [
+    HttpModule,
     ModeSchedulePageModule,
 
     FormsModule,
@@ -80,15 +91,19 @@ class WheelSelectorBrowser extends WheelSelector {
     TabsPage
   ],
   providers: [
+    AndroidPermissions,
     BLE,
-    BluetoothSerial,
     NativeStorage,
     { provide: WheelSelector, useClass: WheelSelectorBrowser},
     StatusBar,
     SplashScreen,
     {provide: ErrorHandler, useClass: IonicErrorHandler},
-    LightsInfoProvider,
-    LightsGoupsProvider
+    LightsGoupsProvider,
+    PatternsDataProvider,
+    StorageMetaProvider,
+    SectionsDataProvider,
+    ToastCtrlProvider,
+    BleCtrlProvider
     
   ]
 })
