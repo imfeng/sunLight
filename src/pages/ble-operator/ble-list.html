@@ -28,31 +28,18 @@
     <ion-list-header>
       發現的裝置
     </ion-list-header>
-    <ion-item *ngFor="let device of devices">
+    <ion-item *ngFor="let device of devices.list">
         <ion-icon item-start name="sunny"></ion-icon>
         <h2>{{ device.name || '無名稱' }}</h2>
         <p>{{ device.id }} ( Rx: {{ device.rssi }} )</p>
         <ion-badge item-end>#1</ion-badge>
-        <button (click)="connetDevice(device.id)" ion-button outline item-end>connect</button>
+        <button (click)="connectDevice(device.id)" ion-button outline item-end>connect</button>
       </ion-item>
-    <ion-item>
-      <ion-icon item-start name="sunny"></ion-icon>
-      <h2>Cher</h2>
-      <p>Ugh. As if.</p>
-      <ion-badge item-end>#1</ion-badge>
-      <button ion-button outline item-end><ion-icon ios="ios-settings" md="md-settings"></ion-icon></button>
-    </ion-item>
-    <ion-item>
-      <ion-icon item-start name="sunny"></ion-icon>
-      <ion-label>Ionic View</ion-label>
-      <p>Ugh. As if.</p>
-      <ion-badge item-end>#1</ion-badge>
-      <button ion-button outline item-end><ion-icon ios="ios-settings" md="md-settings"></ion-icon></button>
-    </ion-item>
+
   </ion-list>
 </ion-content>
 <ion-footer>
     <ion-toolbar>
-      <p>{{statusMessage}}</p>
+      <p>{{blueInfo.statusMessage}}</p>
     </ion-toolbar>
   </ion-footer>

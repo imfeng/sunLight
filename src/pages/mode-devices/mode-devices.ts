@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
-
+import { ModalController,IonicPage, NavController, NavParams } from 'ionic-angular';
+import { BleOperatorPage } from '../ble-operator/ble-operator';
 /**
  * Generated class for the ModeDevicesPage page.
  *
@@ -15,9 +15,13 @@ import { IonicPage, NavController, NavParams } from 'ionic-angular';
 })
 export class ModeDevicesPage {
 
-  constructor(public navCtrl: NavController, public navParams: NavParams) {
+  constructor(public modalCtrl: ModalController,
+    public navCtrl: NavController, public navParams: NavParams) {
   }
-
+  openBleModal(){
+    let modal = this.modalCtrl.create(BleOperatorPage);
+    modal.present();
+  }
   ionViewDidLoad() {
     console.log('ionViewDidLoad ModeDevicesPage');
   }

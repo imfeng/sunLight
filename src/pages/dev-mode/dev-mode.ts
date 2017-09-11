@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
-import { NavController } from 'ionic-angular';
+import { AlertController,ModalController,NavController } from 'ionic-angular';
 import { LightsInfoProvider } from  '../../providers/lights-info/lights-info'
 
-import { WheelSelector } from '@ionic-native/wheel-selector';
-
+import { BleOperatorPage } from '../ble-operator/ble-operator';
 
 @Component({
   selector: 'page-dev-mode',
@@ -33,27 +32,68 @@ export class DevMode {
   }
   lightLinesArr : Array<object>= Array.from( new Array(12),((val,index) => ({'value':index+1}) )); // [1 to 12]
 
-  constructor(private numSelector: WheelSelector, public navCtrl: NavController, private lightsInfo: LightsInfoProvider) {
+  constructor(
+    private alertCtrl:AlertController,
+    public modalCtrl: ModalController,
+    public navCtrl: NavController,
+    private lightsInfo: LightsInfoProvider) {
     this.test = this.lightsInfo.getTypes();
   }
+  openBleModal(){
+    let modal = this.modalCtrl.create(BleOperatorPage);
+    modal.present();
+  }
+  openFanModal(){
 
+  }
+  devModeSetting(){
+    let alert = this.alertCtrl.create({
+      cssClass: 'devModeSetting',
+      title: '亮度管理',
+      message: '選擇需要的亮度階數 或 增加當前設定',
+      inputs: [
+        {
+          name: '自訂2',
+          type: 'radio',
+          label: '10,20,50,100,90,10,50,10,10,60,10,20',
+          value: '10,20,50,100,90,10,50,10,10,60,10,20',
+        },
+        {
+          name: '自訂2',
+          type: 'radio',
+          label: '20,20,50,30,90,10,50,10,10,60,10,20',
+          value: '30,20,50,30,90,10,50,10,10,60,10,20',
+        },
+      ],
+      buttons: [
+        {
+          text: '使用',
+          handler: () => {
+            console.log('選擇 clicked');
+          }
+        },
+        {
+          text: '增加當前的設定值',
+          handler: () => {
+            console.log('儲存 clicked');
+          }
+        },
+        {
+          text: 'Cancel',
+          handler: () => {
+            console.log('Cancel clicked');
+          }
+        },
+
+      ]
+    });
+
+    alert.present();
+  }
   onNumberChanged(event){
     console.log(event);
   }
-  selectANumber() {
-    console.log(this.lightLinesArr);
-    this.numSelector.show({
-      title: "How Many?",
-      items: [
-        this.lightDataForWheel
-      ],
-    }).then(
-      result => {
-        console.log(result[0].description + ' at index: ' + result[0].index);
-      },
-      err => console.log('Error: ', err)
-      );
-  }
+
   ionViewDidLoad() {
     console.log('ionViewDidLoad DevMode');
     console.log(this.lightDataForWheel);

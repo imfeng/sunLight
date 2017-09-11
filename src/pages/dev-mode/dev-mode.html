@@ -7,12 +7,23 @@
 <ion-header>
 
   <ion-navbar>
+      <ion-buttons start>
+          <button menuToggle ion-button icon-only color="royal" (click)="openBleModal()">
+            <ion-icon name="bluetooth" ></ion-icon>
+          </button>
+        </ion-buttons>
     <ion-title>devMode</ion-title>
     <ion-buttons end>
-        <button ion-button icon-only color="royal" (click)="openBleModal('11','22','33')">
+      <button ion-button icon-only color="royal" (click)="openFanModal()">
           <ion-icon name="speedometer" ></ion-icon>
         </button>
-      </ion-buttons>
+      <button ion-button icon-only color="royal" (click)="devModeSetting()">
+        <ion-icon name="create" ></ion-icon>
+      </button>
+      <button ion-button icon-only color="royal" (click)="openBleModal()">
+        <ion-icon name="bluetooth" ></ion-icon>
+      </button>
+    </ion-buttons>
   </ion-navbar>
 
 </ion-header>
@@ -48,7 +59,7 @@
       <ng-container *ngFor="let line of lightLinesArr.slice(8,12); let i = index">
 
         <ion-col align-self-center>
-          <number-picker [(ngModel)]="lightLinesArr[i+8].value" [customClick]="testNumWheel" [description]="'No.'+(i+1)" [width]="'3rem'"
+          <number-picker [(ngModel)]="lightLinesArr[i+8].value" [description]="'No.'+(i+1)" [width]="'3rem'"
             [min]="0" [max]="100" [step]="1" [precision]="1" [inputDisabled]="false" (change)="onNumberChanged($event)"></number-picker>
         </ion-col>
 
@@ -56,5 +67,5 @@
     </ion-row>
   </ion-grid>
   <hr>
-  <button ion-button block color="dark" (click)="selectANumber()">select</button>
+  <button ion-button block color="dark" >傳送指令</button>
 </ion-content>

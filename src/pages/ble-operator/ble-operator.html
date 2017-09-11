@@ -27,16 +27,16 @@
     <ion-item>
       <ion-icon name="bluetooth" item-start></ion-icon>
       <ion-label>開啟藍芽</ion-label>
-      <ion-toggle checked="false" [(ngModel)]="blueInfo.isEabled" (ionChange)="enableBle()"></ion-toggle>
+      <ion-toggle [(ngModel)]="test.tog" (ionChange)="enableBle()" checked="false"></ion-toggle>
     </ion-item>
     <ion-list-header>
       正在連接中的裝置
     </ion-list-header>
     <button ion-item (click)="openBleListNav()">
         <ion-icon name="bluetooth" item-start color="primary"></ion-icon>
-        <ion-label>NAME</ion-label>
-        <ion-note item-end>ID:ID:ID:ID:ID:ID</ion-note>
-        <ion-badge item-end>#1</ion-badge>
+        <ion-label>{{blueInfo.peripheral.name||'無裝置'}}</ion-label>
+        <ion-note item-end>{{blueInfo.peripheral.id||' - '}}</ion-note>
+        <ion-badge item-end><ion-icon name="ios-arrow-forward-outline"></ion-icon></ion-badge>
       </button>
 
 
@@ -45,16 +45,16 @@
     </ion-list-header>
     <ion-item>
       <ion-icon item-start name="sunny"></ion-icon>
-      <h2>Cher</h2>
-      <p>Ugh. As if.</p>
-      <ion-badge item-end>#1</ion-badge>
+      <h2>裝置名１</h2>
+      <p>11:22:33:44:55:66</p>
+      <ion-badge item-end>群組1</ion-badge>
       <button ion-button outline item-end><ion-icon ios="ios-settings" md="md-settings"></ion-icon></button>
     </ion-item>
     <ion-item>
       <ion-icon item-start name="sunny"></ion-icon>
-      <ion-label>Ionic View</ion-label>
-      <p>Ugh. As if.</p>
-      <ion-badge item-end>#1</ion-badge>
+      <ion-label>裝置名２</ion-label>
+      <p>AA:BB:CC:DD:EE:FF</p>
+      <ion-badge item-end>群組2</ion-badge>
       <button ion-button outline item-end><ion-icon ios="ios-settings" md="md-settings"></ion-icon></button>
     </ion-item>
   </ion-list>

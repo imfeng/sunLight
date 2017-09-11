@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, forwardRef ,OnChanges } from '@angular/core';
 import { FormControl,NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
+import { WheelSelector } from '@ionic-native/wheel-selector';
 const noop = ()=>{};
 export const USER_PROFILE_VALUE_ACCESSOR: any = {
   provide: NG_VALUE_ACCESSOR,
@@ -29,8 +30,10 @@ export class NumberPickerComponent implements ControlValueAccessor, OnChanges,On
   @Output() onChange: EventEmitter < number > = new EventEmitter();
 
   private numberPicker: FormControl;
-
-  constructor() {}
+  lightDataForWheel : Array<object> = Array.from( new Array(101),((val,index) => ({'description':index})));
+  constructor(
+    private numSelector: WheelSelector
+  ) {}
     //The internal data model
   //private innerValue: any = '';
 
@@ -57,6 +60,21 @@ export class NumberPickerComponent implements ControlValueAccessor, OnChanges,On
       this.onChange.emit(this.numberPicker.value);
       console.log('ngOnChanges');
     }
+  }
+  numWheel(){
+    console.log('WheelSelector!');
+    this.numSelector.show({
+      title: "選擇亮度階數 0 ~ 100",
+      items: [
+        this.lightDataForWheel
+      ],
+    }).then(
+      result => {
+        this.value = parseInt(result[0].description);
+        console.log('customClick() >>' + result[0].description + ' at index: ' + result[0].index);
+      },
+      err => console.log('Error: ', err)
+    );
   }
   ngOnInit() {
     if (this.customClick == null) {

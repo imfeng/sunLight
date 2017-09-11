@@ -1,7 +1,10 @@
 number-picker {
 
-
-  $size: 4rem; //change this to change size of picker
+  .input-group>input{
+    cursor: pointer;
+    background-color:  rgb(255, 255, 255);
+  }
+  $size: 3.2rem; //change this to change size of picker
   $border-radius: 3px; //set to 0 if not required
   $content: "QTY";
   margin: 0 auto;

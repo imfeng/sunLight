@@ -21,16 +21,20 @@ export class ModeManual {
   lightsGroups : Array<object>=[
     {'id':1,'name':'測試'}
   ];
-  constructor(public modalCtrl: ModalController, private lightsInfo: LightsInfoProvider, public navCtrl: NavController,public navParams: NavParams,public toastCtrl:ToastController) {
+  constructor(
+    public modalCtrl: ModalController,
+    private lightsInfo: LightsInfoProvider,
+    public navCtrl: NavController,
+    public navParams: NavParams,
+    public toastCtrl:ToastController) {
     
   // 
   }
   ngOnInit() {
     this.lightsType = this.lightsInfo.getTypes();
   }
-  openBleModal(...characterNum){
-    console.log(characterNum);
-    let modal = this.modalCtrl.create(BleOperatorPage, characterNum);
+  openBleModal(){
+    let modal = this.modalCtrl.create(BleOperatorPage);
     modal.present();
   }
   ionViewDidLoad() {

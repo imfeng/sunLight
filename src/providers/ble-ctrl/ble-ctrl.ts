@@ -1,5 +1,5 @@
 import { Injectable,NgZone } from '@angular/core';
-import { Platform,ToastController } from 'ionic-angular';
+import { Platform,ToastController, LoadingController } from 'ionic-angular';
 import { BLE } from '@ionic-native/ble';
 import { NativeStorage } from '@ionic-native/native-storage';
 import { AndroidPermissions } from '@ionic-native/android-permissions';
@@ -35,10 +35,10 @@ interface nowStatus {
   "isDiscovered": boolean,
   "isSearching": boolean,
   "peripheral": any,
-  "message":string,
 }
 @Injectable()
 export class BleCtrlProvider {
+  private _loadingObj : any;
   nowStatus:Observable<nowStatus>;
   private _nowStatus:BehaviorSubject<nowStatus>;
 
@@ -57,12 +57,15 @@ export class BleCtrlProvider {
   */
 
   constructor(
+    
     private androidPermissions: AndroidPermissions,
     private ble: BLE,
     private storage: NativeStorage,
     private ngZone: NgZone,
+    public loadingCtrl: LoadingController,
     private toastCtrl: ToastController,
     private platform:Platform) {
+      console.log('>>>>>>>>>>>>>>>>>>>>>>BleCtrlProvider');
     this.scanedDevices = {
       "list":[]
     };
@@ -81,7 +84,6 @@ export class BleCtrlProvider {
           "slug": "無裝置",
           "id": null,
         },
-        "message":''
     };
 
     this.platform.ready().then(ready=>{
@@ -114,28 +116,34 @@ export class BleCtrlProvider {
     );
   }
   enableBle() {
-    Observable.fromPromise(this.ble.enable()).take(1).subscribe(
+    let ob = Observable.fromPromise(this.ble.enable())
+    ob.take(1).subscribe(
       ()=>{
         this._change("isEnabled",true);
         this._setStatus('成功開啟藍芽！');
       },
       err=>{
         alert('無法開啟藍芽...');
-        this._change("isEnabled",false)
+        this.ngZone.run(() => {
+          this.dataStore.isEnabled = false;
+          //this._change("isEnabled",false);
+        });
         console.log('>>> Ble Enabled Failed!');
         console.log(JSON.stringify(err));
       }
     );
+    return ob;
   }
   disableBle(){
     alert('請使用手機系統的設定自行關閉唷');
   }
   /** SCAN series */
   scan(sec=8){
+    let time = this._presentLoading();
     this.scanedDevices["list"] = [];
     this.ble.scan([], sec).subscribe(
-      device => this._onDeviceDiscovered(device),
-      error => this._showError(error,'掃描藍芽裝置時發生錯誤。')
+      device => {this._onDeviceDiscovered(device);this._dismissLoading(time);},
+      error => {this._showError(error,'掃描藍芽裝置時發生錯誤。');this._dismissLoading(time);}
     );
     setTimeout(this._setStatus.bind(this), 1000*sec, '掃描完成......');
   }
@@ -148,9 +156,10 @@ export class BleCtrlProvider {
   }
   /** CONNECT DEVICE series */
   connectDevice(deviceId){
+    let time = this._presentLoading();
     this.ble.connect(deviceId).subscribe(
-      peripheral => this._onConnected(peripheral),
-      peripheral => this._onDeviceDisconnected()
+      peripheral => {this._onConnected(peripheral);this._dismissLoading(time);},
+      peripheral => {this._onDeviceDisconnected();this._dismissLoading(time);}
     );
   }
   disConnectDevice(deviceId){
@@ -166,34 +175,65 @@ export class BleCtrlProvider {
     this.ngZone.run(() => {
       this._change("isConnected",true);
       this._change("peripheral",peripheral);
+      alert('連線成功！');
       this._setStatus('連線成功！');
     });
   }
 
   private _onDeviceDisconnected(): void {
     this._change("isConnected",false);
-    let toast = this.toastCtrl.create({
+    /*let toast = this.toastCtrl.create({
       message: '連線中斷！',
       duration: 3000,
       position: 'middle'
     });
-    toast.present();
+    toast.present();*/
   }
   /** */
   write(value:Uint8Array){
     //new Uint8Array(*).buffer
-    return Observable.fromPromise(
+    let time = this._presentLoading();    
+    Observable.fromPromise(
       this.ble.write(
         this.dataStore.peripheral["id"],
         _LIGHTS_SERVICE_UUID,
         _LIGHTS_CHAR_UUID,
         value.buffer
-      ));
+      )).subscribe(
+        scc => {this._setStatus('傳送成功！');this._dismissLoading(time);},
+        err => {this._showError(err,'傳送失敗');this._dismissLoading(time);}
+      );
   }
   /* */
+  private waitLoading(message){
+    this._presentLoading();
+  }
+  private _presentLoading() {
+    let loading = this.loadingCtrl.create({
+      content: 'Please wait...'
+    });
+    loading.present();
+    this._loadingObj = loading;
+    let time = setTimeout(()=>{
+      alert('逾時');
+      loading.dismiss();
+    }, 1000*20);
+    return time;
+    /*
+      setTimeout(() => {
+        loading.dismiss();
+      }, 5000); */
+  }
+  private _dismissLoading(time){
+    if(this._loadingObj){
+      clearTimeout(time);
+      this._loadingObj.dismiss();
+    }
+  }
+  
   private _setStatus(message) {
     this.ngZone.run(() => {
-      this.dataStore["message"] = message;
+      this.dataStore["statusMessage"] = message;
     });
   }
   private _showError(error,message) {
