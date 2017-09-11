@@ -43,6 +43,7 @@ import { StorageMetaProvider } from '../providers/storage-meta/storage-meta';
 import { SectionsDataProvider } from '../providers/sections-data/sections-data';
 import { ToastCtrlProvider } from '../providers/toast-ctrl/toast-ctrl';
 import { BleCtrlProvider } from '../providers/ble-ctrl/ble-ctrl';
+import { BleCommandProvider } from '../providers/ble-command/ble-command';
 
 class WheelSelectorBrowser extends WheelSelector {
 
@@ -103,7 +104,8 @@ class WheelSelectorBrowser extends WheelSelector {
     StorageMetaProvider,
     SectionsDataProvider,
     ToastCtrlProvider,
-    BleCtrlProvider
+    BleCtrlProvider,
+    BleCommandProvider
     
   ]
 })

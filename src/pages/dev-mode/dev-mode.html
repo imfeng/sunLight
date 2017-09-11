@@ -32,12 +32,25 @@
         </ng-template>-->
 
 <ion-content padding>
+    <ion-item>
+        <ion-icon name="ios-pricetags-outline" item-start></ion-icon>
+        <ion-label>群組</ion-label>
+        <ion-select interface="alert" multiple="true" cancelText="取消" [(ngModel)]="deviceMeta.groups">
+          <ion-option *ngFor="let type of lightsGroups; let i = index" value="{{type.id}}">{{type.name}} (#{{type.id}})</ion-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+          <ion-range min="0" max="100" pin="true" [(ngModel)]="deviceMeta.curMultiple">
+            <ion-icon range-left small name="sunny"></ion-icon>
+            <ion-icon range-right name="sunny"></ion-icon>
+          </ion-range>
+        </ion-item>
   <ion-grid class="cont-lines">
     <ion-row align-items-center justify-content-center>
-      <ng-container *ngFor="let line of lightLinesArr.slice(0,4); let i = index; trackBy: trackById">
+      <ng-container *ngFor="let line of saveSettings.lightLinesArr.slice(0,4); let i = index; trackBy: trackById">
 
         <ion-col align-self-center>
-          <number-picker [(ngModel)]="lightLinesArr[i+0].value" [customClick]="testNumWheel" [description]="'No.'+(i+1)" [width]="'3rem'"
+          <number-picker [(ngModel)]="saveSettings.lightLinesArr[i+0].value" [customClick]="testNumWheel" [description]="'No.'+(i+1)" [width]="'3rem'"
             [min]="0" [max]="100" [step]="1" [precision]="1" [inputDisabled]="false" (onChange)="onNumberChanged($event)"></number-picker>
         </ion-col>
 
@@ -45,10 +58,10 @@
     </ion-row>
     <hr>
     <ion-row align-items-center justify-content-center>
-      <ng-container *ngFor="let line of lightLinesArr.slice(4,8); let i = index">
+      <ng-container *ngFor="let line of saveSettings.lightLinesArr.slice(4,8); let i = index">
 
         <ion-col align-self-center>
-          <number-picker [(ngModel)]="lightLinesArr[i+4].value" [customClick]="testNumWheel" [description]="'No.'+(i+1)" [width]="'3rem'"
+          <number-picker [(ngModel)]="saveSettings.lightLinesArr[i+4].value" [customClick]="testNumWheel" [description]="'No.'+(i+1)" [width]="'3rem'"
             [min]="0" [max]="100" [step]="1" [precision]="1" [inputDisabled]="false" (onChange)="onNumberChanged($event)"></number-picker>
         </ion-col>
 
@@ -56,16 +69,16 @@
     </ion-row>
     <hr>
     <ion-row align-items-center justify-content-center>
-      <ng-container *ngFor="let line of lightLinesArr.slice(8,12); let i = index">
+      <ng-container *ngFor="let line of saveSettings.lightLinesArr.slice(8,12); let i = index">
 
         <ion-col align-self-center>
-          <number-picker [(ngModel)]="lightLinesArr[i+8].value" [description]="'No.'+(i+1)" [width]="'3rem'"
-            [min]="0" [max]="100" [step]="1" [precision]="1" [inputDisabled]="false" (change)="onNumberChanged($event)"></number-picker>
+          <number-picker [(ngModel)]="saveSettings.lightLinesArr[i+8].value" [description]="'No.'+(i+1)" [width]="'3rem'"
+            [min]="0" [max]="100" [step]="1" [precision]="1" [inputDisabled]="false" (inChange)="onNumberChanged($event)"></number-picker>
         </ion-col>
 
       </ng-container>
     </ion-row>
   </ion-grid>
   <hr>
-  <button ion-button block color="dark" >傳送指令</button>
+  <button ion-button block color="dark" (click)="sendDev()">傳送指令</button>
 </ion-content>

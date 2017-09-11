@@ -191,6 +191,9 @@ export class BleCtrlProvider {
   }
   /** */
   write(value:Uint8Array){
+    console.log('=== CMD VALUE ===');
+    console.log(value);
+    console.log('======');
     //new Uint8Array(*).buffer
     let time = this._presentLoading();    
     Observable.fromPromise(
@@ -241,8 +244,8 @@ export class BleCtrlProvider {
     console.log('>>> scanError() ');
     console.log(JSON.stringify(error));
     let toast = this.toastCtrl.create({
-      message: message,
-      position: 'middle',
+      message: message +' '+JSON.stringify(error),
+      position: 'bottom',
       duration: 5000
     });
     toast.present();
