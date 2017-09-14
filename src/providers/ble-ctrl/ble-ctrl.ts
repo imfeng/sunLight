@@ -155,10 +155,10 @@ export class BleCtrlProvider {
     });
   }
   /** CONNECT DEVICE series */
-  connectDevice(deviceId){
+  connectDevice(deviceId,todoFn = ()=>{}){
     let time = this._presentLoading();
     this.ble.connect(deviceId).subscribe(
-      peripheral => {this._onConnected(peripheral);this._dismissLoading(time);},
+      peripheral => {this._onConnected(peripheral);this._dismissLoading(time);todoFn();},
       peripheral => {this._onDeviceDisconnected();this._dismissLoading(time);}
     );
   }
@@ -191,6 +191,7 @@ export class BleCtrlProvider {
   }
   /** */
   write(value:Uint8Array){
+
     console.log('=== CMD VALUE ===');
     console.log(value);
     console.log('======');
@@ -203,7 +204,7 @@ export class BleCtrlProvider {
         _LIGHTS_CHAR_UUID,
         value.buffer
       )).subscribe(
-        scc => {this._setStatus('傳送成功！');this._dismissLoading(time);},
+        scc => {alert('傳送成功！');this._dismissLoading(time);},
         err => {this._showError(err,'傳送失敗');this._dismissLoading(time);}
       );
   }

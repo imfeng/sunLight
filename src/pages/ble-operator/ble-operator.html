@@ -43,6 +43,13 @@
     <ion-list-header>
       過去配對的裝置
     </ion-list-header>
+    <ion-item *ngFor="let item of devices_list|async">
+      <ion-icon item-start name="sunny"></ion-icon>
+      <h2>{{item.name || item.o_name || "無名稱"}}</h2>
+      <p>{{item.id}}</p>
+      <ion-badge item-end>{{item.group || "無群組"}}</ion-badge>
+      <button ion-button outline item-end><ion-icon ios="ios-settings" md="md-settings"></ion-icon></button>
+    </ion-item>
     <ion-item>
       <ion-icon item-start name="sunny"></ion-icon>
       <h2>裝置名１</h2>

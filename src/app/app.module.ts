@@ -44,6 +44,7 @@ import { SectionsDataProvider } from '../providers/sections-data/sections-data';
 import { ToastCtrlProvider } from '../providers/toast-ctrl/toast-ctrl';
 import { BleCtrlProvider } from '../providers/ble-ctrl/ble-ctrl';
 import { BleCommandProvider } from '../providers/ble-command/ble-command';
+import { DevicesDataProvider } from '../providers/devices-data/devices-data';
 
 class WheelSelectorBrowser extends WheelSelector {
 
@@ -105,7 +106,9 @@ class WheelSelectorBrowser extends WheelSelector {
     SectionsDataProvider,
     ToastCtrlProvider,
     BleCtrlProvider,
-    BleCommandProvider
+    BleCommandProvider,
+    DevicesDataProvider,
+    DevicesDataProvider
     
   ]
 })

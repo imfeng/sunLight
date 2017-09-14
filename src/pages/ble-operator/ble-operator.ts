@@ -7,7 +7,7 @@ import 'rxjs/add/operator/take';
 import 'rxjs/add/operator/withLatestFrom';
 import 'rxjs/add/observable/fromPromise';
 import { Observable } from 'rxjs/Observable';
-
+import { DevicesDataProvider,lightDeviceType } from '../../providers/devices-data/devices-data';
 import { BleCtrlProvider } from '../../providers/ble-ctrl/ble-ctrl';
 /**
  * Generated class for the BleOperatorPage page.
@@ -26,13 +26,17 @@ export class BleOperatorPage implements OnInit{
   test = {
     "tog":false
   }
+  devices_list:Observable<lightDeviceType[]>;
   constructor(
+    private devicesProv:DevicesDataProvider,
     private bleCtrl:BleCtrlProvider,
     public viewCtrl: ViewController,
     public navCtrl: NavController,
     public navParams: NavParams,) {
       console.log('>>>>>>>>>>>>>>>>>>>>>>BleOperatorPage');
       this.blueInfo = this.bleCtrl.dataStore;
+      this.devices_list = this.devicesProv.list;
+      
   }
   ngOnInit(){
   }
@@ -106,8 +110,8 @@ export class bleListPage implements OnInit{
   }
 
   connectDevice(deviceId){
-    this.bleCtrl.connectDevice(deviceId);
-    this.navCtrl.pop()
+    this.bleCtrl.connectDevice(deviceId,this.navCtrl.pop);
+    
   }
 
   scan(){
