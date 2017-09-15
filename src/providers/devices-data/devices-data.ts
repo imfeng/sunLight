@@ -15,12 +15,6 @@ export interface lightDeviceType {
   "group":number,
   "last_sended": number
 }
-/*
-  Generated class for the DevicesDataProvider provider.
-
-  See https://angular.io/docs/ts/latest/guide/dependency-injection.html
-  for more info on providers and Angular DI.
-*/
 @Injectable()
 export class DevicesDataProvider {
   list:Observable<lightDeviceType[]>;
@@ -34,7 +28,10 @@ export class DevicesDataProvider {
     private storage:NativeStorage) {
       this._list = <BehaviorSubject<lightDeviceType[]>>new BehaviorSubject([]);
       this.list = this._list.asObservable();
-
+      this.dataStore = {
+        "device": null,
+        "deviceList": []
+      }
       console.log('>>>> DevicesDataProvider');
       this.loadAll();
     

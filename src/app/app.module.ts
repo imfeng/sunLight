@@ -20,7 +20,7 @@ import { BleOperatorPageModule } from '../pages/ble-operator/ble-operator.module
 import { DevMode } from '../pages/dev-mode/dev-mode';
 import { ModeManual } from '../pages/mode-manual/mode-manual';
 import { ModeSchedulePageModule } from '../pages/mode-schedule/mode-schedule.module';
-import { ModeDevicesPage } from '../pages/mode-devices/mode-devices';
+import { ModeDevicesPage,editDevicePage } from '../pages/mode-devices/mode-devices';
 
 
 import { ContactPage } from '../pages/contact/contact';
@@ -54,7 +54,7 @@ class WheelSelectorBrowser extends WheelSelector {
   declarations: [
     NumberPickerComponent,
     LightsChartComponent,
-
+    editDevicePage,
     
     ModeManual,
     ModeDevicesPage,
@@ -83,7 +83,7 @@ class WheelSelectorBrowser extends WheelSelector {
   ],
   bootstrap: [IonicApp],
   entryComponents: [
-    
+    editDevicePage,
     ModeManual,
     ModeDevicesPage,
     DevMode,
