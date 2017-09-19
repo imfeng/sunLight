@@ -1,7 +1,6 @@
 import { Injectable,NgZone } from '@angular/core';
 import { Platform,ToastController, LoadingController } from 'ionic-angular';
 import { BLE } from '@ionic-native/ble';
-import { NativeStorage } from '@ionic-native/native-storage';
 import { AndroidPermissions } from '@ionic-native/android-permissions';
 
 import 'rxjs/add/operator/map';
@@ -10,16 +9,17 @@ import 'rxjs/add/operator/withLatestFrom';
 import 'rxjs/add/observable/fromPromise';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { DevicesDataProvider,lightDeviceType } from '../devices-data/devices-data'
+
 
 const _LIGHTS_SERVICE_UUID = '0000fff0-0000-1000-8000-00805f9b34fb';
 const _LIGHTS_CHAR_UUID = '0000fff3-0000-1000-8000-00805f9b34fb';
-
-/*
-  Generated class for the BleCtrlProvider provider.
-
-  See https://angular.io/docs/ts/latest/guide/dependency-injection.html
-  for more info on providers and Angular DI.
-*/
+//7bb104bf-abf8-4a91-9385-9c3e07cf7c30
+//b9403000-f5f8-466e-aff9-25556b57fe6d
+//const _LIGHTS_SERVICE_UUID = 'b9406000-f5f8-466e-aff9-25556b57fe6d';
+//const _LIGHTS_CHAR_UUID = 'b9406003-f5f8-466e-aff9-25556b57fe6d';
+//const _LIGHTS_SERVICE_UUID = '19B10010-E8F2-537E-4F6C-D104768A1214';
+//const _LIGHTS_CHAR_UUID    = '19B10011-E8F2-537E-4F6C-D104768A1214';
 export interface lightsDevice {
   "name": string,
   "slug": string,  //customize name
@@ -27,7 +27,8 @@ export interface lightsDevice {
   "peripheral": any
   
 }
-interface nowStatus {
+export interface nowStatus {
+  "hadConnected":boolean,
   "useable": boolean,
   "statusMessage": string,
   "isEnabled": boolean,
@@ -35,6 +36,7 @@ interface nowStatus {
   "isDiscovered": boolean,
   "isSearching": boolean,
   "peripheral": any,
+  "device":lightDeviceType
 }
 @Injectable()
 export class BleCtrlProvider {
@@ -57,15 +59,14 @@ export class BleCtrlProvider {
   */
 
   constructor(
-    
+    private devicesData:DevicesDataProvider,
     private androidPermissions: AndroidPermissions,
     private ble: BLE,
-    private storage: NativeStorage,
     private ngZone: NgZone,
     public loadingCtrl: LoadingController,
     private toastCtrl: ToastController,
     private platform:Platform) {
-      console.log('>>>>>>>>>>>>>>>>>>>>>>BleCtrlProvider');
+    console.log('>>>>>>>>>>>>>>>>>>>>>>BleCtrlProvider');
     this.scanedDevices = {
       "list":[]
     };
@@ -73,6 +74,7 @@ export class BleCtrlProvider {
     this._nowStatus = <BehaviorSubject<nowStatus>>new BehaviorSubject({});
     this.nowStatus = this._nowStatus.asObservable();
     this.dataStore = {
+        "hadConnected":false,
         "useable": false,
         "statusMessage": "initialized...",
         "isEnabled": false,
@@ -84,29 +86,34 @@ export class BleCtrlProvider {
           "slug": "無裝置",
           "id": null,
         },
+        "device":{
+          "name":null,
+          "o_name" :null,
+          "id": null,
+          "group":null,
+          "last_sended": null
+        }
     };
 
     this.platform.ready().then(ready=>{
       this.androidPermissions.requestPermissions(
         [this.androidPermissions.PERMISSION.BLUETOOTH,
           this.androidPermissions.PERMISSION.BLUETOOTH_ADMIN,
-          this.androidPermissions.PERMISSION.BLUETOOTH_PRIVILEGED,
           this.androidPermissions.PERMISSION.ACCESS_FINE_LOCATION,
           this.androidPermissions.PERMISSION.ACCESS_COARSE_LOCATION ]);
       this.isEnbled();
     });
   }
-  private _checkUseable(){
-    if(this.dataStore["isEnabled"]&&this.dataStore["isConnected"]&&this.dataStore["isDiscovered"]){
+
+  private _change(idx:string,value:any){
+    this.dataStore[idx]=value;
+    //this._checkUseable();
+    if(this.dataStore["isEnabled"]&&this.dataStore["isConnected"]){
       this.dataStore["useable"] = true;
     }else{
       this.dataStore["useable"] = false;
     }
     this._nowStatus.next(this.dataStore);
-  }
-  private _change(idx:string,value:any){
-    this.dataStore[idx]=value;
-    this._checkUseable();
   }
   /** BLE TURN series */
   isEnbled(){
@@ -116,23 +123,31 @@ export class BleCtrlProvider {
     );
   }
   enableBle() {
-    let ob = Observable.fromPromise(this.ble.enable())
-    ob.take(1).subscribe(
-      ()=>{
-        this._change("isEnabled",true);
-        this._setStatus('成功開啟藍芽！');
-      },
-      err=>{
-        alert('無法開啟藍芽...');
-        this.ngZone.run(() => {
-          this.dataStore.isEnabled = false;
-          //this._change("isEnabled",false);
-        });
-        console.log('>>> Ble Enabled Failed!');
-        console.log(JSON.stringify(err));
+    return Observable.create(
+      observer => {
+        Observable.fromPromise(this.ble.enable())
+          .take(1).subscribe(
+            ()=>{
+              this._change("isEnabled",true);
+              this._setStatus('成功開啟藍芽！');
+              observer.next(true);
+              observer.complete();
+            },
+            err=>{
+              alert('無法開啟藍芽...');
+              this.ngZone.run(() => {
+                //this.dataStore.isEnabled = false;
+                this._change("isEnabled",false);
+              });
+              console.log('>>> Ble Enabled Failed!');
+              console.log(JSON.stringify(err));
+              observer.error(false);
+              observer.complete();
+            }
+          );
       }
     );
-    return ob;
+
   }
   disableBle(){
     alert('請使用手機系統的設定自行關閉唷');
@@ -155,11 +170,34 @@ export class BleCtrlProvider {
     });
   }
   /** CONNECT DEVICE series */
-  connectDevice(deviceId,todoFn = ()=>{}){
+  connectDevice(deviceId,todoFn = (p=null)=>{}){
     let time = this._presentLoading();
     this.ble.connect(deviceId).subscribe(
-      peripheral => {this._onConnected(peripheral);this._dismissLoading(time);todoFn();},
+      peripheral => {
+
+        this._change("hadConnected",true);
+        //console.log(JSON.stringify(peripheral));
+        let device = this.devicesData.check(peripheral.id,peripheral.name);
+        this.dataStore.device = device;
+        this._onConnected(peripheral);this._dismissLoading(time);todoFn(peripheral);},
       peripheral => {this._onDeviceDisconnected();this._dismissLoading(time);}
+    );
+  }
+  connectOnce(deviceId){
+    return Observable.create(
+      observer=>{
+        let time = this._presentLoading();
+        this.ble.connect(deviceId).take(1).subscribe(
+          peripheral => {
+            this._dismissLoading(time);
+            observer.next(true);
+          },
+          peripheral => {
+            this._dismissLoading(time);
+            observer.next(false);
+          }
+        );
+      }
     );
   }
   disConnectDevice(deviceId){
@@ -173,45 +211,140 @@ export class BleCtrlProvider {
   }
   private _onConnected(peripheral): void {
     this.ngZone.run(() => {
+      alert('連線成功！');
       this._change("isConnected",true);
       this._change("peripheral",peripheral);
-      alert('連線成功！');
       this._setStatus('連線成功！');
     });
   }
 
   private _onDeviceDisconnected(): void {
     this._change("isConnected",false);
-    /*let toast = this.toastCtrl.create({
-      message: '連線中斷！',
-      duration: 3000,
+    let toast = this.toastCtrl.create({
+      message: '藍芽連線中斷！',
+      duration: 1500,
       position: 'middle'
     });
-    toast.present();*/
+    toast.present();
   }
   /** */
-  write(value:Uint8Array){
 
-    console.log('=== CMD VALUE ===');
-    console.log(value);
-    console.log('======');
+  checkConnect(){
+    return Observable.create(
+      observer=>{
+        this.nowStatus.take(1).subscribe(
+          now =>{
+            if(now.hadConnected){
+              Observable.fromPromise(this.ble.isConnected(this.dataStore.peripheral.id)).subscribe(
+                ()=>{
+                  observer.next(true);observer.complete();
+                },
+                ()=>{
+                  this.ble.connect(this.dataStore.peripheral.id).take(1).subscribe(
+                    peripheral => {
+                      observer.next(true);observer.complete();
+                    },
+                    peripheral => {console.log('重新連線成功！！');this._onDeviceDisconnected();alert('無法重新連結到剛才的裝置，請確認裝置是否在附近');observer.error(peripheral);}
+                  );
+                }
+              );
+            }else{
+              alert('請先與裝置連線！');
+              observer.error(true);observer.complete();
+            }
+            
+          }
+        );
+        
+
+      }
+    );
+
+  }
+  write_o(value:Uint8Array){
+    return Observable.create(
+      observer=>{
+        let time = this._presentLoading();
+        this.checkConnect().subscribe(
+          ()=>{
+            Observable.fromPromise(
+              this.ble.writeWithoutResponse(
+                this.dataStore.peripheral.id,
+                _LIGHTS_SERVICE_UUID,
+                _LIGHTS_CHAR_UUID,
+                value.buffer
+              )).subscribe(
+                scc => {
+                  alert('傳送成功！');
+                  this._dismissLoading(time);
+                  observer.next(true);observer.complete();
+                },
+                err => {
+                  this._showError(err,'傳送失敗');
+                  this._dismissLoading(time);
+                  observer.error(false);observer.complete();
+                }
+              );
+          },()=>{this._dismissLoading(time);}
+        );
+      }
+    );
+  }
+  write(value:Uint8Array,sccFn=(id)=>{},errFn=(id)=>{},toBack=false){
+    let time = this._presentLoading();
+    /*console.log('=== CMD VALUE ===');
+    console.log(JSON.stringify(value));
+    console.log('======');*/
     //new Uint8Array(*).buffer
-    let time = this._presentLoading();    
-    Observable.fromPromise(
-      this.ble.write(
-        this.dataStore.peripheral["id"],
-        _LIGHTS_SERVICE_UUID,
-        _LIGHTS_CHAR_UUID,
-        value.buffer
-      )).subscribe(
-        scc => {alert('傳送成功！');this._dismissLoading(time);},
-        err => {this._showError(err,'傳送失敗');this._dismissLoading(time);}
-      );
+    this.checkConnect().subscribe(
+      ()=>{
+        Observable.fromPromise(
+          this.ble.writeWithoutResponse(
+            this.dataStore.peripheral.id,
+            _LIGHTS_SERVICE_UUID,
+            _LIGHTS_CHAR_UUID,
+            value.buffer
+          )).subscribe(
+            scc => {
+              if(toBack) sccFn(this.dataStore.peripheral.id);
+              else alert('傳送成功！');
+              this._dismissLoading(time);},
+            err => {
+              if(toBack) errFn(this.dataStore.peripheral.id);
+              else this._showError(err,'傳送失敗');
+              this._dismissLoading(time);}
+          );
+      },()=>{this._dismissLoading(time);}
+    );
+    /*Observable.fromPromise(this.ble.isConnected(this.dataStore.peripheral.id)).subscribe(
+      ()=>{
+
+      },
+      ()=>{
+        console.log('>>> RECONNECTED!!!!');
+        this.ble.connect(this.dataStore.peripheral.id).take(1).subscribe(
+          peripheral => {
+            console.log('重新連線成功！！');
+            Observable.fromPromise(
+              this.ble.writeWithoutResponse(
+                this.dataStore.peripheral.id,
+                _LIGHTS_SERVICE_UUID,
+                _LIGHTS_CHAR_UUID,
+                value.buffer
+              )).subscribe(
+                scc => {
+                  alert('傳送成功！');this._dismissLoading(time);},
+                err => {
+                  this._showError(err,'傳送失敗');this._dismissLoading(time);}
+              );
+          },
+          peripheral => {this._onDeviceDisconnected();this._dismissLoading(time);}
+        );
+      }
+    );*/
+
   }
   /* */
-  private waitLoading(message){
-    this._presentLoading();
-  }
   private _presentLoading() {
     let loading = this.loadingCtrl.create({
       content: 'Please wait...'
@@ -221,7 +354,7 @@ export class BleCtrlProvider {
     let time = setTimeout(()=>{
       alert('逾時');
       loading.dismiss();
-    }, 1000*20);
+    }, 1000*12);
     return time;
     /*
       setTimeout(() => {

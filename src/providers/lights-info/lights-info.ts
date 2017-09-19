@@ -71,10 +71,10 @@ export class LightsInfoProvider {
   pure: false
 })
 export class lightsTypesPipe implements PipeTransform {
-  constructor(private types:LightsInfoProvider){
+  constructor(){
   }
   transform(value, args) {
     let arr = li_types.map( data => data[args]);
-    return arr[value];
+    return arr[value-1];
   }
 }

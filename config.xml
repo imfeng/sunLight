@@ -23,6 +23,7 @@
     <preference name="SplashScreen" value="screen" />
     <preference name="SplashScreenDelay" value="3000" />
     <platform name="android">
+        <preference name="loadUrlTimeoutValue" value="700000" />
         <allow-intent href="market:*" />
         <icon density="ldpi" src="resources/android/icon/drawable-ldpi-icon.png" />
         <icon density="mdpi" src="resources/android/icon/drawable-mdpi-icon.png" />
@@ -86,11 +87,11 @@
     <allow-navigation href="http://192.168.1.108:8100" />
     <plugin name="cordova-wheel-selector-plugin" spec="~1.0.0" />
     <plugin name="cordova-plugin-bluetooth-serial" spec="~0.4.7" />
-    <plugin name="cordova-plugin-nativestorage" spec="~2.2.2" />
     <engine name="browser" spec="~4.1.0" />
     <plugin name="cordova-plugin-ble-central" spec="~1.1.4" />
     <plugin name="cordova-plugin-bluetoothle" spec="~4.4.2" />
     <plugin name="cordova-plugin-background-mode" spec="~0.7.2" />
     <engine name="android" spec="~6.1.2" />
     <plugin name="cordova-plugin-android-permissions" spec="~1.0.0" />
+    <plugin name="cordova-plugin-nativestorage" spec="~2.2.2" />
 </widget>

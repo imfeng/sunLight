@@ -13,6 +13,7 @@ export interface lightDeviceType {
   "o_name" :string,
   "id": string,
   "group":number,
+  //"isGroupSync":boolean
   "last_sended": number
 }
 @Injectable()
@@ -25,6 +26,7 @@ export class DevicesDataProvider {
     "deviceList": Array<lightDeviceType>
   }
   constructor(
+
     private storage:NativeStorage) {
       this._list = <BehaviorSubject<lightDeviceType[]>>new BehaviorSubject([]);
       this.list = this._list.asObservable();
@@ -65,25 +67,83 @@ export class DevicesDataProvider {
       }
     );
   }
+  get(id:''){
+    let tmpOb = Observable.create(
+      observer => {
+        this.list.subscribe(
+          (list)=>{
+            let finded = list.find(
+              item => (item.id==id)
+            );
+            if(finded) observer.next(finded); else observer.error(false);
+          }
+        );
+      }
+    );
+    return tmpOb;
+  }
+  check(d_id,o_name){
+    let finded = this.dataStore.deviceList.find(
+      (val, index, array) =>{
+        if(val.id==d_id)
+          return true;
+        else
+          return false;
+      }
+    );
+    if(!finded){
+      let newDevice = {
+        "name": o_name,
+        "o_name" :o_name,
+        "id": d_id,
+        "group":undefined,
+        "last_sended": 0
+      };
+      this.add(newDevice);
+      return newDevice;
+    }else return finded[0];
+  }
   add( dd:lightDeviceType ){
     this.dataStore.deviceList.push(dd);
     let sub = Observable.fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,this.dataStore.deviceList));
-    return sub;
+    sub.subscribe(
+      (obj)=>{alert('ADD DEVICE!!');this._list.next(obj);}
+    );
+    //return sub;
   }
-  modify(dd:lightDeviceType){
+  modify(d_id,d_name,d_gid){
     console.log(this.dataStore.deviceList);
-    this.dataStore.deviceList.forEach(
-      (ele,idx) =>{
-        if(ele.id == dd.id){
-          this.dataStore.deviceList[idx].name = dd.name;
-          this.dataStore.deviceList[idx].last_sended = dd.last_sended;
-          let sub = Observable.fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,this.dataStore.deviceList));
-          sub.subscribe();
-        }else{
-          console.log(">>> DevicesDataProvider.modify() NOT FOUND device!");
-        }
+    let isNext = false;
+    let tmpOb = Observable.create(
+      observer => {
+        this.dataStore.deviceList.forEach(
+          (ele,idx) =>{
+            if(ele.id == d_id){
+              if(d_name)this.dataStore.deviceList[idx].name = d_name;
+              if(d_gid)this.dataStore.deviceList[idx].group = d_gid;
+              this.dataStore.deviceList[idx].last_sended = new Date().getDate();
+              Observable
+                .fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,this.dataStore.deviceList))
+                .subscribe(
+                  (obj)=>{
+                    this._list.next(obj);
+                    observer.next(true);
+                    console.log('modify成功!!');
+                    console.log(this.dataStore.deviceList);
+                  },
+                  ()=>observer.error(false,'NO ITEM!')
+                );
+              isNext =true;
+            }else{
+              if( !isNext && idx == this.dataStore.deviceList.length-1 ){
+                console.log(">>> DevicesDataProvider.modify() NOT FOUND device!");
+                observer.error(false,'NOT FOUND device!')
+              }
+            }
+          }
+        );
       }
     );
+    return tmpOb;
   }
-
 }

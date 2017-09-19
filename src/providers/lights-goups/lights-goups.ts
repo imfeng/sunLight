@@ -1,5 +1,5 @@
 import { LightsInfoProvider } from '../../providers/lights-info/lights-info'
-
+import { Platform } from 'ionic-angular';
 import { Injectable } from '@angular/core';
 //import { Http } from '@angular/http';
 import 'rxjs/add/operator/map';
@@ -13,8 +13,8 @@ import { PatternsDataProvider } from '../patterns-data/patterns-data'
 const __REF_BASE = 'lightsGroupsDataArr';
 
 
-const __defaultBgColorArr = Array.from(new Array(16) , () => 'rgb(0,0,0)' ) ; 
-const __defaultDatasetArr = Array.from( new Array(16), ()=>0 ) ; 
+//const __defaultBgColorArr = Array.from(new Array(16) , () => 'rgb(0,0,0)' ) ; 
+//const __defaultDatasetArr = Array.from( new Array(16), ()=>0 ) ; 
 //Array.from(new Array(16) , (val,idx) => (this.lightsColor[this.getRandomInt(0,5)]) )
 //Array.from( new Array(16), ()=>(this.getRandomInt(0,100)) )
 export interface lightsGroupsData {
@@ -37,23 +37,65 @@ export class LightsGoupsProvider {
   private _infos:BehaviorSubject<lightsGroupsData[]>;
   private baseUrl: string; 
   dataStore: {
-    infos: lightsGroupsData[]
+    infos: lightsGroupsData[],
+    groupsList: Array<object>
   };
 
   constructor(
+    private platform: Platform,
     private PatternsDataProvider:PatternsDataProvider,
     private lightsInfo:LightsInfoProvider,
     private storage:NativeStorage
   ) {
+    console.log('>>> LightsGoupsProvider constructor() !');
     this.baseUrl = '';// Strorage
-    this.dataStore = { "infos": [] };
+    this.dataStore = { "infos": [], "groupsList":[] };
     this._infos = <BehaviorSubject<lightsGroupsData[]>>new BehaviorSubject([]);
     this.infos = this._infos.asObservable();
+    this.platform.ready().then((readySource) => {
+      this.loadAll();
+      this.getGroups().subscribe(
+        (arr)=>{
+          this.dataStore.groupsList=arr;
+        }
+      );
+    });
+    
+
+  }
+  dedup(arr) {
+    var hashTable = {};
+  
+    return arr.filter(function (el) {
+      var key = JSON.stringify(el);
+      var match = Boolean(hashTable[key]);
+  
+      return (match ? false : hashTable[key] = true);
+    });
+  }
+  
+  getGroups(){
+    return Observable.create(
+      observer => {
+        this.infos.subscribe(
+          arr => {
+            let groupsList = arr.map(val=>({"id":val.gid,"name":val.name}));
+            groupsList = this.dedup(groupsList);
+            groupsList.push({'id':0,'name':'廣播'});
+            console.log(groupsList);
+            observer.next(groupsList);
+            //observer.complete();
+          }
+        );
+      }
+    );
+
   }
   getList(){
     return this.dataStore.infos;
   }
   loadAll() {
+    console.log('>>> LightsGoupsProvider.loadAll()');
     let sub = Observable.fromPromise(this.storage.getItem(__REF_BASE));
     sub.subscribe(
       arr => {
@@ -62,7 +104,17 @@ export class LightsGoupsProvider {
         this._infos.next(Object.assign({}, this.dataStore).infos);
       },
       err => {
-        console.log('>>> Could not DO "loadAll()" ERR below <<<' );
+        if(err.code==2){
+          console.log('>>> '+__REF_BASE + ' NULL!!!! ADDED array!');
+          Observable.fromPromise(this.storage.setItem(__REF_BASE,[])).subscribe(
+            arr=>{
+              this.dataStore.infos = arr;
+              this._infos.next(Object.assign({}, this.dataStore).infos);
+            }
+          );
+        }else{
+          console.log('>>> Could not DO "loadAll()" ERR below <<<' );
+        }
         console.log(err);
       }
     );
@@ -112,8 +164,8 @@ export class LightsGoupsProvider {
       // ADD *"patternsArr-_GID_"*
       let sub_2 =this.PatternsDataProvider.createNull(gid);
       sub.withLatestFrom( sub_2 ).subscribe(
-        res =>{ this._infos.next(this.dataStore.infos); observer.next(true,res);},
-        err =>{ observer.next(false,err)}
+        res =>{ this._infos.next(this.dataStore.infos); observer.next(true,res);observer.complete();},
+        err =>{ observer.next(false,err);observer.complete();}
       );
 
     });

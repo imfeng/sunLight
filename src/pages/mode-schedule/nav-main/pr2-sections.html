@@ -6,7 +6,9 @@
       編輯排程
     </ion-title>
     <ion-buttons end>
-        
+      <button ion-button icon-only color="royal" (click)="openBleModal()">
+        <ion-icon name="bluetooth" ></ion-icon>
+      </button>
       <button ion-button (click)="isShowDelBtn()">
             <ion-icon  name="ios-remove-circle-outline"></ion-icon>
           </button>
@@ -52,7 +54,7 @@
     </ion-item>
 
       <button ion-button block color="primary" (click)="saveSections()">儲存</button>
-
+      <button ion-button block color="secondary" (click)="sendSections()">傳送</button>
   </ion-list>
 </ion-content>
 <ion-footer>

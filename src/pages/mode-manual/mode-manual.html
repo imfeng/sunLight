@@ -14,6 +14,7 @@
       <ion-buttons end>
         <button ion-button icon-only color="royal" (click)="openBleModal()">
           <ion-icon name="bluetooth" ></ion-icon>
+          
         </button>
       </ion-buttons>
 
@@ -29,7 +30,7 @@
       <ion-icon name="ios-pricetags-outline" item-start></ion-icon>
       <ion-label>群組</ion-label>
       <ion-select interface="alert" multiple="true" cancelText="取消" [(ngModel)]="deviceMeta.groups">
-        <ion-option *ngFor="let type of lightsGroups; let i = index" value="{{type.id}}">{{type.name}} (#{{type.id}})</ion-option>
+        <ion-option *ngFor="let type of deviceMeta.groupsList|async; let i = index" value="{{type.id}}">{{type.name}} (#{{type.id}})</ion-option>
       </ion-select>
     </ion-item>
     <ion-item>
@@ -40,7 +41,7 @@
       </ion-select>
     </ion-item>
     <ion-item>
-      <ion-range min="0" max="100" pin="true" [(ngModel)]="deviceMeta.curMultiple">
+      <ion-range min="0" max="30" pin="true" [(ngModel)]="deviceMeta.curMultiple">
         <ion-icon range-left small name="sunny"></ion-icon>
         <ion-icon range-right name="sunny"></ion-icon>
       </ion-range>

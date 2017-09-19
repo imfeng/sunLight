@@ -11,7 +11,35 @@
   </ion-header>
   
   <ion-content class="outer-content">
-  
+    <ion-item-group>
+      <button (click)="editGroup(deviceInfo.data.id)" ion-item>
+        <ion-icon name="wifi" item-start color="primary"></ion-icon>
+        <ion-label>群組</ion-label>
+        <ion-badge item-end>#{{deviceInfo.data.group}}</ion-badge>
+      </button>
+      <button (click)="editName()" ion-item>
+        <ion-icon name="wifi" item-start color="primary"></ion-icon>
+        <ion-label>裝置名稱</ion-label>
+        <ion-note item-end>{{deviceInfo.data.name}}</ion-note>
+      </button>
+      <ion-item>
+        <ion-icon name="wifi" item-start color="primary"></ion-icon>
+        <ion-label>原始名稱</ion-label>
+        <ion-note item-end>{{deviceInfo.data.o_name}}</ion-note>
+      </ion-item>
+      <ion-item>
+        <ion-icon name="wifi" item-start color="primary"></ion-icon>
+        <ion-label>ID</ion-label>
+        <ion-note item-end>{{deviceInfo.data.id}}</ion-note>
+      </ion-item>
+      <ion-item>
+        <ion-icon name="wifi" item-start color="primary"></ion-icon>
+        <ion-label>最後一次連結時間</ion-label>
+        <ion-note item-end>{{deviceInfo.data.last_sended}}</ion-note>
+      </ion-item>
+
+      
+    </ion-item-group>
   </ion-content>
   <ion-footer>
 

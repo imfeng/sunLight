@@ -82,9 +82,10 @@ export class ModeSchedulePage implements OnInit{
     public navCtrl: NavController,
     public navParams: NavParams) {
       this.testGroups = this.lightsGroups.infos;
+      //this.lightsGroups.loadAll();
   }
   ngOnInit(){
-    this.lightsGroups.loadAll();
+    //this.lightsGroups.loadAll();
     //this.lightsGroups.set(this.groupsInfo,(isScc)=>{if(isScc)console.log('lightsGroups.set OK!!!!!!!!!!!!!!')});
     
     
@@ -108,19 +109,28 @@ export class ModeSchedulePage implements OnInit{
   }
   addLightsGroup(){
     // TODO : show moda to config group name and id
-    let cursor = this.groupsInfo.length+1;
-    //avoidRepeatGid(this.lightsGroups.getList(),gid);
-    this.lightsGroups.addNew(
-      cursor,  //TODO choose gid
-      "養殖區"+cursor
-    ).subscribe(
-      (isScc,res)=>{
-        if(isScc)console.log('addLightsGroup() Done!');
-        else {console.log('addLightsGroup() Failed!'); console.log(res)};
+    
+    this.testGroups.take(1).subscribe(
+      arr=>{
+        console.log('arr.length+1 = '+ arr.length);
+        let cursor = arr.length+1;
+        this.lightsGroups.addNew(
+          cursor,  //TODO choose gid
+          "群組"+cursor
+        ).take(1).subscribe(
+          (isScc,res)=>{
+            if(isScc)console.log('addLightsGroup() Done!');
+            else {console.log('addLightsGroup() Failed!'); console.log(res)};
+          }
+        );
+
       }
     );
+    //avoidRepeatGid(this.lightsGroups.getList(),gid);
+
     
     //DEBUG
+    /*
     this.groupsInfo.unshift(
       {
         "gid": cursor,
@@ -132,7 +142,7 @@ export class ModeSchedulePage implements OnInit{
           "datasets": [this.getRandomDatasetArr()]
         }
       }
-    );
+    );*/
   }
   /** */
 

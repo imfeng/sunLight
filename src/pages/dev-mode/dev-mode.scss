@@ -1,12 +1,18 @@
 page-dev-mode {
-    .cont-lines hr{
-        width:100%;
-        height: 1.3px;
+    .dev-btns-cont{
+        .col>p{
+            margin-top: 2px;
+        }
     }
+    
     .cont-lines ion-col{
 
     }
     
+}
+.cont-lines hr{
+    width:100%;
+    height: 1.3px;
 }
 .devModeSetting{
     .alert-wrapper{

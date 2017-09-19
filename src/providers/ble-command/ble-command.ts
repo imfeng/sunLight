@@ -1,8 +1,12 @@
 import { Injectable } from '@angular/core';
 
 import { BleCtrlProvider } from '../ble-ctrl/ble-ctrl'
-
+import { DevicesDataProvider } from '../devices-data/devices-data'
+import { SectionDataType } from '../../providers/patterns-data/patterns-data';
+/*
 import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/withLatestFrom';
+import { Observable } from 'rxjs/Observable';*/
 const _START = 0xFA;
 const _END = 0xFF;
 /** */
@@ -23,9 +27,11 @@ const _CMD_FAN_SPEED = 0xAD; // s,cmd, fan, e
 */
 @Injectable()
 export class BleCommandProvider {
-
+  //devicesList:any;//lightDeviceType[]
   constructor(
+    private devicesData: DevicesDataProvider,
     public bleCtrl: BleCtrlProvider) {
+    //this.devicesList = this.devicesData.list;
     console.log('Hello BleCommandProvider Provider');
   }
   goSyncTime(){
@@ -33,24 +39,92 @@ export class BleCommandProvider {
     let data = new Uint8Array([_START,_CMD_TIME,time.getHours(),time.getMinutes(),time.getSeconds(),_END]);
     this.bleCtrl.write(data);
   }
-  goSetGroup(group){
-    let data = new Uint8Array([_START,_CMD_SET_GROUP,group,_END]);
-    this.bleCtrl.write(data);
+  goSetGroupOther(gid,deviceId){
+    let data = new Uint8Array([_START,_CMD_SET_GROUP,gid,_END]);
+    this.bleCtrl.connectOnce(deviceId).subscribe(
+      isScc=>{
+        if(isScc){
+          this.bleCtrl.write(data,
+            (id)=>{
+              this.devicesData.modify(id,null,gid).subscribe();
+              alert('修改群組成功！');
+            },
+            (id)=>{
+              this.devicesData.modify(id,null,gid).subscribe();
+              alert('成功連接但傳送時失敗，但仍會在APP顯示方才所更改的群組值');
+            },true
+          );
+        }else{
+          this.devicesData.modify(deviceId,null,gid).subscribe();
+          alert('修改該裝置群組失敗(找不到裝置)，但仍會在APP顯示方才所更改的群組值');
+        }
+      }
+    );
   }
-  goManual(multi,type,group){
-    let data = new Uint8Array([_START,_CMD_MANUAL_MODE,multi,type,group,_END]);
-    this.bleCtrl.write(data);
-  }
-  goSchedule(arr){
+  goSetGroup(gid){
+    let data = new Uint8Array([_START,_CMD_SET_GROUP,gid,_END]);
+    this.bleCtrl.write(data,
+      (id)=>{
+        this.devicesData.modify(id,null,gid);
+        alert('修改群組成功！');
+      },
+      (id)=>{
+        this.devicesData.modify(id,null,gid);
+        alert('成功連接但傳送時失敗，但仍會在APP顯示方才所更改的群組值');
+      },true
+    );
 
+    /*this.bleCtrl.write(data).subscribe(
+      (id)=>{
+        this.devicesData.modify(id,null,gid);
+        alert('修改群組成功！');
+      },
+      (id)=>{ //失敗仍然修改 devicesData"的群組值
+        this.devicesData.modify(id,null,gid);
+        alert('修改該裝置群組失敗，但仍會在APP顯示方才所更改的群組值');
+      }
+    );*/
   }
-  goDev(multi,group,arr){
-    let data = new Uint8Array([_START,_CMD_DEV_MODE,multi,group, ...arr ,_END]);
+  goManual(multi,type,gid){
+    let data = new Uint8Array([_START,_CMD_MANUAL_MODE,multi,type,gid,_END]);
     this.bleCtrl.write(data);
+  }
+  goSchedule(sectionsList:SectionDataType[],gid){
+    let time = new Date();
+    let timeArr = new Uint8Array([_START,_CMD_TIME,time.getHours(),time.getMinutes(),time.getSeconds(),_END]);
+    let data = new Uint8Array([_START,_CMD_SCHEDULE_MODE,0,0,gid,0,0,0xAA,_END]);
+    data = this._appendBuffer(timeArr,data);
+    let cursor = 1;
+    sectionsList.forEach(val => {
+      data = this._appendBuffer(data,new Uint8Array([
+        _START,
+        _CMD_SCHEDULE_MODE,
+        val.multiple,
+        val.mode,
+        gid,
+        val.time_num[0],
+        val.time_num[1],
+        cursor++,
+        _END])
+      );
+    });
+    return this.bleCtrl.write_o(data);
+     
+    //this.bleCtrl.write(data);
+  }
+  private _appendBuffer (buffer1, buffer2) {
+    let tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
+    tmp.set(new Uint8Array(buffer1), 0);
+    tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
+    return tmp;
+  };
+  goDev(multi,gid,arr){
+    let data = new Uint8Array([_START,_CMD_DEV_MODE,multi,gid, ...arr ,_END]);
+    this.bleCtrl.write(data);;
   }
   goFan(speed){
     let data = new Uint8Array([_START,_CMD_FAN_SPEED,speed ,_END]);
-    this.bleCtrl.write(data);
+    this.bleCtrl.write(data);;
   }
 
 

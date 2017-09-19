@@ -14,12 +14,12 @@
         </ion-buttons>
     <ion-title>devMode</ion-title>
     <ion-buttons end>
+        <button ion-button icon-only color="royal" (click)="showEdit()">
+            <ion-icon name="settings" ></ion-icon>
+        </button>
       <button ion-button icon-only color="royal" (click)="openFanModal()">
           <ion-icon name="speedometer" ></ion-icon>
         </button>
-      <button ion-button icon-only color="royal" (click)="devModeSetting()">
-        <ion-icon name="create" ></ion-icon>
-      </button>
       <button ion-button icon-only color="royal" (click)="openBleModal()">
         <ion-icon name="bluetooth" ></ion-icon>
       </button>
@@ -32,53 +32,25 @@
         </ng-template>-->
 
 <ion-content padding>
+    <ion-fab right bottom>
+        <button (click)="addDevSetting()" ion-fab color="primary"><ion-icon name="add"></ion-icon></button>
+    
+    </ion-fab>
     <ion-item>
         <ion-icon name="ios-pricetags-outline" item-start></ion-icon>
         <ion-label>群組</ion-label>
         <ion-select interface="alert" multiple="true" cancelText="取消" [(ngModel)]="deviceMeta.groups">
-          <ion-option *ngFor="let type of lightsGroups; let i = index" value="{{type.id}}">{{type.name}} (#{{type.id}})</ion-option>
+          <ion-option *ngFor="let type of lightsGroups|async; let i = index" value="{{type.id}}">{{type.name}} (#{{type.id}})</ion-option>
         </ion-select>
-      </ion-item>
-      <ion-item>
-          <ion-range min="0" max="100" pin="true" [(ngModel)]="deviceMeta.curMultiple">
-            <ion-icon range-left small name="sunny"></ion-icon>
-            <ion-icon range-right name="sunny"></ion-icon>
-          </ion-range>
-        </ion-item>
-  <ion-grid class="cont-lines">
-    <ion-row align-items-center justify-content-center>
-      <ng-container *ngFor="let line of saveSettings.lightLinesArr.slice(0,4); let i = index; trackBy: trackById">
+    </ion-item>
+    <ion-grid class="dev-btns-cont">
+        <ion-row text-center align-items-center justify-content-center>
+            <ion-col *ngFor="let item of devDataStore.list;let idx=index;" col-4 align-self-center>
+                <button (click)="triggerDevBtn(idx)" ion-button round color="light"> <ion-icon *ngIf="saveSettings.isEdit" name="settings"></ion-icon>
+                </button>
+                <p>{{item.name}}</p>  
+            </ion-col>
+        </ion-row>
+    </ion-grid>
 
-        <ion-col align-self-center>
-          <number-picker [(ngModel)]="saveSettings.lightLinesArr[i+0].value" [customClick]="testNumWheel" [description]="'No.'+(i+1)" [width]="'3rem'"
-            [min]="0" [max]="100" [step]="1" [precision]="1" [inputDisabled]="false" (onChange)="onNumberChanged($event)"></number-picker>
-        </ion-col>
-
-      </ng-container>
-    </ion-row>
-    <hr>
-    <ion-row align-items-center justify-content-center>
-      <ng-container *ngFor="let line of saveSettings.lightLinesArr.slice(4,8); let i = index">
-
-        <ion-col align-self-center>
-          <number-picker [(ngModel)]="saveSettings.lightLinesArr[i+4].value" [customClick]="testNumWheel" [description]="'No.'+(i+1)" [width]="'3rem'"
-            [min]="0" [max]="100" [step]="1" [precision]="1" [inputDisabled]="false" (onChange)="onNumberChanged($event)"></number-picker>
-        </ion-col>
-
-      </ng-container>
-    </ion-row>
-    <hr>
-    <ion-row align-items-center justify-content-center>
-      <ng-container *ngFor="let line of saveSettings.lightLinesArr.slice(8,12); let i = index">
-
-        <ion-col align-self-center>
-          <number-picker [(ngModel)]="saveSettings.lightLinesArr[i+8].value" [description]="'No.'+(i+1)" [width]="'3rem'"
-            [min]="0" [max]="100" [step]="1" [precision]="1" [inputDisabled]="false" (inChange)="onNumberChanged($event)"></number-picker>
-        </ion-col>
-
-      </ng-container>
-    </ion-row>
-  </ion-grid>
-  <hr>
-  <button ion-button block color="dark" (click)="sendDev()">傳送指令</button>
 </ion-content>

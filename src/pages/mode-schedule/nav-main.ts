@@ -1,16 +1,19 @@
-import { OnInit, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { AlertController ,ViewController, ModalController, NavController, NavParams } from 'ionic-angular';
 
 import { ToastCtrlProvider } from  '../../providers/toast-ctrl/toast-ctrl'
-import { LightsInfoProvider, lightsType,lightsTypesPipe } from  '../../providers/lights-info/lights-info'
+import { LightsInfoProvider,lightsTypesPipe } from  '../../providers/lights-info/lights-info'
 //import { SectionsDataProvider,sectioDataType } from '../../providers/sections-data/sections-data';
 import { PatternsDataProvider,PatternDataType,SectionDataType } from '../../providers/patterns-data/patterns-data';
 
 import 'rxjs/add/operator/map';
-import { Observable } from 'rxjs/Observable';
+
+import { BleOperatorPage } from '../ble-operator/ble-operator';
+//import { BleCtrlProvider } from '../../providers/ble-ctrl/ble-ctrl';
+import { BleCommandProvider } from '../../providers/ble-command/ble-command';
 //Math.floor(new Date().getTime()%(86400000)/60000)*60000;
 
-const _colNumver = 2;
+
 /**
  * Note :
  * NoSql tables:
@@ -67,11 +70,7 @@ export interface patternData {
   "lastSended" : boolean,
   "sections" : Array<any>
 }
-interface patternsStoreType {
-  //"gid": number,
-  "list" : Array <patternData>,
-  "list_o": Observable<PatternDataType[]>
-}
+
 @Component({
     templateUrl: './nav-main/pr1-patterns.html',
     
@@ -80,7 +79,10 @@ export class pr1patternsNav {
   parentParam : object; 
   patternsStore :any={
     "list" :{},
-    "list_o": {}
+    "list_o": {},
+    "latestPattern":{},
+    "latestPattern_pidx":null,
+
   };
   /*rows = Array.from(
     Array(Math.ceil(this.patternsStore.list.length/_colNumver)).keys()
@@ -90,7 +92,7 @@ export class pr1patternsNav {
   constructor(
     private toastCtrl:ToastCtrlProvider,
     private pattersProvider :PatternsDataProvider,
-    private lightInfos: LightsInfoProvider,
+    //private lightInfos: LightsInfoProvider,
     public navCtrl: NavController,
     public navParams: NavParams) {
       if(!this.navParams.data["gid"]) this.navParams.data["gid"]=0;
@@ -105,6 +107,35 @@ export class pr1patternsNav {
     }
 
   ionViewDidEnter(){
+    this.checkLatestPattern();
+  }
+  checkLatestPattern(){
+    let temp = {
+      "latest":{"lastSendedTime":0},
+      "latest_pidx":0
+    }
+    this.patternsStore.list_o.subscribe(
+      list => {
+        list.forEach((val,idx) => {
+          if(val.lastSendedTime!=0&&val.lastSendedTime > temp.latest.lastSendedTime){
+            temp.latest = val;
+            temp.latest_pidx = idx;
+          }
+        });
+        if(temp.latest.lastSendedTime!=0){
+          this.patternsStore.latestPattern = temp.latest;
+          this.patternsStore.latestPattern_pidx= temp.latest_pidx;
+        }
+        else {
+          this.patternsStore.latestPattern = {
+            "lastSendedTime":null,
+            "lastModified":null
+          };
+          this.patternsStore.latestPattern_pidx= null;
+        }
+      }
+    );
+    
   }
   /** */
   goNavModes(goGid,goPidx){
@@ -113,7 +144,8 @@ export class pr1patternsNav {
       arr => {
         let tmpArr = arr.filter((obj,idx) => (obj.gid==goGid)&&(idx==goPidx));
         this.navCtrl.push(pr2ModesNav, {
-          "pidx":goPidx,
+          "gid": this.navParams.data["gid"],
+          "pidx": goPidx,
           "pattern": tmpArr[0]
         });
       }
@@ -177,12 +209,14 @@ let cursor = 0;
 })
 export class pr2ModesNav {
     infos: {
+      "gid" : number,
       "pidx" : number,
       "pattern" : PatternDataType
     };
     sections: Array<SectionDataType> = [];
     isShowDel : boolean;
     constructor(
+      private bleCmd: BleCommandProvider,
       private pattersProvider :PatternsDataProvider,
       private toastCtrl: ToastCtrlProvider,
       private modalCtrl: ModalController,
@@ -191,6 +225,7 @@ export class pr2ModesNav {
       public navParams: NavParams){
         this.isShowDel = false;    
         this.infos = {
+          "gid": this.navParams.data["gid"],
           "pidx" : this.navParams.data["pidx"],
           "pattern" : this.navParams.data["pattern"]
         }
@@ -200,15 +235,29 @@ export class pr2ModesNav {
         console.log(this.infos);
       }
     ionViewDidEnter() {
+
     }
-    saveSections(){
+    openBleModal(){
+      let modal = this.modalCtrl.create(BleOperatorPage);
+      modal.present();
+    }
+    saveSections(isSended=false){
       this.pattersProvider.updatePattern(
         this.infos['pattern'],
-        this.infos['pidx']).subscribe(
+        this.infos['pidx'],isSended).subscribe(
           (scc,res) => {if(!scc){this.toastCtrl.showToast('儲存失敗');console.log(scc);}else this.toastCtrl.showToast('儲存成功！');}
         );
       //this.infos['lastModified'] = new Date().getTime();
       //console.log(this.infos['lastModified']);
+    }
+    sendSections(){
+      // 沒有儲存就傳送有問題！
+      this.bleCmd.goSchedule(this.sections,this.infos.gid).subscribe(
+        ()=>{
+          this.saveSections(true);
+        }
+      );
+      
     }
     isShowDelBtn(){
       this.isShowDel = !this.isShowDel;
@@ -283,7 +332,7 @@ export class modalSectionEdit{
     private lightsType: LightsInfoProvider,
     public viewCtrl: ViewController,
     public navParams: NavParams) {
-      this.lightsTypes = lightsType.getTypes();
+      this.lightsTypes = this.lightsType.getTypes();
       this.settings= {
         "mode":1,
         "time":this.navParams.data["time"],

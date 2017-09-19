@@ -4,6 +4,7 @@ import { ToastController } from 'ionic-angular';
 import { IonicPage } from 'ionic-angular';  // LazyLoading
 import { BleOperatorPage } from '../ble-operator/ble-operator';
 import { BleCommandProvider } from  '../../providers/ble-command/ble-command'
+import { LightsGoupsProvider } from '../../providers/lights-goups/lights-goups'
 
 
 import { LightsInfoProvider } from  '../../providers/lights-info/lights-info'
@@ -17,27 +18,28 @@ export class ModeManual {
     "groups" : Array<number>,
     "curType" : number,
     "curMultiple": number, 
+    "groupsList": Array<object>
   };
   lightsType : Array<object>;
-  lightsGroups : Array<object>=[
-    {'id':0,'name':'測試0'},
-    {'id':1,'name':'測試1'},
-    {'id':2,'name':'測試2'},
-    {'id':3,'name':'測試3'},
-    {'id':50,'name':'測試50'}
-  ];
+  lightsGroupsList : Array<object>;
   constructor(
+    //private blePage: BleOperatorPage,
+    private lightsGroups:LightsGoupsProvider,
     private bleCmd: BleCommandProvider,
     public modalCtrl: ModalController,
     private lightsInfo: LightsInfoProvider,
     public navCtrl: NavController,
     public navParams: NavParams,
     public toastCtrl:ToastController) {
+
       this.deviceMeta = {
-        "groups" : [0,1,2,3,50],
+        "groups" : [0],
         "curType" : 1,
         "curMultiple":0, 
+        "groupsList": this.lightsGroups.getGroups()
       };
+      //this.deviceMeta.groupsList.push({'id':0,'name':'廣播'});
+      //this.deviceMeta.groupsList.push({'id':1,'name':'測試1'});
     
   // 
   }
@@ -68,8 +70,6 @@ export class ModeManual {
          }, 1000*idx)
       });
     }
-    
-
   }
   openBleModal(){
     let modal = this.modalCtrl.create(BleOperatorPage);

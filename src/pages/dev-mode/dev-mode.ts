@@ -1,20 +1,29 @@
 import { Component } from '@angular/core';
-import { AlertController,ModalController,NavController } from 'ionic-angular';
-import { LightsInfoProvider } from  '../../providers/lights-info/lights-info'
+import { NavParams,AlertController,ModalController,NavController } from 'ionic-angular';
 import { BleCommandProvider } from  '../../providers/ble-command/ble-command'
-
+import { LightsGoupsProvider } from '../../providers/lights-goups/lights-goups'
 import { BleOperatorPage } from '../ble-operator/ble-operator';
 import { NativeStorage } from '@ionic-native/native-storage';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/take';
 import 'rxjs/add/observable/fromPromise';
 import { Observable } from 'rxjs/Observable';
-
+const _DEV_SETTINGS_LIST = 'devValueList';
+interface devSetting {
+  "name":string,
+  "value":Array<number>,
+  "multiple":number,
+  "color":string
+}
 @Component({
   selector: 'page-dev-mode',
   templateUrl: 'dev-mode.html',
 })
 export class DevMode {
+  devDataStore:{
+    "list": Array<devSetting>
+  };
+
   numTest: object = {'0':99};
   ggg: object = {value:1};
   testNumWheel : Function =function(){
@@ -25,49 +34,81 @@ export class DevMode {
   }>*/
   
   saveSettings : {
-    "devValueList":Array<{
-      "name":string,
-      "value":Array<number>
-    }>,
-    "lightLinesArr":Array<{
-      value:number
-    }>
+    "isEdit":boolean,
   }
-  lightsGroups : Array<object>=[
-    {'id':0,'name':'測試0'},
-    {'id':1,'name':'測試1'},
-    {'id':2,'name':'測試2'},
-    {'id':3,'name':'測試3'},
-    {'id':50,'name':'測試50'}
-  ];
+  lightsGroups : Array<any>;
   deviceMeta = {
-    "groups" : [50],
+    "groups" : [0],
     "curMultiple":0, 
   };
   constructor(
+    private lightsGroupsProv:LightsGoupsProvider,
     private bleCmd: BleCommandProvider,
     private storage:NativeStorage,
     private alertCtrl:AlertController,
     public modalCtrl: ModalController,
     public navCtrl: NavController,
-    private lightsInfo: LightsInfoProvider) {
+    ) {
+    this.lightsGroups = this.lightsGroupsProv.getGroups();
     //this.lightLinesArr =    
     this.saveSettings= {
-      "devValueList":[],
-      "lightLinesArr":Array.from( new Array(12),((val,index) => ({'value':index+1}) )) // [1 to 12] 
+      "isEdit":false,
     };
-    Observable.fromPromise(this.storage.getItem("devValueList")).subscribe(
+    this.devDataStore = {
+      "list":[]
+    };
+  }
+  ionViewDidEnter(){
+    Observable.fromPromise(this.storage.getItem(_DEV_SETTINGS_LIST)).subscribe(
       value=>{
         if(typeof value != 'object') value = JSON.parse(value);
-        this.saveSettings.devValueList = value;
+        this.devDataStore.list = value;
       },
       ()=>{
-        this.storage.setItem("devValueList",[]).then(); 
+        this.devDataStore.list = [
+            {"name":"測試1","value":[1,2,3,4,5,6,7,8,9,10,11,12],"multiple":20,"color":"blue"},
+            {"name":"測試2","value":[1,2,3,4,5,6,7,8,9,10,11,12],"multiple":20,"color":"blue"},
+            {"name":"測試3","value":[1,2,3,4,5,6,7,8,9,10,11,12],"multiple":20,"color":"blue"},
+            {"name":"測試3","value":[1,2,3,4,5,6,7,8,9,10,11,12],"multiple":20,"color":"blue"},
+          ];
+        this.storage.setItem(_DEV_SETTINGS_LIST,this.devDataStore.list).then(); 
       }
     );
-
-
   }
+  showEdit(){
+    this.saveSettings.isEdit = !this.saveSettings.isEdit;
+  }
+  triggerDevBtn(idx:number){
+    console.log('triggerDevBtn('+idx+')');
+    if(this.saveSettings.isEdit){
+      this.editDevSetting(idx);
+    }else{
+      this.sendDevSetting(idx);
+    }
+  }
+  addDevSetting(){
+    this.devDataStore.list.push({"name":"按鈕","value":[0,0,0,0,0,0,0,0,0,0,0,0],"multiple":30,"color":"blue"});
+    this.saveSettingsToStorage();
+  }
+  saveSettingsToStorage(){
+    Observable.fromPromise(this.storage.setItem(_DEV_SETTINGS_LIST,this.devDataStore.list))
+      .take(1).subscribe(
+        () => {console.log('成功！');},
+        () => {alert('未知的錯誤！');}
+      );
+  }
+  editDevSetting(idx:number){
+    this.navCtrl.push(editDevSettingPage, { "idx":idx });
+  }
+  sendDevSetting(idx:number){
+    let tmp = this.devDataStore.list[idx];
+    this.bleCmd.goDev(
+      tmp.multiple,
+      this.deviceMeta.groups,
+      tmp.value
+    );
+  }
+/*
   sendDev(){
     let multi=this.deviceMeta.curMultiple;
     this.deviceMeta.groups.forEach((group,idx) => {
@@ -79,7 +120,7 @@ export class DevMode {
         );
        }, 1000*idx,group)
     });
-  }
+  }*/
   openBleModal(){
     let modal = this.modalCtrl.create(BleOperatorPage);
     modal.present();
@@ -112,6 +153,7 @@ export class DevMode {
     });
     confirm.present();
   }
+/*
   devModeSetting(){
     //console.log(this.saveSettings.devValueList[0]);
     let tmplist = this.saveSettings.devValueList.map( (val,idx) =>({
@@ -201,18 +243,141 @@ export class DevMode {
     confirm.present();
   }
   saveSettingsToStorage(){
-    Observable.fromPromise(this.storage.setItem("devValueList",this.saveSettings.devValueList))
+    Observable.fromPromise(this.storage.setItem(_DEV_SETTINGS_LIST,this.saveSettings.devValueList))
       .take(1).subscribe(
         () => {alert('儲存成功！');},
         () => {alert('未知的錯誤！');}
       );
   }
-  onNumberChanged(event){
-    console.log(event);
-  }
-
+  
+*/
+onNumberChanged(event){
+  console.log(event);
+}
   ionViewDidLoad() {
     console.log('ionViewDidLoad DevMode');
   }
 
+}
+
+@Component({
+  templateUrl: 'edit-setting.html'
+})
+export class editDevSettingPage {
+  lightsGroups : Array<any>;
+  saveSettings : {
+    "settingMeta":devSetting;
+    "devValueList":Array<devSetting>,
+    "lightLinesArr":Array<{
+      value:number
+    }>
+  }
+  
+
+  constructor(
+    private storage:NativeStorage,
+    private alertCtrl: AlertController,
+    private lightsGroupsProv:LightsGoupsProvider,
+    private navCtrl: NavParams,
+    public navigaCtrl: NavController
+  ){
+    this.lightsGroups = this.lightsGroupsProv.getGroups();
+    this.saveSettings= {
+      "settingMeta":{
+        "name":null,
+        "value":[],
+        "multiple":0,
+        "color":"string"
+      },
+      "devValueList":[],
+      "lightLinesArr":Array.from( new Array(12),((val,index) => ({'value':0}) )) // [1 to 12] 
+    };
+
+  }
+  ionViewDidEnter(){
+    Observable.fromPromise(this.storage.getItem(_DEV_SETTINGS_LIST)).subscribe(
+      value=>{
+        if(typeof value != 'object') value = JSON.parse(value);
+        let tmpSetting = value[this.navCtrl.data["idx"]];
+        this.saveSettings.settingMeta = {
+          "name":tmpSetting.name,
+          "value":tmpSetting.value,
+          "multiple":tmpSetting.multiple,
+          "color":tmpSetting.color
+        }
+        this.saveSettings.devValueList = value;
+        this.saveSettings.lightLinesArr = tmpSetting.value.map(val=>({'value':val}));
+      },
+      ()=>{}
+    );
+  }
+  remove(){
+    let confirm = this.alertCtrl.create({
+      title: '刪除此按鈕',
+      message: '確定刪除此組按鈕設定？',
+      buttons: [
+        {
+          text: '取消',
+          handler: () => {
+            console.log('Disagree clicked');
+          }
+        },
+        {
+          text: '確定',
+          handler: () => {
+            this.saveSettings.devValueList.splice(this.navCtrl.data["idx"],1);
+            Observable.fromPromise(this.storage.setItem(_DEV_SETTINGS_LIST,this.saveSettings.devValueList))
+            .take(1).subscribe(
+              () => {
+                this.navigaCtrl.pop();
+              },
+              () => {alert('未知的錯誤！');}
+            );
+          }
+        }
+      ]
+    });
+    confirm.present();
+    
+  }
+  editName(){
+    let alert = this.alertCtrl.create({
+      title: '更改名稱',
+      inputs: [
+        {
+          name: 'name',
+          placeholder: '請輸入按鈕名稱...'
+        }
+      ],
+      buttons: [
+        {
+          text: '取消',
+          role: 'cancel',
+          handler: data => {
+            console.log('Cancel clicked');
+          }
+        },
+        {
+          text: '確定',
+          handler: data => {
+            this.saveSettings.settingMeta.name = data.name;
+          }
+        }
+      ]
+    });
+    alert.present();
+  }
+
+  saveSettingsToStorage(){
+    console.log(this.saveSettings.lightLinesArr);
+    this.saveSettings.settingMeta.value = this.saveSettings.lightLinesArr.map(val=>val.value);
+    console.log(this.saveSettings.settingMeta);
+    this.saveSettings.devValueList[this.navCtrl.data["idx"]] = this.saveSettings.settingMeta;
+
+    Observable.fromPromise(this.storage.setItem(_DEV_SETTINGS_LIST,this.saveSettings.devValueList))
+      .take(1).subscribe(
+        () => {alert('成功！');},
+        () => {alert('未知的錯誤！');}
+      );
+  }
 }

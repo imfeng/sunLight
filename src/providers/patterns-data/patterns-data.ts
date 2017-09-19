@@ -25,7 +25,7 @@ export interface PatternDataType {  // sql/"patternsArr-_GID_"
   "gid" : number,
   //"pid" : number,
   "p_name":string,
-  "isSended" : boolean,
+  "lastSendedTime" : number,
   "lastModified":number,
   "sections" : Array<any>,
   //"sectionsId" : number  // => sql/"sectionsArr-_sectionsId_"
@@ -137,7 +137,7 @@ export class PatternsDataProvider {
               "sections":[],
               //"sectionsId":newSid,
               "p_name":"自訂排程",
-              "isSended" : false,
+              "lastSendedTime" : 0,
               "lastModified":0,
             });
             //let newSid = this.meta.sectionsMetaAdd();
@@ -154,20 +154,23 @@ export class PatternsDataProvider {
     return sub;
   }
 
-  updatePattern(pattern:PatternDataType,pidx:number){
+  updatePattern(pattern:PatternDataType,pidx:number,sended=false){
     /* DEBUG */
     let sub = Observable.create(
       observer => {
         this.infos.take(1).subscribe(
           arr => {
-
+            if(sended)arr[pidx].lastSendedTime== new Date().getTime();
             arr[pidx] = pattern;
             arr[pidx].lastModified = new Date().getTime();
             console.log('save section @gid:'+arr[pidx].gid);
             let tempSetOb = Observable.fromPromise(this.storage.setItem(__REF_BASE_PATTERNS+pattern["gid"],arr));
             //this.sectionsProvider.createNew(newSid).withLatestFrom(sub).map( (arr)=> arr );
-            tempSetOb.subscribe(
-              scc => observer.next(true,null),
+            tempSetOb.take(1).subscribe(
+              scc => {
+                observer.next(true,null);
+                //this.loadAll(pattern["gid"]);
+              },
               err => observer.next(false,err)
             );
           

@@ -23,14 +23,14 @@
   <ion-list inset no-lines>
     <ion-list-header>
       最後同步的「排程組合」
-      <ion-note item-end>2 days ago sended</ion-note>
+      <ion-note item-end>{{patternsStore.latestPattern.lastSendedTime||""}}</ion-note>
     </ion-list-header>
     <ion-item>
       <ion-icon name="bulb" item-start color="primary"></ion-icon>
 
-      <h2>排程1</h2>
-      <p>2017/09/03 最後編輯</p>
-      <button ion-button outline item-end><ion-icon name="ios-open-outline"></ion-icon></button>
+      <h2>{{patternsStore.latestPattern.p_name||"無最新同步的排程"}}</h2>
+      <p>{{patternsStore.latestPattern.lastModified||""}}</p>
+      <button *ngIf="patternsStore.latest_pidx" (click)="goNavModes(patternsStore.latestPattern.gid,patternsStore.latestPattern_pidx)" ion-button outline item-end><ion-icon name="ios-open-outline"></ion-icon></button>
       <!-- <ion-note class="note-time" item-end>2 days ago sended</ion-note> -->
     </ion-item>
 
