@@ -101,8 +101,8 @@ export class ModeSchedulePage implements OnInit{
   }
   
   /** */
-  goPatterns(goGid:number){   // lightsGroupsData .getGid(gid)
-    this.navCtrl.push(subMain.pr1patternsNav, { "gid": goGid });
+  goPatterns(goGid:number,goName:string){   // lightsGroupsData .getGid(gid)
+    this.navCtrl.push(subMain.pr1patternsNav, { "gid": goGid,"name": goName});
   }
   goDevices(goGid:number){  //TODO
     this.navCtrl.push(subMain.pr1patternsNav, { "gid": goGid });

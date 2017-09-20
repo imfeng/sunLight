@@ -36,12 +36,20 @@ export class ModeManual {
         "groups" : [0],
         "curType" : 1,
         "curMultiple":0, 
-        "groupsList": this.lightsGroups.getGroups()
+        "groupsList": []
       };
       //this.deviceMeta.groupsList.push({'id':0,'name':'廣播'});
       //this.deviceMeta.groupsList.push({'id':1,'name':'測試1'});
+      
     
   // 
+  }
+  ionViewDidEnter(){
+    this.lightsGroups.getGroups().subscribe(
+      list => {
+        this.deviceMeta.groupsList = list;
+      }
+    );
   }
   ngOnInit() {
     this.lightsType = this.lightsInfo.getTypes();
@@ -72,8 +80,9 @@ export class ModeManual {
     }
   }
   openBleModal(){
-    let modal = this.modalCtrl.create(BleOperatorPage);
-    modal.present();
+    this.navCtrl.push(BleOperatorPage);
+    /*let modal = this.modalCtrl.create(BleOperatorPage);
+    modal.present();*/
   }
   ionViewDidLoad() {
     console.log('ionViewDidLoad ModeManual');

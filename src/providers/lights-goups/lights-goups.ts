@@ -84,7 +84,7 @@ export class LightsGoupsProvider {
             groupsList.push({'id':0,'name':'廣播'});
             console.log(groupsList);
             observer.next(groupsList);
-            //observer.complete();
+            observer.complete();
           }
         );
       }
@@ -105,7 +105,7 @@ export class LightsGoupsProvider {
       },
       err => {
         if(err.code==2){
-          console.log('>>> '+__REF_BASE + ' NULL!!!! ADDED array!');
+          console.log('>>> '+__REF_BASE + ' NULL!!!! ADDED array!');  
           Observable.fromPromise(this.storage.setItem(__REF_BASE,[])).subscribe(
             arr=>{
               this.dataStore.infos = arr;

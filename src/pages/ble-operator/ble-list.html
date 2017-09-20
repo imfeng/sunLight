@@ -32,7 +32,7 @@
         <ion-icon item-start name="sunny"></ion-icon>
         <h2>{{ device.name || '無名稱' }}</h2>
         <p>{{ device.id }} ( Rx: {{ device.rssi }} )</p>
-        <ion-badge item-end>#1</ion-badge>
+        <ion-badge item-end>{{ device.group || '?' }}</ion-badge>
         <button (click)="connectDevice(device.id)" ion-button outline item-end>connect</button>
       </ion-item>
 

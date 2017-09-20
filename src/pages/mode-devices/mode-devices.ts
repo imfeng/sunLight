@@ -29,8 +29,9 @@ export class ModeDevicesPage {
     this.navCtrl.push(editDevicePage, { "id":id });
   }
   openBleModal(){
-    let modal = this.modalCtrl.create(BleOperatorPage);
-    modal.present();
+    this.navCtrl.push(BleOperatorPage);
+   /* let modal = this.modalCtrl.create(BleOperatorPage);
+    modal.present();*/
   }
   ionViewDidLoad() {
     console.log('ionViewDidLoad ModeDevicesPage');
@@ -119,8 +120,8 @@ export class editDevicePage {
         {
           text: '修改',
           handler: data => {
-
-            this.bleCmd.goSetGroupOther(data.gid,this.deviceInfo.data.id);
+            let gid = parseInt(data.gid);
+            this.bleCmd.goSetGroupOther(gid,this.deviceInfo.data.id);
 
             console.log('傳送');
           }

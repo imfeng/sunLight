@@ -37,9 +37,10 @@ export class BleCommandProvider {
   goSyncTime(){
     let time = new Date();
     let data = new Uint8Array([_START,_CMD_TIME,time.getHours(),time.getMinutes(),time.getSeconds(),_END]);
-    this.bleCtrl.write(data);
+    this.bleCtrl.write(data,()=>{},()=>{},true);
   }
   goSetGroupOther(gid,deviceId){
+    gid = parseInt(gid);
     let data = new Uint8Array([_START,_CMD_SET_GROUP,gid,_END]);
     this.bleCtrl.connectOnce(deviceId).subscribe(
       isScc=>{
@@ -52,7 +53,7 @@ export class BleCommandProvider {
             (id)=>{
               this.devicesData.modify(id,null,gid).subscribe();
               alert('成功連接但傳送時失敗，但仍會在APP顯示方才所更改的群組值');
-            },true
+            },true,deviceId
           );
         }else{
           this.devicesData.modify(deviceId,null,gid).subscribe();
@@ -62,14 +63,15 @@ export class BleCommandProvider {
     );
   }
   goSetGroup(gid){
+    gid = parseInt(gid);
     let data = new Uint8Array([_START,_CMD_SET_GROUP,gid,_END]);
     this.bleCtrl.write(data,
       (id)=>{
-        this.devicesData.modify(id,null,gid);
+        this.devicesData.modify(id,null,gid).subscribe();
         alert('修改群組成功！');
       },
       (id)=>{
-        this.devicesData.modify(id,null,gid);
+        this.devicesData.modify(id,null,gid).subscribe();
         alert('成功連接但傳送時失敗，但仍會在APP顯示方才所更改的群組值');
       },true
     );
@@ -90,12 +92,43 @@ export class BleCommandProvider {
     this.bleCtrl.write(data);
   }
   goSchedule(sectionsList:SectionDataType[],gid){
-    let time = new Date();
-    let timeArr = new Uint8Array([_START,_CMD_TIME,time.getHours(),time.getMinutes(),time.getSeconds(),_END]);
-    let data = new Uint8Array([_START,_CMD_SCHEDULE_MODE,0,0,gid,0,0,0xAA,_END]);
-    data = this._appendBuffer(timeArr,data);
+    //let time = new Date();
+    //let timeArr = new Uint8Array([_START,_CMD_TIME,time.getHours(),time.getMinutes(),time.getSeconds(),_END]);
+    //let data = new Uint8Array([_START,_CMD_SCHEDULE_MODE,0,0,gid,0,0,0xAA,_END]);
+    //data = this._appendBuffer(timeArr,data);
+    let cmds =[];
+    let data = new Uint8Array([]);
     let cursor = 1;
     sectionsList.forEach(val => {
+      cmds.push(
+        new Uint8Array([
+          _START,
+          _CMD_SCHEDULE_MODE,
+          val.multiple,
+          val.mode,
+          gid,
+          val.time_num[0],
+          val.time_num[1],
+          cursor++,
+          _END])
+      );
+    });/*
+    for(let i=cursor;i<=30;i++){
+      cmds.push(
+        new Uint8Array([
+          _START,
+          _CMD_SCHEDULE_MODE,
+          0,
+          0,
+          gid,
+          0,
+          0,
+          i,
+          _END])
+      );
+    }*/
+
+    /*sectionsList.forEach(val => {
       data = this._appendBuffer(data,new Uint8Array([
         _START,
         _CMD_SCHEDULE_MODE,
@@ -107,8 +140,9 @@ export class BleCommandProvider {
         cursor++,
         _END])
       );
-    });
-    return this.bleCtrl.write_o(data);
+    });*/
+
+    return this.bleCtrl.write_many(cmds);
      
     //this.bleCtrl.write(data);
   }

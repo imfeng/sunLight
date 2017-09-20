@@ -43,7 +43,7 @@ export class DevicesDataProvider {
       (arr) =>{
         if(typeof arr != 'object') JSON.parse(arr);
         this.dataStore.deviceList = arr;
-        this._list.next(this.dataStore.deviceList);
+        this._list.next(Object.assign({}, this.dataStore).deviceList);
       },
       (error)=>{
         if(error.code.code=2){
@@ -82,26 +82,41 @@ export class DevicesDataProvider {
     );
     return tmpOb;
   }
-  check(d_id,o_name){
-    let finded = this.dataStore.deviceList.find(
-      (val, index, array) =>{
-        if(val.id==d_id)
-          return true;
-        else
-          return false;
+  check(device,toAdd=true){  //  bleCtrl use
+    return Observable.create(
+      observer => {
+        this.list.subscribe(
+          list =>{
+            let finded = list.find(
+              (val) =>{
+                if(val.id==device.id)
+                  return true;
+                else
+                  return false;
+              }
+            );
+            if(!finded && toAdd){
+              let newDevice = {
+                "name": device.name,
+                "o_name" :device.name,
+                "id": device.id,
+                "group":null,
+                "last_sended": 0
+              };
+              this.add(newDevice);
+              observer.next(newDevice);
+            }else if(!finded && !toAdd){
+              observer.next(device);
+            }else observer.next(finded);
+            observer.complete();
+          }
+        );
       }
     );
-    if(!finded){
-      let newDevice = {
-        "name": o_name,
-        "o_name" :o_name,
-        "id": d_id,
-        "group":undefined,
-        "last_sended": 0
-      };
-      this.add(newDevice);
-      return newDevice;
-    }else return finded[0];
+
+  }
+  del(deviceId:string){
+    // TODO
   }
   add( dd:lightDeviceType ){
     this.dataStore.deviceList.push(dd);
@@ -128,16 +143,18 @@ export class DevicesDataProvider {
                   (obj)=>{
                     this._list.next(obj);
                     observer.next(true);
-                    console.log('modify成功!!');
-                    console.log(this.dataStore.deviceList);
+                    observer.complete();
+                    console.log('>>> modify成功!!');
+                    //console.log(this.dataStore.deviceList);
                   },
-                  ()=>observer.error(false,'NO ITEM!')
+                  ()=>{observer.error(false,'NO ITEM!');observer.complete();}
                 );
               isNext =true;
             }else{
               if( !isNext && idx == this.dataStore.deviceList.length-1 ){
                 console.log(">>> DevicesDataProvider.modify() NOT FOUND device!");
-                observer.error(false,'NOT FOUND device!')
+                observer.error(false,'NOT FOUND device!');
+                observer.complete();
               }
             }
           }

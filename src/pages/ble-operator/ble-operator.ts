@@ -22,9 +22,17 @@ import { BleCommandProvider } from '../../providers/ble-command/ble-command';
   templateUrl: 'ble-operator.html',
 })
 export class BleOperatorPage implements OnInit{
-  @ViewChild('toggle') ionToggle: Toggle;
+  @ViewChild('toggleble') ionToggle: Toggle;
   blueInfo :{
-    "details":nowStatus
+    "details":Observable<nowStatus>,
+    "nowDevice":{
+      "hadConnected":boolean,
+      "id":string,
+      "name":string,
+      "o_name":string,
+      "group":number
+    }
+    //"details":nowStatus
   };
   bleToggle :{
     "checked" :boolean
@@ -41,20 +49,42 @@ export class BleOperatorPage implements OnInit{
     public navParams: NavParams,) {
       console.log('>>>>>>>>>>>>>>>>>>>>>>BleOperatorPage');
       this.blueInfo= {
-        "details":this.bleCtrl.dataStore
-      };
+        "details":this.bleCtrl.nowStatus,
+        "nowDevice":{
+          "hadConnected":false,
+          "id":null,
+          "name":null,
+          "o_name":null,
+          "group":null
+        }
+        //"details":this.bleCtrl.dataStore
+      };/*
       this.bleCtrl.nowStatus.subscribe(
         data => {
           this.blueInfo= {
             "details":this.bleCtrl.dataStore
           };
         }
-      );
-
+      );*/
       this.devices_list = this.devicesProv.list;
       this.bleToggle = {
-        "checked": this.blueInfo.details.isEnabled
+        "checked": false
       };
+  }
+  ionViewDidEnter(){
+    console.log('>>>>>>>>>>>>>>>>>>>>>>BleOperatorPage ionViewDidEnter');
+    this.blueInfo.details.take(1).subscribe(
+      obj=>{
+        this.blueInfo.nowDevice.hadConnected = obj.hadConnected;
+        this.blueInfo.nowDevice.id = obj.device.id;
+        this.blueInfo.nowDevice.name = obj.device.name;
+        this.blueInfo.nowDevice.o_name = obj.device.o_name;
+        this.blueInfo.nowDevice.group = obj.device.group;
+        this.bleToggle.checked =obj.isEnabled;
+        if(this.bleToggle.checked) this.ionToggle.checked = true;
+        else this.ionToggle.checked = false;
+      }
+    );
   }
   ngOnInit(){
   }
@@ -65,16 +95,14 @@ export class BleOperatorPage implements OnInit{
       //console.log(JSON.stringify(this.blueInfo));
       this.bleCtrl.enableBle().subscribe(
         ()=>{
-          this.bleToggle.checked =true;
+          this.bleToggle.checked = true;
+          this.ionToggle.checked = true;
         },
         ()=>{
           console.log('>>> BleOperatorPage.enableBle() FAILED!');
-          
-          
-          
           this.ngZone.run(() => {
             this.bleToggle.checked = false;
-            this.ionToggle.checked =false;
+            this.ionToggle.checked = false;
           });
         }
       );
@@ -83,7 +111,7 @@ export class BleOperatorPage implements OnInit{
       //this.bleToggle = false;
     }else{
       this.bleCtrl.disableBle();
-      this.bleToggle.checked = this.blueInfo.details.isEnabled;
+      //this.bleToggle.checked = this.blueInfo.details.isEnabled;
     }
     
     
@@ -98,11 +126,13 @@ export class BleOperatorPage implements OnInit{
   dismiss() {
     this.viewCtrl.dismiss();
   }
-  connectDevice(deviceId){
-    this.bleCtrl.connectDevice(deviceId,this.navCtrl.pop);
+  connectRecentDevice(deviceId){
+    this.bleCtrl.scanAndConnect(deviceId);
+    /*this.bleCtrl.scan();
+    this.bleCtrl.connectDevice(deviceId,this.navCtrl.pop);*/
   }
   modifyDeviceGroup(){
-    if(this.blueInfo.details.useable){
+    if(this.blueInfo.nowDevice.hadConnected){
       let confirm = this.alertCtrl.create({
         title: '調整群組 1~255',
         message: '數值"0"為無群組，修改時只會更改目前連結中的裝置',
@@ -123,7 +153,8 @@ export class BleOperatorPage implements OnInit{
           {
             text: '修改',
             handler: data => {
-              this.bleCmd.goSetGroup(data.gid);
+              let gid = parseInt(data.gid);
+              this.bleCmd.goSetGroup(gid);
               //console.log('傳送');
             }
           }
@@ -131,7 +162,7 @@ export class BleOperatorPage implements OnInit{
       });
       confirm.present();
     }else{
-      alert('this.blueInfo.details.useable FALSE!');
+      alert('尚未連接');
     }
   }
 }
@@ -157,7 +188,7 @@ export class bleListPage implements OnInit{
     this.platform.ready().then(ready=>{
       this.blueInfo = this.bleCtrl.dataStore;
       this.devices = this.bleCtrl.scanedDevices;
-      if(this.blueInfo["isEnabled"]){
+      if(this.blueInfo["isEnabled"]){ //TODO
         this.doRefresh();
         /* HACK refresher EVENT */
         /*this.refresher._top = this.content.contentTop + 'px';
@@ -180,8 +211,8 @@ export class bleListPage implements OnInit{
   }
 
   scan(){
-    console.log(JSON.stringify(this.blueInfo));
-    console.log(JSON.stringify(this.devices.list));
+    //console.log(JSON.stringify(this.blueInfo));
+    //console.log(JSON.stringify(this.devices.list));
     this.bleCtrl.scan();
   }
 

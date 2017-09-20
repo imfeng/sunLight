@@ -30,7 +30,7 @@
       <ion-icon name="ios-pricetags-outline" item-start></ion-icon>
       <ion-label>群組</ion-label>
       <ion-select interface="alert" multiple="true" cancelText="取消" [(ngModel)]="deviceMeta.groups">
-        <ion-option *ngFor="let type of deviceMeta.groupsList|async; let i = index" value="{{type.id}}">{{type.name}} (#{{type.id}})</ion-option>
+        <ion-option *ngFor="let type of deviceMeta.groupsList; let i = index" value="{{type.id}}">{{type.name}} (#{{type.id}})</ion-option>
       </ion-select>
     </ion-item>
     <ion-item>

@@ -76,7 +76,11 @@ export interface patternData {
     
 })
 export class pr1patternsNav {
-  parentParam : object; 
+  parentParam : object;
+  groupInfo: {
+    "gid":number,
+    "name":string
+  }
   patternsStore :any={
     "list" :{},
     "list_o": {},
@@ -96,6 +100,10 @@ export class pr1patternsNav {
     public navCtrl: NavController,
     public navParams: NavParams) {
       if(!this.navParams.data["gid"]) this.navParams.data["gid"]=0;
+      this.groupInfo = {
+        "gid":this.navParams.data["gid"],
+        "name":this.navParams.data["name"]
+      }
       this.patternsStore.list_o = this.pattersProvider.infos;
 
       let loader = this.toastCtrl.showLoading('讀取中...');
@@ -238,8 +246,9 @@ export class pr2ModesNav {
 
     }
     openBleModal(){
-      let modal = this.modalCtrl.create(BleOperatorPage);
-      modal.present();
+      this.navCtrl.push(BleOperatorPage);
+      /*let modal = this.modalCtrl.create(BleOperatorPage);
+      modal.present();*/
     }
     saveSections(isSended=false){
       this.pattersProvider.updatePattern(
@@ -253,7 +262,13 @@ export class pr2ModesNav {
     sendSections(){
       // 沒有儲存就傳送有問題！
       this.bleCmd.goSchedule(this.sections,this.infos.gid).subscribe(
-        ()=>{
+        (isOkList)=>{
+          console.log('>>>>>>>>>>>>> CMD WRITE LIST STATUS <<<<<<<<<<<<<<<<');
+          console.log(JSON.stringify(isOkList));
+          console.log('>>>>>>>>>>>>> <<<<<<<<<<<<<<<<');
+          if(isOkList.find( val=>val==false )){
+            alert('傳送排程過程中發生問題，請重新傳送QQ');
+          }else{}
           this.saveSections(true);
         }
       );
@@ -266,23 +281,28 @@ export class pr2ModesNav {
       this.sections.splice(idx,1);
     }
     addSection() {
-      let modal = this.modalCtrl.create(modalSectionEdit,{ "time":"00:00","multiple":0 },{cssClass:'modal-section'});
-      modal.onDidDismiss(data => {
-        let repeated =this.detectRepeat(data)
-        if(data && !repeated){
-          this.sections.push(data);
-          this.sections.sort( 
-            (a,b) => 
-            ( (a.time_num[0]==b.time_num[0])?(a.time_num[1]-b.time_num[1]):(a.time_num[0]-b.time_num[0])  ) 
-          );
-        }else if(repeated){
-          this.toastCtrl.showToast('「開始時間」重複，請試試別的時間唷');
-        }else{
+      if(this.sections.length>=30){
+        alert('排程數量已經額滿(上限為30組)');
+      }else{
+        let modal = this.modalCtrl.create(modalSectionEdit,{ "time":"00:00","multiple":0 },{cssClass:'modal-section'});
+        modal.onDidDismiss(data => {
+          let repeated =this.detectRepeat(data)
+          if(data && !repeated){
+            this.sections.push(data);
+            this.sections.sort( 
+              (a,b) => 
+              ( (a.time_num[0]==b.time_num[0])?(a.time_num[1]-b.time_num[1]):(a.time_num[0]-b.time_num[0])  ) 
+            );
+          }else if(repeated){
+            this.toastCtrl.showToast('「開始時間」重複，請試試別的時間唷');
+          }else{
+  
+          }
+          //console.log(this.sections);
+        });
+        modal.present();
+      }
 
-        }
-        //console.log(this.sections);
-      });
-      modal.present();
     }
     detectRepeat(data){
       if(this.sections.find( (val,idx) => (val.time==data.time)?true:false )){

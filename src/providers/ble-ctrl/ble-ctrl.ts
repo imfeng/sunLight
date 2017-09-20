@@ -40,7 +40,6 @@ export interface nowStatus {
 }
 @Injectable()
 export class BleCtrlProvider {
-  private _loadingObj : any;
   nowStatus:Observable<nowStatus>;
   private _nowStatus:BehaviorSubject<nowStatus>;
 
@@ -74,7 +73,7 @@ export class BleCtrlProvider {
     this._nowStatus = <BehaviorSubject<nowStatus>>new BehaviorSubject({});
     this.nowStatus = this._nowStatus.asObservable();
     this.dataStore = {
-        "hadConnected":false,
+        "hadConnected":true,
         "useable": false,
         "statusMessage": "initialized...",
         "isEnabled": false,
@@ -153,49 +152,79 @@ export class BleCtrlProvider {
     alert('請使用手機系統的設定自行關閉唷');
   }
   /** SCAN series */
-  scan(sec=8){
-    let time = this._presentLoading();
+  scan(sec=8,showLoading=true){
+    let loadObj = this._presentLoading();
     this.scanedDevices["list"] = [];
+    this._setStatus('掃描中');
     this.ble.scan([], sec).subscribe(
-      device => {this._onDeviceDiscovered(device);this._dismissLoading(time);},
-      error => {this._showError(error,'掃描藍芽裝置時發生錯誤。');this._dismissLoading(time);}
+      device => {this._onDeviceDiscovered(device);
+        if(showLoading) this._dismissLoading(loadObj);},
+      error => {this._showError(error,'掃描藍芽裝置時發生錯誤。');this._dismissLoading(loadObj);}
     );
     setTimeout(this._setStatus.bind(this), 1000*sec, '掃描完成......');
   }
 
   private _onDeviceDiscovered(device) {
-    console.log('Discovered ' + JSON.stringify(device, null, 2));
-    this.ngZone.run(() => {
-      this.scanedDevices["list"].push(device);
-    });
+    //console.log('Discovered ' + JSON.stringify(device, null, 2));
+    this.devicesData.check(device,false).subscribe(
+      findDevice => {
+        this.ngZone.run(() => {
+          this.scanedDevices["list"].push(findDevice);
+        });
+      }
+    );
   }
   /** CONNECT DEVICE series */
   connectDevice(deviceId,todoFn = (p=null)=>{}){
-    let time = this._presentLoading();
+    let loadObj = this._presentLoading();
     this.ble.connect(deviceId).subscribe(
       peripheral => {
-
+        setTimeout(()=>{
+          let time = new Date();
+          let data = new Uint8Array([0xfa,0xa0,time.getHours(),time.getMinutes(),time.getSeconds(),0xff]);
+          this.write(data,()=>{
+            this.showToast('已將裝置時間同步！');
+          },()=>{},true);
+        },2500);
         this._change("hadConnected",true);
         //console.log(JSON.stringify(peripheral));
-        let device = this.devicesData.check(peripheral.id,peripheral.name);
-        this.dataStore.device = device;
-        this._onConnected(peripheral);this._dismissLoading(time);todoFn(peripheral);},
-      peripheral => {this._onDeviceDisconnected();this._dismissLoading(time);}
+        this.devicesData.check(peripheral,true).subscribe(
+          device => {
+            this.dataStore.device = device;
+          }
+        );
+        this._onConnected(peripheral);this._dismissLoading(loadObj);todoFn(peripheral);},
+      peripheral => {this._onDeviceDisconnected();this._dismissLoading(loadObj);}
     );
   }
-  connectOnce(deviceId){
+  scanAndConnect(id:string,sec=6){  // ble-operator.ts
+    let loadObj = this._presentLoading();
+    this.scan(sec);
+    setTimeout(
+      ()=>{
+        this.connectDevice(id);
+        this._dismissLoading(loadObj);
+      },1000*sec
+    );
+  }
+  connectOnce(deviceId,sec=6){  // ble-command.ts
     return Observable.create(
       observer=>{
-        let time = this._presentLoading();
-        this.ble.connect(deviceId).take(1).subscribe(
-          peripheral => {
-            this._dismissLoading(time);
-            observer.next(true);
-          },
-          peripheral => {
-            this._dismissLoading(time);
-            observer.next(false);
-          }
+        let loadObj = this._presentLoading();
+        this.scan(sec);
+        setTimeout(
+          ()=>{
+            this.ble.connect(deviceId).take(1).subscribe(
+              peripheral => {
+                this._dismissLoading(loadObj);
+                observer.next(true);
+              },
+              peripheral => {
+                this._dismissLoading(loadObj);
+                observer.next(false);
+              }
+            );
+          },1000*sec
         );
       }
     );
@@ -221,30 +250,31 @@ export class BleCtrlProvider {
   private _onDeviceDisconnected(): void {
     this._change("isConnected",false);
     let toast = this.toastCtrl.create({
-      message: '藍芽連線中斷！',
+      message: '連線中斷！',
       duration: 1500,
-      position: 'middle'
+      position: 'bottom'
     });
     toast.present();
   }
   /** */
 
-  checkConnect(){
+  checkConnect(id){
     return Observable.create(
       observer=>{
         this.nowStatus.take(1).subscribe(
           now =>{
             if(now.hadConnected){
-              Observable.fromPromise(this.ble.isConnected(this.dataStore.peripheral.id)).subscribe(
+              Observable.fromPromise(this.ble.isConnected(id)).subscribe(
                 ()=>{
                   observer.next(true);observer.complete();
                 },
                 ()=>{
-                  this.ble.connect(this.dataStore.peripheral.id).take(1).subscribe(
+                  this.ble.connect(id).take(1).subscribe(
                     peripheral => {
+                      console.log('重新連線成功！！');
                       observer.next(true);observer.complete();
                     },
-                    peripheral => {console.log('重新連線成功！！');this._onDeviceDisconnected();alert('無法重新連結到剛才的裝置，請確認裝置是否在附近');observer.error(peripheral);}
+                    peripheral => {this._onDeviceDisconnected();alert('無法重新連結到剛才的裝置，請確認裝置是否在附近');observer.error(peripheral);}
                   );
                 }
               );
@@ -261,42 +291,63 @@ export class BleCtrlProvider {
     );
 
   }
-  write_o(value:Uint8Array){
+  write_many_go(observer,cmds:Uint8Array[],idx,isOk:boolean[],loadObj){
+    Observable.fromPromise(
+      this.ble.writeWithoutResponse(
+        this.dataStore.peripheral.id,
+        _LIGHTS_SERVICE_UUID,
+        _LIGHTS_CHAR_UUID,
+        cmds[idx].buffer
+      )).subscribe(
+        scc => {
+          idx++;
+          isOk.push(true);
+          if(idx>cmds.length-1){  //傳送結束
+            this._dismissLoading(loadObj);
+            observer.next(isOk);
+            observer.complete();
+          }else{
+            this.write_many_go(observer,cmds,idx,isOk,loadObj);
+          }
+        },
+        err => {
+          console.log(' write ERROR!!!!!!!!!!!!!!!!!!!!!!!!!');
+          console.log(JSON.stringify(err));
+          idx++;
+          isOk.push(false);
+          if(idx>cmds.length-1){  //傳送結束
+            this._dismissLoading(loadObj);
+            observer.next(isOk);
+            observer.complete();
+          }else{
+            this.write_many_go(observer,cmds,idx,isOk,loadObj);
+          }
+        }
+      );
+  }
+  write_many(value:Uint8Array[]){
+    console.log('=== CMD VALUE ===');
+    console.log(JSON.stringify(value));
+    console.log('======');
     return Observable.create(
       observer=>{
-        let time = this._presentLoading();
-        this.checkConnect().subscribe(
+        let loadObj = this._presentLoading();
+        
+        this.checkConnect(this.dataStore.device.id).subscribe(
           ()=>{
-            Observable.fromPromise(
-              this.ble.writeWithoutResponse(
-                this.dataStore.peripheral.id,
-                _LIGHTS_SERVICE_UUID,
-                _LIGHTS_CHAR_UUID,
-                value.buffer
-              )).subscribe(
-                scc => {
-                  alert('傳送成功！');
-                  this._dismissLoading(time);
-                  observer.next(true);observer.complete();
-                },
-                err => {
-                  this._showError(err,'傳送失敗');
-                  this._dismissLoading(time);
-                  observer.error(false);observer.complete();
-                }
-              );
-          },()=>{this._dismissLoading(time);}
+            this.write_many_go(observer,value,0,[],loadObj);
+          },()=>{this._dismissLoading(loadObj);}
         );
       }
     );
   }
-  write(value:Uint8Array,sccFn=(id)=>{},errFn=(id)=>{},toBack=false){
-    let time = this._presentLoading();
-    /*console.log('=== CMD VALUE ===');
+  write(value:Uint8Array,sccFn=(id)=>{},errFn=(id)=>{},toBack=false,deviceId=this.dataStore.device.id){
+    let loadObj = this._presentLoading();
+    console.log('=== CMD VALUE ===');
     console.log(JSON.stringify(value));
-    console.log('======');*/
+    console.log('======');
     //new Uint8Array(*).buffer
-    this.checkConnect().subscribe(
+    this.checkConnect(deviceId).subscribe(
       ()=>{
         Observable.fromPromise(
           this.ble.writeWithoutResponse(
@@ -307,14 +358,14 @@ export class BleCtrlProvider {
           )).subscribe(
             scc => {
               if(toBack) sccFn(this.dataStore.peripheral.id);
-              else alert('傳送成功！');
-              this._dismissLoading(time);},
+              else this.showToast('傳送成功！');
+              this._dismissLoading(loadObj);},
             err => {
               if(toBack) errFn(this.dataStore.peripheral.id);
               else this._showError(err,'傳送失敗');
-              this._dismissLoading(time);}
+              this._dismissLoading(loadObj);}
           );
-      },()=>{this._dismissLoading(time);}
+      },()=>{this._dismissLoading(loadObj);}
     );
     /*Observable.fromPromise(this.ble.isConnected(this.dataStore.peripheral.id)).subscribe(
       ()=>{
@@ -350,24 +401,35 @@ export class BleCtrlProvider {
       content: 'Please wait...'
     });
     loading.present();
-    this._loadingObj = loading;
     let time = setTimeout(()=>{
       alert('逾時');
       loading.dismiss();
     }, 1000*12);
-    return time;
+    return {
+      "time":time,
+      "loading":loading
+    };
     /*
       setTimeout(() => {
         loading.dismiss();
       }, 5000); */
   }
-  private _dismissLoading(time){
-    if(this._loadingObj){
-      clearTimeout(time);
-      this._loadingObj.dismiss();
+  private _dismissLoading(loadObj){
+    if(loadObj.loading){
+      clearTimeout(loadObj.time);
+      loadObj.loading.dismiss();
     }
   }
   
+  private showToast(message=null){
+    let toast = this.toastCtrl.create({
+      message: message ,
+      position: 'bottom',
+      duration: 1000
+    });
+    toast.present();
+  }
+
   private _setStatus(message) {
     this.ngZone.run(() => {
       this.dataStore["statusMessage"] = message;

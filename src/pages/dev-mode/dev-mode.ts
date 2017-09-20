@@ -49,7 +49,7 @@ export class DevMode {
     public modalCtrl: ModalController,
     public navCtrl: NavController,
     ) {
-    this.lightsGroups = this.lightsGroupsProv.getGroups();
+    this.lightsGroups = [];
     //this.lightLinesArr =    
     this.saveSettings= {
       "isEdit":false,
@@ -59,6 +59,11 @@ export class DevMode {
     };
   }
   ionViewDidEnter(){
+    this.lightsGroupsProv.getGroups().subscribe(
+      list => {
+        this.lightsGroups = list;
+      }
+    );
     Observable.fromPromise(this.storage.getItem(_DEV_SETTINGS_LIST)).subscribe(
       value=>{
         if(typeof value != 'object') value = JSON.parse(value);
@@ -122,8 +127,9 @@ export class DevMode {
     });
   }*/
   openBleModal(){
-    let modal = this.modalCtrl.create(BleOperatorPage);
-    modal.present();
+    this.navCtrl.push(BleOperatorPage);
+    /*let modal = this.modalCtrl.create(BleOperatorPage);
+    modal.present();*/
   }
   openFanModal(){
     let confirm = this.alertCtrl.create({
@@ -264,7 +270,7 @@ onNumberChanged(event){
   templateUrl: 'edit-setting.html'
 })
 export class editDevSettingPage {
-  lightsGroups : Array<any>;
+
   saveSettings : {
     "settingMeta":devSetting;
     "devValueList":Array<devSetting>,
@@ -277,11 +283,9 @@ export class editDevSettingPage {
   constructor(
     private storage:NativeStorage,
     private alertCtrl: AlertController,
-    private lightsGroupsProv:LightsGoupsProvider,
     private navCtrl: NavParams,
     public navigaCtrl: NavController
   ){
-    this.lightsGroups = this.lightsGroupsProv.getGroups();
     this.saveSettings= {
       "settingMeta":{
         "name":null,
@@ -295,6 +299,7 @@ export class editDevSettingPage {
 
   }
   ionViewDidEnter(){
+
     Observable.fromPromise(this.storage.getItem(_DEV_SETTINGS_LIST)).subscribe(
       value=>{
         if(typeof value != 'object') value = JSON.parse(value);
