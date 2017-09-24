@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { AlertController,ModalController,IonicPage, NavController, NavParams } from 'ionic-angular';
 import { BleOperatorPage } from '../ble-operator/ble-operator';
+import { SyncPage } from '../sync/sync';
 import { DevicesDataProvider,lightDeviceType } from '../../providers/devices-data/devices-data';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/take';
@@ -33,6 +34,11 @@ export class ModeDevicesPage {
    /* let modal = this.modalCtrl.create(BleOperatorPage);
     modal.present();*/
   }
+  openSyncPage(){
+    this.navCtrl.push(SyncPage);
+   /* let modal = this.modalCtrl.create(BleOperatorPage);
+    modal.present();*/
+  }
   ionViewDidLoad() {
     console.log('ionViewDidLoad ModeDevicesPage');
   }
@@ -49,7 +55,9 @@ export class editDevicePage {
       "o_name" :'',
       "id": '',
       "group":0,
-      "last_sended": 0
+      "last_sended": 0,
+
+      "hadGroupSync":false
     }
   };
   constructor(

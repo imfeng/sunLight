@@ -15,6 +15,8 @@ export interface lightDeviceType {
   "group":number,
   //"isGroupSync":boolean
   "last_sended": number
+
+  "hadGroupSync":boolean,
 }
 @Injectable()
 export class DevicesDataProvider {
@@ -85,32 +87,46 @@ export class DevicesDataProvider {
   check(device,toAdd=true){  //  bleCtrl use
     return Observable.create(
       observer => {
-        this.list.subscribe(
-          list =>{
-            let finded = list.find(
-              (val) =>{
-                if(val.id==device.id)
-                  return true;
-                else
-                  return false;
-              }
-            );
-            if(!finded && toAdd){
-              let newDevice = {
-                "name": device.name,
-                "o_name" :device.name,
-                "id": device.id,
-                "group":null,
-                "last_sended": 0
-              };
-              this.add(newDevice);
-              observer.next(newDevice);
-            }else if(!finded && !toAdd){
-              observer.next(device);
-            }else observer.next(finded);
-            observer.complete();
-          }
-        );
+        if(device.name!='Sunlight'){
+          observer.error(false);
+        }else{
+          this.list.subscribe(
+            list =>{
+              let finded = list.find(
+                (val) =>{
+                  if(val.id==device.id)
+                    return true;
+                  else
+                    return false;
+                }
+              );
+              if(!finded && toAdd){
+                let newDevice = {
+                  "name": device.name,
+                  "o_name" :device.name,
+                  "id": device.id,
+                  "group":null,
+                  "hadGroupSync":false,
+                  "last_sended": 0
+                };
+                this.add(newDevice);
+                observer.next(newDevice);
+              }else if(!finded && !toAdd){
+                let tmpDevice = {
+                  "name": device.name,
+                  "o_name" :device.name,
+                  "id": device.id,
+                  "group":null,
+                  "hadGroupSync":false,
+                  "last_sended": 0
+                };
+                observer.next(tmpDevice);
+              }else observer.next(finded);
+              observer.complete();
+            }
+          );                                                                  
+        }
+        
       }
     );
 
@@ -126,7 +142,7 @@ export class DevicesDataProvider {
     );
     //return sub;
   }
-  modify(d_id,d_name,d_gid){
+  modify(d_id,d_name,d_gid,hadGroupSync=false){
     console.log(this.dataStore.deviceList);
     let isNext = false;
     let tmpOb = Observable.create(
@@ -135,8 +151,15 @@ export class DevicesDataProvider {
           (ele,idx) =>{
             if(ele.id == d_id){
               if(d_name)this.dataStore.deviceList[idx].name = d_name;
-              if(d_gid)this.dataStore.deviceList[idx].group = d_gid;
-              this.dataStore.deviceList[idx].last_sended = new Date().getDate();
+              if(d_gid){
+                this.dataStore.deviceList[idx].group = d_gid;
+                this.dataStore.deviceList[idx].hadGroupSync = hadGroupSync;
+              }      
+              if(hadGroupSync)
+              {
+                this.dataStore.deviceList[idx].hadGroupSync = hadGroupSync;
+                this.dataStore.deviceList[idx].last_sended = new Date().getDate();
+              };
               Observable
                 .fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,this.dataStore.deviceList))
                 .subscribe(

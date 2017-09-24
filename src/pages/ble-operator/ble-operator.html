@@ -31,7 +31,7 @@
     </ion-item>
     <ion-list-header>
       正在連接中的裝置
-      
+      <button *ngIf="blueInfo.nowDevice.hadConnected" (click)="disconnectDevice()" ion-button outline item-end><ion-icon name="close"></ion-icon></button>
       <button *ngIf="blueInfo.nowDevice.hadConnected" (click)="modifyDeviceGroup()" ion-button outline item-end><ion-icon name="pricetags"></ion-icon></button>
     </ion-list-header>
     <button ion-item (click)="openBleListNav()">

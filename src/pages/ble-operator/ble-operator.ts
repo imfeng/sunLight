@@ -131,6 +131,13 @@ export class BleOperatorPage implements OnInit{
     /*this.bleCtrl.scan();
     this.bleCtrl.connectDevice(deviceId,this.navCtrl.pop);*/
   }
+  disconnectDevice(){
+    this.bleCtrl.disconnectCurrent().subscribe(
+      isScc =>{
+        alert('中斷連線成功！');
+      }
+    );
+  }
   modifyDeviceGroup(){
     if(this.blueInfo.nowDevice.hadConnected){
       let confirm = this.alertCtrl.create({

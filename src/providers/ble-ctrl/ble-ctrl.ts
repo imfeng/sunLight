@@ -40,6 +40,19 @@ export interface nowStatus {
 }
 @Injectable()
 export class BleCtrlProvider {
+  scanListStore : {
+    "list":lightDeviceType[]
+  }={
+    "list":[]
+  }
+  private _scanListOb = <BehaviorSubject<lightDeviceType[]>>new BehaviorSubject([]);
+  bleStatus : {
+    "onScanning": boolean,
+    "scanList": Observable<lightDeviceType[]>,
+  }= {
+    "onScanning":false,
+    "scanList":this._scanListOb.asObservable()
+  }
   nowStatus:Observable<nowStatus>;
   private _nowStatus:BehaviorSubject<nowStatus>;
 
@@ -48,14 +61,6 @@ export class BleCtrlProvider {
   scanedDevices:{
     "list": Array<object>
   };
-  /*
-  {
-    "name": "TI SensorTag",
-    "id": "BD922605-1B07-4D55-8D09-B66653E51BBA",
-    "rssi": -79,
-    "advertising": /* ArrayBuffer or map 
-  }
-  */
 
   constructor(
     private devicesData:DevicesDataProvider,
@@ -90,7 +95,8 @@ export class BleCtrlProvider {
           "o_name" :null,
           "id": null,
           "group":null,
-          "last_sended": null
+          "last_sended": null,
+          "hadGroupSync": false,
         }
     };
 
@@ -151,14 +157,274 @@ export class BleCtrlProvider {
   disableBle(){
     alert('請使用手機系統的設定自行關閉唷');
   }
+  speciWrtie(deviceId,data){
+    return Observable.create(
+      observer => {
+        this.checkConnectOnce(deviceId).subscribe(
+          ()=>{
+            Observable.fromPromise(
+              this.ble.writeWithoutResponse(
+                deviceId,
+                _LIGHTS_SERVICE_UUID,
+                _LIGHTS_CHAR_UUID,
+                data.buffer
+              )).subscribe(
+                scc => {
+                  observer.next(true);
+                  observer.complete();
+                },
+                err => {
+                  console.log('>>> ERR,speciWrtie ');
+                 
+                  console.log(JSON.stringify(err));
+                  observer.next(false);
+                  observer.complete();
+                }
+              );
+          },()=>{
+            observer.next(false);
+            observer.complete();
+          }
+        );/*
+        Observable.fromPromise(
+          this.ble.writeWithoutResponse(
+            id,
+            _LIGHTS_SERVICE_UUID,
+            _LIGHTS_CHAR_UUID,
+            data.buffer
+          )).subscribe(
+          scc => {
+            observer.next(true);
+            observer.complete();
+          },
+          err => {
+            console.log('>>> ERR,speciWrtie ');
+            console.log(JSON.stringify(err));
+            observer.next(false);
+            observer.complete();
+          }
+          );*/
+      }
+    );
+
+  }
+  syncSunLightsProcess(devices:lightDeviceType[], idx, observer=null,fan=null){
+    
+        this.connectOnce(devices[idx].id).subscribe(
+          isScc => {
+            if(isScc){
+              this._setStatus(devices[idx].id+' CONNECTED!');
+              let writeStatus = {
+                "isTime": false,
+                "isGroup": false,
+                "isFan":false,
+              }
+              setTimeout(
+                ()=>{
+                  let time = new Date();
+                  let timeData = new Uint8Array([0xfa,0xa0,time.getHours(),time.getMinutes(),time.getSeconds(),0xff]);
+                  this.speciWrtie(devices[idx].id,timeData)
+                  .subscribe( val=>{
+                    writeStatus.isTime=val;
+                    this._setStatus(devices[idx].id +' 同步時間!');
+                    setTimeout(
+                      ()=>{
+                        let data = new Uint8Array([0xFA,0xA1,devices[idx].group,0xFF]);
+                        this._setStatus('正在將'+devices[idx].id +' 的群組更改為'+devices[idx].group);
+                        this.speciWrtie(devices[idx].id,data)
+                        .subscribe( val=>{
+                          writeStatus.isGroup=val;
+                          this.devicesData.modify(devices[idx].id,null,devices[idx].group,val).subscribe();
+                          if(val){
+                            this._setStatus(devices[idx].id +' 同步群組成功!');
+                            this.ngZone.run(() => {
+                              devices[idx].hadGroupSync = true;
+                            })
+                          }else{
+                            this._setStatus(devices[idx].id +' 同步群組失敗!');
+                            
+                          }
+                          console.log('>>>>>>> syncSunLightsProcess "'+devices[idx].id+'"');
+                          console.log(JSON.stringify(writeStatus));
+                          this._setStatus(JSON.stringify(writeStatus));
+                          console.log('>>>>>>> >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+                          
+                          if(fan){
+                            setTimeout(
+                              ()=>{
+                                let datafan = new Uint8Array([0xfa,0xad,fan ,0xff]);
+                                this.speciWrtie(devices[idx].id,datafan).subscribe(
+                                  isScc=>{
+                                    writeStatus.isFan=val;
+                                    if(val){
+                                      this._setStatus(devices[idx].id +' 同步風扇成功!');
+                                      
+                                    }else{
+                                      this._setStatus(devices[idx].id +' 同步風扇失敗!');
+                                      
+                                    }
+                                    setTimeout(
+                                      ()=>{
+                                        this.disconnetOnce(devices[idx].id).subscribe(
+                                          isScc => {
+                                            this._setStatus(devices[idx].id+' disconnet : '+isScc);
+                                            setTimeout(
+                                              ()=>{
+                                                idx++;
+                                                if(idx >= devices.length){
+                                                  observer.next(true);
+                                                  observer.complete();
+                                                }else{
+                                                  this.syncSunLightsProcess(devices,idx, observer,fan);
+                                                }
+                                              },300
+                                            );
+                                          }
+                                        );
+                                      },1000
+                                    );
+                                  }
+                                );
+                              },100
+                            );
+                          }else{
+                            setTimeout(
+                              ()=>{
+                                this.disconnetOnce(devices[idx].id).subscribe(
+                                  isScc => {
+                                    this._setStatus(devices[idx].id+' disconnet : '+isScc);
+                                    setTimeout(
+                                      ()=>{
+                                        idx++;
+                                        if(idx >= devices.length){
+                                          observer.next(true);
+                                          observer.complete();
+                                        }else{
+                                          this.syncSunLightsProcess(devices,idx, observer,fan);
+                                        }
+                                      },300
+                                    );
+                                  }
+                                );
+                              },1000
+                            );
+                          }
+                        });
+                      },100
+                    );
+
+                  });
+                },1500
+              );
+
+              /*setTimeout(
+                ()=>{
+                  let data = new Uint8Array([0xFA,0xA1,devices[idx].group,0xFF]);    
+                  
+                  this.speciWrtie(devices[idx].id,data)
+                  .subscribe( val=>{
+                    
+                    console.log('>>>>>>> syncSunLightsProcess "'+devices[idx].id+'"');
+                    console.log(JSON.stringify(val));
+                    this._setStatus(JSON.stringify(val));
+                    console.log('>>>>>>> >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+                    this.ngZone.run(() => {
+                      devices[idx].hadGroupSync = true;
+                    });
+                    alert(devices[idx].id+'成功');
+                    
+                    this.devicesData.modify(devices[idx].id,null,null,true).subscribe();
+                    this.disconnetOnce(devices[idx].id).subscribe(
+                      isScc => {
+                        console.log('>>>>>>>>>>>>>> disconnetOnce : '+isScc);
+                        setTimeout(
+                          ()=>{
+                            idx++;
+                            if(idx >= devices.length){
+                              observer.next(true);
+                              observer.complete();
+                            }else{
+                              this.syncSunLightsProcess(devices,idx, observer);
+                            }
+                          },1000
+                        );
+                      }
+                    );
+                  } );
+                },1000
+              );*/
+              
+            }else{
+              setTimeout(
+                ()=>{
+                  console.log('>>> connectOnce失敗！');
+                  alert(devices[idx].id+' 連接失敗');
+                  idx++;
+                  if(idx >= devices.length){
+                    observer.next(true);
+                    observer.complete();
+                  }else{
+                    this.syncSunLightsProcess(devices,idx, observer, fan);
+                  };
+                },500
+              );
+            }
+          }
+        );
+ 
+  }
+  syncSunlights(devices:lightDeviceType[],fan=null){
+    return Observable.create(
+      observer => {
+        this.syncSunLightsProcess(devices, 0, observer, fan);
+      }
+    );
+
+  }
+  startScan(services=[_LIGHTS_SERVICE_UUID]){
+    this.bleStatus.onScanning = true;
+    this.scanListStore.list = [];
+    this._setStatus('掃描中......');
+    this.ble.startScan(services).subscribe(
+      device => {
+        this.devicesData.check(device,true).subscribe(
+          findDevice => {
+            this.ngZone.run(() => {
+              this.scanListStore.list.push(findDevice);
+              this._scanListOb.next(this.scanListStore.list);
+              //this._scanListOb.next(Object.assign({},this.scanListStore).list);
+            });
+          }
+        );
+      },
+      error => {this.bleStatus.onScanning =false;this._showError(error,'掃描藍芽裝置時發生錯誤。');}
+    )
+  }
+  stopScan(){
+    if(this.bleStatus.onScanning){
+      this.ble.stopScan().then(
+        ()=>{
+          this._setStatus('停止掃描');
+          this.bleStatus.onScanning =false;
+        },
+        () => {
+          this.showToast('停止藍芽掃描時發生錯誤');
+        }
+      );
+    }else{
+      this._setStatus('停止掃描....');
+    }
+  }
   /** SCAN series */
   scan(sec=8,showLoading=true){
     let loadObj = this._presentLoading();
     this.scanedDevices["list"] = [];
     this._setStatus('掃描中');
     this.ble.scan([], sec).subscribe(
-      device => {this._onDeviceDiscovered(device);
-        if(showLoading) this._dismissLoading(loadObj);},
+      device => {
+        this._onDeviceDiscovered(device);
+        this._dismissLoading(loadObj);
+      },
       error => {this._showError(error,'掃描藍芽裝置時發生錯誤。');this._dismissLoading(loadObj);}
     );
     setTimeout(this._setStatus.bind(this), 1000*sec, '掃描完成......');
@@ -174,28 +440,68 @@ export class BleCtrlProvider {
       }
     );
   }
+  disconnectCurrent(){
+    return Observable.create(
+      observer => {
+        this.nowStatus.take(1).subscribe(
+          obj => {
+            if(obj.hadConnected){
+              Observable.fromPromise(this.ble.isConnected(obj.peripheral.id)).subscribe(
+                ()=>{
+                  Observable.fromPromise(this.ble.disconnect(obj.peripheral.id))
+                  .subscribe( 
+                    () => {
+                      this._change("hadConnected",false);
+                      this._onDeviceDisconnected();
+                      observer.next(true);observer.complete();
+                    },
+                    err => {
+                      observer.next(false);observer.complete();
+                      console.log('中斷連線時發生錯誤！');}
+                  );
+                  
+                },
+                ()=>{
+                  observer.next(true);observer.complete();
+                }
+              );
+            }else{
+              observer.next(true);observer.complete();
+            }
+          }
+        );
+      }
+    );
+    
+  }
   /** CONNECT DEVICE series */
   connectDevice(deviceId,todoFn = (p=null)=>{}){
     let loadObj = this._presentLoading();
-    this.ble.connect(deviceId).subscribe(
-      peripheral => {
-        setTimeout(()=>{
-          let time = new Date();
-          let data = new Uint8Array([0xfa,0xa0,time.getHours(),time.getMinutes(),time.getSeconds(),0xff]);
-          this.write(data,()=>{
-            this.showToast('已將裝置時間同步！');
-          },()=>{},true);
-        },2500);
-        this._change("hadConnected",true);
-        //console.log(JSON.stringify(peripheral));
-        this.devicesData.check(peripheral,true).subscribe(
-          device => {
-            this.dataStore.device = device;
-          }
+    this.disconnectCurrent().subscribe(
+      ()=>{
+        this.ble.connect(deviceId).subscribe(
+          peripheral => {
+            setTimeout(()=>{
+              let time = new Date();
+              let data = new Uint8Array([0xfa,0xa0,time.getHours(),time.getMinutes(),time.getSeconds(),0xff]);
+              this.write(data,()=>{
+                this.showToast('已將裝置時間同步！');
+              },()=>{},true);
+            },2500);
+            this._change("hadConnected",true);
+            //console.log(JSON.stringify(peripheral));
+            this.devicesData.check(peripheral,true).subscribe(
+              device => {
+                this.dataStore.device = device;
+              }
+            );
+            this._onConnected(peripheral);this._dismissLoading(loadObj);todoFn(peripheral);
+          },
+          peripheral => {this._onDeviceDisconnected();this._dismissLoading(loadObj);}
         );
-        this._onConnected(peripheral);this._dismissLoading(loadObj);todoFn(peripheral);},
-      peripheral => {this._onDeviceDisconnected();this._dismissLoading(loadObj);}
+      }
     );
+    
   }
   scanAndConnect(id:string,sec=6){  // ble-operator.ts
     let loadObj = this._presentLoading();
@@ -207,25 +513,51 @@ export class BleCtrlProvider {
       },1000*sec
     );
   }
+  disconnetOnce(deviceId){
+    return Observable.create(
+      observer => {
+        Observable.fromPromise(this.ble.disconnect(deviceId))
+        .subscribe(
+          () => {
+            console.log('>>> OK, disconnetOnce(deviceId) OK!!!');
+            observer.next(true);observer.complete();
+          },
+          err => {
+            console.log('>>> ERR, disconnetOnce(deviceId) failed!');
+            observer.next(false);observer.complete();
+        }
+        );
+      }
+    )
+
+  }
   connectOnce(deviceId,sec=6){  // ble-command.ts
     return Observable.create(
       observer=>{
         let loadObj = this._presentLoading();
-        this.scan(sec);
+        /*this.scan(sec);
         setTimeout(
-          ()=>{
-            this.ble.connect(deviceId).take(1).subscribe(
-              peripheral => {
-                this._dismissLoading(loadObj);
-                observer.next(true);
+          ()=>{},1000*sec
+        );*/
+        this.ble.connect(deviceId).take(1).subscribe(
+          peripheral => {
+            console.log('>>> OK, connectOnce() _> this.ble.connect(deviceId) OK!!!!!');
+            this._dismissLoading(loadObj);
+            observer.next(true);
+          },
+          peripheral => {
+            Observable.fromPromise(this.ble.disconnect(deviceId))
+            .subscribe(
+              () => {
+                console.log('>>> WARN, connectOnce() _> this.ble.disconnect(deviceId) !!!!! NO CONNECT!!');
               },
-              peripheral => {
-                this._dismissLoading(loadObj);
-                observer.next(false);
-              }
+              err => {console.log('>>> ERR, connectOnce() _> this.ble.disconnect(deviceId) failed!');}
             );
-          },1000*sec
+            this._dismissLoading(loadObj);
+            observer.next(false);
+          }
         );
+          
       }
     );
   }
@@ -249,6 +581,7 @@ export class BleCtrlProvider {
 
   private _onDeviceDisconnected(): void {
     this._change("isConnected",false);
+    this._change("isConnected",false);
     let toast = this.toastCtrl.create({
       message: '連線中斷！',
       duration: 1500,
@@ -257,7 +590,33 @@ export class BleCtrlProvider {
     toast.present();
   }
   /** */
+  checkConnectOnce(id){
 
+    return Observable.create(
+      observer=>{
+        
+            
+        Observable.fromPromise(this.ble.isConnected(id)).subscribe(
+          ()=>{
+            observer.next(true);observer.complete();
+          },
+          ()=>{
+            this.ble.connect(id).take(1).subscribe(
+              peripheral => {
+                console.log('重新連線成功！！');
+                observer.next(true);observer.complete();
+              },
+              peripheral => {
+                observer.error(false);
+              }
+            );
+          }
+        );
+            
+  
+      }
+    );
+  }
   checkConnect(id){
     return Observable.create(
       observer=>{
@@ -307,7 +666,8 @@ export class BleCtrlProvider {
             observer.next(isOk);
             observer.complete();
           }else{
-            this.write_many_go(observer,cmds,idx,isOk,loadObj);
+            setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj);},150);
+            
           }
         },
         err => {
@@ -320,7 +680,7 @@ export class BleCtrlProvider {
             observer.next(isOk);
             observer.complete();
           }else{
-            this.write_many_go(observer,cmds,idx,isOk,loadObj);
+            setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj);},150);
           }
         }
       );
@@ -421,7 +781,7 @@ export class BleCtrlProvider {
     }
   }
   
-  private showToast(message=null){
+  private showToast(message){
     let toast = this.toastCtrl.create({
       message: message ,
       position: 'bottom',
@@ -434,6 +794,7 @@ export class BleCtrlProvider {
     this.ngZone.run(() => {
       this.dataStore["statusMessage"] = message;
     });
+    this._nowStatus.next(this.dataStore);
   }
   private _showError(error,message) {
     this._setStatus('Error ' + error);
@@ -442,7 +803,7 @@ export class BleCtrlProvider {
     let toast = this.toastCtrl.create({
       message: message +' '+JSON.stringify(error),
       position: 'bottom',
-      duration: 5000
+      duration: 3000
     });
     toast.present();
   }
