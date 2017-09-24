@@ -208,169 +208,102 @@ export class BleCtrlProvider {
     );
 
   }
+  syncMultiWrite(deviceId,observer,cmds:Uint8Array[],idx,isOk:boolean[]){
+    Observable.fromPromise(
+      this.ble.writeWithoutResponse(
+        deviceId,
+        _LIGHTS_SERVICE_UUID,
+        _LIGHTS_CHAR_UUID,
+        cmds[idx].buffer
+      )).subscribe(
+        scc => {
+          idx++;
+          isOk.push(true);
+          if(idx>=cmds.length){  //傳送結束
+            observer.next(isOk);
+            observer.complete();
+          }else{
+            setTimeout(()=>{this.syncMultiWrite(deviceId,observer,cmds,idx,isOk);},150);
+          }
+        },
+        err => {
+          this._setStatus(JSON.stringify(err));
+          idx++;
+          isOk.push(false);
+          if(idx>=cmds.length){  //傳送結束
+            observer.next(isOk);
+            observer.complete();
+          }else{
+            setTimeout(()=>{this.write_many_go(deviceId,observer,cmds,idx,isOk);},150);
+          }
+        }
+      );
+  }
   syncSunLightsProcess(devices:lightDeviceType[], idx, observer=null,fan=null){
-    
-        this.connectOnce(devices[idx].id).subscribe(
+        this.checkConnectOnce(devices[idx].id).subscribe(
           isScc => {
             if(isScc){
               this._setStatus(devices[idx].id+' CONNECTED!');
-              let writeStatus = {
-                "isTime": false,
-                "isGroup": false,
-                "isFan":false,
-              }
-              setTimeout(
-                ()=>{
-                  let time = new Date();
-                  let timeData = new Uint8Array([0xfa,0xa0,time.getHours(),time.getMinutes(),time.getSeconds(),0xff]);
-                  this.speciWrtie(devices[idx].id,timeData)
-                  .subscribe( val=>{
-                    writeStatus.isTime=val;
-                    this._setStatus(devices[idx].id +' 同步時間!');
-                    setTimeout(
-                      ()=>{
-                        let data = new Uint8Array([0xFA,0xA1,devices[idx].group,0xFF]);
-                        this._setStatus('正在將'+devices[idx].id +' 的群組更改為'+devices[idx].group);
-                        this.speciWrtie(devices[idx].id,data)
-                        .subscribe( val=>{
-                          writeStatus.isGroup=val;
-                          this.devicesData.modify(devices[idx].id,null,devices[idx].group,val).subscribe();
-                          if(val){
-                            this._setStatus(devices[idx].id +' 同步群組成功!');
-                            this.ngZone.run(() => {
-                              devices[idx].hadGroupSync = true;
-                            })
-                          }else{
-                            this._setStatus(devices[idx].id +' 同步群組失敗!');
-                            
-                          }
-                          console.log('>>>>>>> syncSunLightsProcess "'+devices[idx].id+'"');
-                          console.log(JSON.stringify(writeStatus));
-                          this._setStatus(JSON.stringify(writeStatus));
-                          console.log('>>>>>>> >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
-                          
-                          if(fan){
-                            setTimeout(
-                              ()=>{
-                                let datafan = new Uint8Array([0xfa,0xad,fan ,0xff]);
-                                this.speciWrtie(devices[idx].id,datafan).subscribe(
-                                  isScc=>{
-                                    writeStatus.isFan=val;
-                                    if(val){
-                                      this._setStatus(devices[idx].id +' 同步風扇成功!');
-                                      
-                                    }else{
-                                      this._setStatus(devices[idx].id +' 同步風扇失敗!');
-                                      
-                                    }
-                                    setTimeout(
-                                      ()=>{
-                                        this.disconnetOnce(devices[idx].id).subscribe(
-                                          isScc => {
-                                            this._setStatus(devices[idx].id+' disconnet : '+isScc);
-                                            setTimeout(
-                                              ()=>{
-                                                idx++;
-                                                if(idx >= devices.length){
-                                                  observer.next(true);
-                                                  observer.complete();
-                                                }else{
-                                                  this.syncSunLightsProcess(devices,idx, observer,fan);
-                                                }
-                                              },300
-                                            );
-                                          }
-                                        );
-                                      },1000
-                                    );
-                                  }
-                                );
-                              },100
-                            );
-                          }else{
-                            setTimeout(
-                              ()=>{
-                                this.disconnetOnce(devices[idx].id).subscribe(
-                                  isScc => {
-                                    this._setStatus(devices[idx].id+' disconnet : '+isScc);
-                                    setTimeout(
-                                      ()=>{
-                                        idx++;
-                                        if(idx >= devices.length){
-                                          observer.next(true);
-                                          observer.complete();
-                                        }else{
-                                          this.syncSunLightsProcess(devices,idx, observer,fan);
-                                        }
-                                      },300
-                                    );
-                                  }
-                                );
-                              },1000
-                            );
-                          }
-                        });
-                      },100
-                    );
-
-                  });
-                },1500
+              let cmds=[];
+              let time = new Date();
+              cmds.push( new Uint8Array([0xfa,0xa0,time.getHours(),time.getMinutes(),time.getSeconds(),0xff]) );
+              cmds.push( new Uint8Array([0xfa,0xa1,devices[idx].group,0xff]) );
+              if(fan)cmds.push( new Uint8Array([0xfa,0xad,fan ,0xff]) );
+              this._setStatus(devices[idx].id+' SENDING.....');
+              let loadObj = this._presentLoading();
+              Observable.create(
+                observer => {
+                  this.syncMultiWrite(devices[idx].id, observer,cmds, 0, []);
+                }
+              ).subscribe(
+                isOkArr => {
+                  this._dismissLoading(loadObj);
+                  this._setStatus(JSON.stringify(isOkArr));
+                  if(isOkArr[1]){
+                    this.devicesData.modify(devices[idx].id,null,devices[idx].group,true).subscribe();
+                  }else{
+                    this.devicesData.modify(devices[idx].id,null,devices[idx].group,false).subscribe();
+                  }
+                  setTimeout(
+                    ()=>{
+                      this.disconnetOnce(devices[idx].id).subscribe(
+                        isScc => {
+                          this._setStatus(devices[idx].id+' disconnet : '+isScc);
+                          setTimeout(
+                            ()=>{
+                              idx++;
+                              if(idx >= devices.length){
+                                observer.next(true);
+                                observer.complete();
+                              }else{
+                                this.syncSunLightsProcess(devices,idx, observer,fan);
+                              }
+                            },300
+                          );
+                        }
+                      );
+                    },1000
+                  );
+                }
               );
-
-              /*setTimeout(
-                ()=>{
-                  let data = new Uint8Array([0xFA,0xA1,devices[idx].group,0xFF]);    
-                  
-                  this.speciWrtie(devices[idx].id,data)
-                  .subscribe( val=>{
-                    
-                    console.log('>>>>>>> syncSunLightsProcess "'+devices[idx].id+'"');
-                    console.log(JSON.stringify(val));
-                    this._setStatus(JSON.stringify(val));
-                    console.log('>>>>>>> >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
-                    this.ngZone.run(() => {
-                      devices[idx].hadGroupSync = true;
-                    });
-                    alert(devices[idx].id+'成功');
-                    
-                    this.devicesData.modify(devices[idx].id,null,null,true).subscribe();
-                    this.disconnetOnce(devices[idx].id).subscribe(
-                      isScc => {
-                        console.log('>>>>>>>>>>>>>> disconnetOnce : '+isScc);
-                        setTimeout(
-                          ()=>{
-                            idx++;
-                            if(idx >= devices.length){
-                              observer.next(true);
-                              observer.complete();
-                            }else{
-                              this.syncSunLightsProcess(devices,idx, observer);
-                            }
-                          },1000
-                        );
-                      }
-                    );
-                  } );
-                },1000
-              );*/
               
             }else{
+              this._setStatus(devices[idx].id+' CONNECT FAILED!');
               setTimeout(
                 ()=>{
-                  console.log('>>> connectOnce失敗！');
-                  alert(devices[idx].id+' 連接失敗');
                   idx++;
                   if(idx >= devices.length){
                     observer.next(true);
                     observer.complete();
                   }else{
-                    this.syncSunLightsProcess(devices,idx, observer, fan);
-                  };
-                },500
+                    this.syncSunLightsProcess(devices,idx, observer,fan);
+                  }
+                },300
               );
             }
           }
         );
+
  
   }
   syncSunlights(devices:lightDeviceType[],fan=null){
@@ -594,20 +527,25 @@ export class BleCtrlProvider {
 
     return Observable.create(
       observer=>{
-        
-            
+        let loadObj = this._presentLoading();
         Observable.fromPromise(this.ble.isConnected(id)).subscribe(
           ()=>{
             observer.next(true);observer.complete();
+            this._dismissLoading(loadObj);
           },
           ()=>{
             this.ble.connect(id).take(1).subscribe(
               peripheral => {
-                console.log('重新連線成功！！');
-                observer.next(true);observer.complete();
+                setTimeout(
+                  ()=>{
+                    this._dismissLoading(loadObj);
+                    observer.next(true);observer.complete();
+                  },1500
+                );
               },
               peripheral => {
-                observer.error(false);
+                observer.next(false);
+                this._dismissLoading(loadObj);
               }
             );
           }

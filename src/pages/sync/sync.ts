@@ -75,7 +75,7 @@ export class SyncPage {
         {
           text: '傳送',
           handler: data => {
-            this.blueInfo.fanSpeed = parseInt(data.speed);
+            this.blueInfo.fanSpeed = data.speed;
           }
         }
       ]
