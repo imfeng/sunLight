@@ -246,10 +246,11 @@ export class BleCtrlProvider {
               this._setStatus(devices[idx].id+' CONNECTED!');
               let cmds=[];
               let time = new Date();
-              cmds.push( new Uint8Array([0xfa,0xa0,time.getHours(),time.getMinutes(),time.getSeconds(),0xff]) );
-              cmds.push( new Uint8Array([0xfa,0xa1,devices[idx].group,0xff]) );
+              //cmds.push( new Uint8Array([0xfa,0xa0,time.getHours(),time.getMinutes(),time.getSeconds(),0xff]) );
+              //cmds.push( new Uint8Array([0xfa,0xa1,devices[idx].group,0xff]) );
               if(fan)cmds.push( new Uint8Array([0xfa,0xad,fan ,0xff]) );
               this._setStatus(devices[idx].id+' SENDING.....');
+
               let loadObj = this._presentLoading();
               Observable.create(
                 observer => {
@@ -523,35 +524,31 @@ export class BleCtrlProvider {
     toast.present();
   }
   /** */
-  checkConnectOnce(id){
+  checkConnectOnce(deviceId){
 
     return Observable.create(
       observer=>{
         let loadObj = this._presentLoading();
-        Observable.fromPromise(this.ble.isConnected(id)).subscribe(
+        this.disconnectCurrent().subscribe(
           ()=>{
-            observer.next(true);observer.complete();
-            this._dismissLoading(loadObj);
-          },
-          ()=>{
-            this.ble.connect(id).take(1).subscribe(
+            this.ble.connect(deviceId).subscribe(
               peripheral => {
+
+                this._dismissLoading(loadObj);
                 setTimeout(
                   ()=>{
-                    this._dismissLoading(loadObj);
                     observer.next(true);observer.complete();
-                  },1500
+                  },2500
                 );
               },
               peripheral => {
-                observer.next(false);
+                observer.next(false);observer.complete();
                 this._dismissLoading(loadObj);
               }
             );
           }
         );
-            
-  
+
       }
     );
   }
@@ -694,7 +691,7 @@ export class BleCtrlProvider {
 
   }
   /* */
-  private _presentLoading() {
+  private _presentLoading(deviceId=null) {
     let loading = this.loadingCtrl.create({
       content: 'Please wait...'
     });
@@ -702,7 +699,12 @@ export class BleCtrlProvider {
     let time = setTimeout(()=>{
       alert('逾時');
       loading.dismiss();
-    }, 1000*12);
+      this.disconnetOnce(deviceId).subscribe(
+        isScc => {
+          this._setStatus('逾時 disconnect : '+isScc);
+        }
+      );
+    }, 1000*30);
     return {
       "time":time,
       "loading":loading
