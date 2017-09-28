@@ -30,7 +30,8 @@ export class BleOperatorPage implements OnInit{
       "id":string,
       "name":string,
       "o_name":string,
-      "group":number
+      "group":number,
+      "hadGroupSync":boolean
     }
     //"details":nowStatus
   };
@@ -55,7 +56,8 @@ export class BleOperatorPage implements OnInit{
           "id":null,
           "name":null,
           "o_name":null,
-          "group":null
+          "group":null,
+          "hadGroupSync":false
         }
         //"details":this.bleCtrl.dataStore
       };/*
@@ -80,6 +82,7 @@ export class BleOperatorPage implements OnInit{
         this.blueInfo.nowDevice.name = obj.device.name;
         this.blueInfo.nowDevice.o_name = obj.device.o_name;
         this.blueInfo.nowDevice.group = obj.device.group;
+        this.blueInfo.nowDevice.hadGroupSync = obj.device.hadGroupSync;
         this.bleToggle.checked =obj.isEnabled;
         if(this.bleToggle.checked) this.ionToggle.checked = true;
         else this.ionToggle.checked = false;
@@ -113,9 +116,6 @@ export class BleOperatorPage implements OnInit{
       this.bleCtrl.disableBle();
       //this.bleToggle.checked = this.blueInfo.details.isEnabled;
     }
-    
-    
-
   }
   openBleListNav(item){
     this.navCtrl.push(bleListPage, { item: item });
@@ -126,14 +126,13 @@ export class BleOperatorPage implements OnInit{
   dismiss() {
     this.viewCtrl.dismiss();
   }
-  connectRecentDevice(deviceId){
-    this.bleCtrl.scanAndConnect(deviceId);
-    /*this.bleCtrl.scan();
-    this.bleCtrl.connectDevice(deviceId,this.navCtrl.pop);*/
-  }
+
   disconnectDevice(){
     this.bleCtrl.disconnectCurrent().subscribe(
       isScc =>{
+        this.blueInfo.nowDevice.id = null;
+        this.blueInfo.nowDevice.name = null;
+        this.blueInfo.nowDevice.group = null;
         alert('中斷連線成功！');
       }
     );
@@ -161,7 +160,17 @@ export class BleOperatorPage implements OnInit{
             text: '修改',
             handler: data => {
               let gid = parseInt(data.gid);
-              this.bleCmd.goSetGroup(gid);
+              this.bleCmd.goSetGroup(gid).subscribe(
+                isScc=>{
+                  if(isScc){
+                    this.blueInfo.nowDevice.group = gid;
+                    this.blueInfo.nowDevice.hadGroupSync = true;
+                    alert('修改群組成功！');
+                  }else{
+                    alert('成功連接但傳送時失敗');
+                  }
+                }
+              );
               //console.log('傳送');
             }
           }
@@ -224,7 +233,9 @@ export class bleListPage implements OnInit{
   }
 
   doRefresh() {
-    this.scan();
+    if(!this.bleCtrl.dataStore.isSearching){
+      this.scan();
+    }
     /*
     setTimeout(() => {
       console.log('Async operation has ended');

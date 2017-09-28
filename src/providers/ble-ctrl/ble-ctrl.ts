@@ -11,7 +11,7 @@ import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { DevicesDataProvider,lightDeviceType } from '../devices-data/devices-data'
 
-
+const _BLE_CONNECT_TIMEOUT = 20000;
 const _LIGHTS_SERVICE_UUID = '0000fff0-0000-1000-8000-00805f9b34fb';
 const _LIGHTS_CHAR_UUID = '0000fff3-0000-1000-8000-00805f9b34fb';
 //7bb104bf-abf8-4a91-9385-9c3e07cf7c30
@@ -47,10 +47,8 @@ export class BleCtrlProvider {
   }
   private _scanListOb = <BehaviorSubject<lightDeviceType[]>>new BehaviorSubject([]);
   bleStatus : {
-    "onScanning": boolean,
     "scanList": Observable<lightDeviceType[]>,
   }= {
-    "onScanning":false,
     "scanList":this._scanListOb.asObservable()
   }
   nowStatus:Observable<nowStatus>;
@@ -78,7 +76,7 @@ export class BleCtrlProvider {
     this._nowStatus = <BehaviorSubject<nowStatus>>new BehaviorSubject({});
     this.nowStatus = this._nowStatus.asObservable();
     this.dataStore = {
-        "hadConnected":true,
+        "hadConnected":false,
         "useable": false,
         "statusMessage": "initialized...",
         "isEnabled": false,
@@ -234,13 +232,13 @@ export class BleCtrlProvider {
             observer.next(isOk);
             observer.complete();
           }else{
-            setTimeout(()=>{this.write_many_go(deviceId,observer,cmds,idx,isOk);},150);
+            setTimeout(()=>{this.syncMultiWrite(deviceId,observer,cmds,idx,isOk);},150);
           }
         }
       );
   }
-  syncSunLightsProcess(devices:lightDeviceType[], idx, observer=null,fan=null){
-        this.checkConnectOnce(devices[idx].id).subscribe(
+  syncSunLightsProcess(devices:lightDeviceType[], idx, observer=null,fan=null,isOkIdxArr){
+      this.checkConnectOnce(devices[idx].id, (idx-1>0)?devices[idx-1].id:null ).subscribe(
           isScc => {
             if(isScc){
               this._setStatus(devices[idx].id+' CONNECTED!');
@@ -249,22 +247,23 @@ export class BleCtrlProvider {
               //cmds.push( new Uint8Array([0xfa,0xa0,time.getHours(),time.getMinutes(),time.getSeconds(),0xff]) );
               //cmds.push( new Uint8Array([0xfa,0xa1,devices[idx].group,0xff]) );
               if(fan)cmds.push( new Uint8Array([0xfa,0xad,fan ,0xff]) );
-              this._setStatus(devices[idx].id+' SENDING.....');
-
-              let loadObj = this._presentLoading();
+              
+              let loadObj = this._presentLoading(devices[idx].id);
               Observable.create(
                 observer => {
                   this.syncMultiWrite(devices[idx].id, observer,cmds, 0, []);
                 }
               ).subscribe(
                 isOkArr => {
+                  isOkIdxArr.push(isOkArr);
                   this._dismissLoading(loadObj);
-                  this._setStatus(JSON.stringify(isOkArr));
-                  if(isOkArr[1]){
+                  this._setStatus(devices[idx].id +' SENED: '+JSON.stringify(isOkArr));
+                  // TODO 連線時會發生多重連接
+                  /*if(isOkArr[1]){
                     this.devicesData.modify(devices[idx].id,null,devices[idx].group,true).subscribe();
                   }else{
                     this.devicesData.modify(devices[idx].id,null,devices[idx].group,false).subscribe();
-                  }
+                  }*/
                   setTimeout(
                     ()=>{
                       this.disconnetOnce(devices[idx].id).subscribe(
@@ -274,16 +273,16 @@ export class BleCtrlProvider {
                             ()=>{
                               idx++;
                               if(idx >= devices.length){
-                                observer.next(true);
+                                observer.next(isOkIdxArr);
                                 observer.complete();
                               }else{
-                                this.syncSunLightsProcess(devices,idx, observer,fan);
+                                this.syncSunLightsProcess(devices,idx, observer,fan,isOkIdxArr);
                               }
-                            },300
+                            },1000
                           );
                         }
                       );
-                    },1000
+                    },300
                   );
                 }
               );
@@ -292,12 +291,13 @@ export class BleCtrlProvider {
               this._setStatus(devices[idx].id+' CONNECT FAILED!');
               setTimeout(
                 ()=>{
+                  isOkIdxArr.push(false);
                   idx++;
                   if(idx >= devices.length){
                     observer.next(true);
                     observer.complete();
                   }else{
-                    this.syncSunLightsProcess(devices,idx, observer,fan);
+                    this.syncSunLightsProcess(devices,idx, observer,fan,isOkIdxArr);
                   }
                 },300
               );
@@ -310,20 +310,27 @@ export class BleCtrlProvider {
   syncSunlights(devices:lightDeviceType[],fan=null){
     return Observable.create(
       observer => {
-        this.syncSunLightsProcess(devices, 0, observer, fan);
+        this.disconnectCurrent().subscribe(
+          ()=>{
+            this.syncSunLightsProcess(devices, 0, observer, fan, []);
+          }
+        );
       }
     );
 
   }
   startScan(services=[_LIGHTS_SERVICE_UUID]){
-    this.bleStatus.onScanning = true;
+
     this.scanListStore.list = [];
     this._setStatus('掃描中......');
+    this.showToast('掃描中......');
+    this._change("isSearching",true);
     this.ble.startScan(services).subscribe(
       device => {
         this.devicesData.check(device,true).subscribe(
           findDevice => {
             this.ngZone.run(() => {
+              findDevice.hadGroupSync = false;
               this.scanListStore.list.push(findDevice);
               this._scanListOb.next(this.scanListStore.list);
               //this._scanListOb.next(Object.assign({},this.scanListStore).list);
@@ -331,17 +338,19 @@ export class BleCtrlProvider {
           }
         );
       },
-      error => {this.bleStatus.onScanning =false;this._showError(error,'掃描藍芽裝置時發生錯誤。');}
+      error => {this._change("isSearching",false);this._showError(error,'掃描藍芽裝置時發生錯誤。');}
     )
   }
   stopScan(){
-    if(this.bleStatus.onScanning){
+    if(this.dataStore.isSearching){
       this.ble.stopScan().then(
         ()=>{
-          this._setStatus('停止掃描');
-          this.bleStatus.onScanning =false;
+          this._change("isSearching",false);
+          this._setStatus('掃描停止....');
+          this.showToast('掃描停止....');
         },
         () => {
+          this._change("isSearching",false);
           this.showToast('停止藍芽掃描時發生錯誤');
         }
       );
@@ -351,17 +360,25 @@ export class BleCtrlProvider {
   }
   /** SCAN series */
   scan(sec=8,showLoading=true){
-    let loadObj = this._presentLoading();
+    let loadObj = this._presentLoading(false);
     this.scanedDevices["list"] = [];
     this._setStatus('掃描中');
+    this._change("isSearching",true);
     this.ble.scan([], sec).subscribe(
       device => {
         this._onDeviceDiscovered(device);
         this._dismissLoading(loadObj);
       },
-      error => {this._showError(error,'掃描藍芽裝置時發生錯誤。');this._dismissLoading(loadObj);}
+      error => {
+        this._change("isSearching",false);
+        this._showError(error,'掃描藍芽裝置時發生錯誤。');this._dismissLoading(loadObj);
+      }
     );
-    setTimeout(this._setStatus.bind(this), 1000*sec, '掃描完成......');
+    setTimeout(()=>{
+      this._change("isSearching",false);
+      this._dismissLoading(loadObj);
+      this._setStatus('掃描完成......');
+    }, 1000*sec);
   }
 
   private _onDeviceDiscovered(device) {
@@ -380,11 +397,19 @@ export class BleCtrlProvider {
         this.nowStatus.take(1).subscribe(
           obj => {
             if(obj.hadConnected){
+              if(!obj.peripheral.id)obj.peripheral.id='';
               Observable.fromPromise(this.ble.isConnected(obj.peripheral.id)).subscribe(
                 ()=>{
                   Observable.fromPromise(this.ble.disconnect(obj.peripheral.id))
                   .subscribe( 
                     () => {
+                      this._change("device",{
+                        "name":null,
+                        "o_name" :null,
+                        "id": null,
+                        "group":null,
+                        "last_sended": null,
+                        "hadGroupSync": false,});
                       this._change("hadConnected",false);
                       this._onDeviceDisconnected();
                       observer.next(true);observer.complete();
@@ -410,7 +435,7 @@ export class BleCtrlProvider {
   }
   /** CONNECT DEVICE series */
   connectDevice(deviceId,todoFn = (p=null)=>{}){
-    let loadObj = this._presentLoading();
+    let loadObj = this._presentLoading(deviceId);
     this.disconnectCurrent().subscribe(
       ()=>{
         this.ble.connect(deviceId).subscribe(
@@ -437,63 +462,29 @@ export class BleCtrlProvider {
     );
     
   }
-  scanAndConnect(id:string,sec=6){  // ble-operator.ts
-    let loadObj = this._presentLoading();
-    this.scan(sec);
-    setTimeout(
-      ()=>{
-        this.connectDevice(id);
-        this._dismissLoading(loadObj);
-      },1000*sec
-    );
-  }
+
   disconnetOnce(deviceId){
     return Observable.create(
       observer => {
-        Observable.fromPromise(this.ble.disconnect(deviceId))
-        .subscribe(
-          () => {
-            console.log('>>> OK, disconnetOnce(deviceId) OK!!!');
-            observer.next(true);observer.complete();
-          },
-          err => {
-            console.log('>>> ERR, disconnetOnce(deviceId) failed!');
-            observer.next(false);observer.complete();
+        if(deviceId){
+          Observable.fromPromise(this.ble.disconnect(deviceId))
+          .subscribe(
+            () => {
+              console.log('>>> OK, disconnetOnce(deviceId) OK!!!');
+              observer.next(true);observer.complete();
+            },
+            err => {
+              console.log('>>> ERR, disconnetOnce(deviceId) failed!');
+              observer.next(false);observer.complete();
+          }
+          );
+        }else{
+          console.log('>>> OK, disconnetOnce(deviceId) ALREADY OK!!!');
+          observer.next(true);observer.complete();
         }
-        );
       }
     )
 
-  }
-  connectOnce(deviceId,sec=6){  // ble-command.ts
-    return Observable.create(
-      observer=>{
-        let loadObj = this._presentLoading();
-        /*this.scan(sec);
-        setTimeout(
-          ()=>{},1000*sec
-        );*/
-        this.ble.connect(deviceId).take(1).subscribe(
-          peripheral => {
-            console.log('>>> OK, connectOnce() _> this.ble.connect(deviceId) OK!!!!!');
-            this._dismissLoading(loadObj);
-            observer.next(true);
-          },
-          peripheral => {
-            Observable.fromPromise(this.ble.disconnect(deviceId))
-            .subscribe(
-              () => {
-                console.log('>>> WARN, connectOnce() _> this.ble.disconnect(deviceId) !!!!! NO CONNECT!!');
-              },
-              err => {console.log('>>> ERR, connectOnce() _> this.ble.disconnect(deviceId) failed!');}
-            );
-            this._dismissLoading(loadObj);
-            observer.next(false);
-          }
-        );
-          
-      }
-    );
   }
   disConnectDevice(deviceId){
     Observable.fromPromise(this.ble.disconnect(deviceId))
@@ -524,19 +515,24 @@ export class BleCtrlProvider {
     toast.present();
   }
   /** */
-  checkConnectOnce(deviceId){
-
+  checkConnectOnce(deviceId,lastId=null){
     return Observable.create(
       observer=>{
-        let loadObj = this._presentLoading();
-        this.disconnectCurrent().subscribe(
+
+        let loadObj = this._presentLoading(deviceId);
+        this.disconnetOnce(lastId).subscribe(
           ()=>{
+            setTimeout(
+              ()=>{
+                observer.next(false);observer.complete();
+                this._dismissLoading(loadObj);
+              },_BLE_CONNECT_TIMEOUT
+            );
             this.ble.connect(deviceId).subscribe(
               peripheral => {
-
-                this._dismissLoading(loadObj);
                 setTimeout(
                   ()=>{
+                    this._dismissLoading(loadObj);
                     observer.next(true);observer.complete();
                   },2500
                 );
@@ -545,6 +541,7 @@ export class BleCtrlProvider {
                 observer.next(false);observer.complete();
                 this._dismissLoading(loadObj);
               }
+              
             );
           }
         );
@@ -563,12 +560,19 @@ export class BleCtrlProvider {
                   observer.next(true);observer.complete();
                 },
                 ()=>{
+                  let loadObj = this._presentLoading(id);
                   this.ble.connect(id).take(1).subscribe(
                     peripheral => {
+                      this._dismissLoading(loadObj);
                       console.log('重新連線成功！！');
                       observer.next(true);observer.complete();
                     },
-                    peripheral => {this._onDeviceDisconnected();alert('無法重新連結到剛才的裝置，請確認裝置是否在附近');observer.error(peripheral);}
+                    peripheral => {
+                      alert('無法重新連結到剛才的裝置，請確認裝置是否在附近');
+                      this._dismissLoading(loadObj);
+                      this._onDeviceDisconnected();
+                      observer.error(peripheral);
+                    }
                   );
                 }
               );
@@ -585,7 +589,7 @@ export class BleCtrlProvider {
     );
 
   }
-  write_many_go(observer,cmds:Uint8Array[],idx,isOk:boolean[],loadObj){
+  write_many_go(observer,cmds:Uint8Array[],idx,isOk:boolean[],loadObj,millsec){
     Observable.fromPromise(
       this.ble.writeWithoutResponse(
         this.dataStore.peripheral.id,
@@ -601,7 +605,7 @@ export class BleCtrlProvider {
             observer.next(isOk);
             observer.complete();
           }else{
-            setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj);},150);
+            setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj,millsec);},millsec);
             
           }
         },
@@ -615,33 +619,100 @@ export class BleCtrlProvider {
             observer.next(isOk);
             observer.complete();
           }else{
-            setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj);},150);
+            setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj,millsec);},millsec);
           }
         }
       );
   }
-  write_many(value:Uint8Array[]){
+  write_many(value:Uint8Array[],millsec=500){
     console.log('=== CMD VALUE ===');
     console.log(JSON.stringify(value));
     console.log('======');
     return Observable.create(
       observer=>{
-        let loadObj = this._presentLoading();
+        let loadObj = this._presentLoading(this.dataStore.device.id);
         
         this.checkConnect(this.dataStore.device.id).subscribe(
           ()=>{
-            this.write_many_go(observer,value,0,[],loadObj);
+            this.write_many_go(observer,value,0,[],loadObj,millsec);
           },()=>{this._dismissLoading(loadObj);}
         );
       }
     );
   }
+    /**TODO 有機率無法廣播，所以改為多傳送幾次 */
+  write_d(value:Uint8Array,sccFn=(id)=>{},errFn=(id)=>{},toBack=false,deviceId=this.dataStore.device.id){
+    let cmds = [value, value];
+    return Observable.create(
+      observer => {
+        this.write_many(cmds,800).subscribe(
+          isSccArr => {
+            if(isSccArr.find(val=>val) ){
+              if(toBack) sccFn(this.dataStore.peripheral.id);
+              else this.showToast('傳送成功！ ('+ JSON.stringify(isSccArr)+')');
+              observer.next(true);
+              //this._dismissLoading(loadObj);
+            }else{
+              if(toBack) errFn(this.dataStore.peripheral.id);
+              else this._showError(isSccArr,'傳送失敗');
+              observer.next(false);
+              //this._dismissLoading(loadObj);
+            }
+            
+          }
+        );
+      }
+    );
+
+  }
+  forceWriteOnce(value:Uint8Array,id:string,sec=8){  // ble-operator.ts
+    return Observable.create(
+      observer => {
+        let loadObj = this._presentLoading(id);
+        this.scan(sec);
+        setTimeout(
+          ()=>{
+            this.checkConnectOnce(id).subscribe(
+              isScc => {
+                if(isScc){
+                  Observable.fromPromise(
+                    this.ble.writeWithoutResponse(
+                      id,
+                      _LIGHTS_SERVICE_UUID,
+                      _LIGHTS_CHAR_UUID,
+                      value.buffer
+                    )).subscribe(
+                      scc => {
+                        observer.next(scc);
+                        this._dismissLoading(loadObj);
+                        this.disconnetOnce(id).subscribe();
+                      },
+                      err => {
+                        observer.next(err);
+                        this._dismissLoading(loadObj);
+                        this.disconnetOnce(id).subscribe();
+                      }
+                    );
+                }else{
+                  observer.next(false);
+                }
+              }
+            );
+            this._dismissLoading(loadObj);
+          },1000*sec
+        );
+      }
+    );
+
+   
+  }
   write(value:Uint8Array,sccFn=(id)=>{},errFn=(id)=>{},toBack=false,deviceId=this.dataStore.device.id){
-    let loadObj = this._presentLoading();
-    console.log('=== CMD VALUE ===');
+    let loadObj = this._presentLoading(this.dataStore.peripheral.id);
+    /*console.log('=== CMD VALUE ===');
     console.log(JSON.stringify(value));
-    console.log('======');
+    console.log('======');*/
     //new Uint8Array(*).buffer
+    /**/
     this.checkConnect(deviceId).subscribe(
       ()=>{
         Observable.fromPromise(
@@ -691,20 +762,22 @@ export class BleCtrlProvider {
 
   }
   /* */
-  private _presentLoading(deviceId=null) {
+  private _presentLoading(deviceId) {
     let loading = this.loadingCtrl.create({
       content: 'Please wait...'
     });
     loading.present();
     let time = setTimeout(()=>{
-      alert('逾時');
+      if(deviceId){
+        alert(deviceId+'逾時');
+        this.disconnetOnce(deviceId).subscribe(
+          isScc => {
+            this._setStatus('逾時 disconnect : '+isScc);
+          }
+        );
+      }
       loading.dismiss();
-      this.disconnetOnce(deviceId).subscribe(
-        isScc => {
-          this._setStatus('逾時 disconnect : '+isScc);
-        }
-      );
-    }, 1000*30);
+    }, _BLE_CONNECT_TIMEOUT);
     return {
       "time":time,
       "loading":loading

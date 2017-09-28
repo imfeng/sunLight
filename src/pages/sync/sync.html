@@ -28,9 +28,12 @@
         <ion-icon item-start name="sunny"></ion-icon>
         <h2>{{ device.name || '無名稱' }}</h2>
         <p>{{ device.id }} ( Rx: {{ device.rssi }} )</p>
-        <ion-badge *ngIf="!device.group" class="badge-nongroup" item-end>?</ion-badge>
-        <ion-badge *ngIf="!device.hadGroupSync && device.group" class="badge-async" item-end>#{{ device.group || '?' }}</ion-badge>
-        <ion-badge *ngIf="device.hadGroupSync && device.group" class="badge-hasgroup" item-end>#{{ device.group || '?' }}</ion-badge>
+        <button (click)="delDevice(idx)" ion-button outline item-end><ion-icon name="trash"></ion-icon></button>
+       <!-- <ion-badge *ngIf="!device.group" class="badge-nongroup" item-end>x</ion-badge>  #{{ device.group || '?' }}
+          #{{ device.group || '?' }}   && device.group
+ && device.group -->
+        <ion-badge *ngIf="!device.hadGroupSync" class="badge-async" item-end>*</ion-badge>
+        <ion-badge *ngIf="device.hadGroupSync" class="badge-hasgroup" item-end>o</ion-badge>
         <button (click)="editDevice(idx)" ion-button outline item-end><ion-icon ios="ios-settings" md="md-settings"></ion-icon></button>
     </ion-item>
 </ion-content>

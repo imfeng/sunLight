@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.ccuome.sunlight" version="0.6.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>SunLight</name>
+<widget id="com.ionicframework.sunlight.demo" version="0.3.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>SunLight_Demo</name>
     <description>智慧神燈</description>
     <author email="hermitf@big-cause.com" href="https://github.com/imfeng">HermitF</author>
     <content src="index.html" />

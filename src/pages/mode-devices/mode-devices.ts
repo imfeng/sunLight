@@ -129,7 +129,7 @@ export class editDevicePage {
           text: '修改',
           handler: data => {
             let gid = parseInt(data.gid);
-            this.bleCmd.goSetGroupOther(gid,this.deviceInfo.data.id);
+            this.bleCmd.goSetGroupOther(gid,this.deviceInfo.data.id).subscribe();
 
             console.log('傳送');
           }

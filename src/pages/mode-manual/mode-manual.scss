@@ -1,3 +1,20 @@
 page-mode-manual {
-
+    .list.manual{
+        button{
+            margin-top: 1.5rem; 
+        }
+    }
+    .checkbox-icon.checkbox-checked{
+        border-radius: 50%;
+        width: 26px;
+        height: 26px;
+        .checkbox-inner {
+            left: 8px;
+            top: 4px;
+        }
+    }
+    .devices-demo .col>p{
+        margin: 5px auto;
+    }
+    
 }

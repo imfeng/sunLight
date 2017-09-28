@@ -38,8 +38,9 @@
         <ion-icon name="bluetooth" item-start color="primary"></ion-icon>
         <h2>{{blueInfo.nowDevice.name||'無裝置'}}</h2>
         <p>{{blueInfo.nowDevice.id||' - '}}</p>
-        <ion-badge outline item-end>{{blueInfo.nowDevice.group||'?'}}</ion-badge>
-        
+        <ion-badge *ngIf="!blueInfo.nowDevice.group" class="badge-nongroup" item-end>?</ion-badge>
+        <ion-badge *ngIf="!blueInfo.nowDevice.hadGroupSync && blueInfo.nowDevice.group" class="badge-async" item-end>#{{blueInfo.nowDevice.group}}</ion-badge>
+        <ion-badge *ngIf="blueInfo.nowDevice.hadGroupSync && blueInfo.nowDevice.group" class="badge-hasgroup" item-end>#{{blueInfo.nowDevice.group}}</ion-badge>
         <button ion-button outline item-end><ion-icon name="search"></ion-icon></button>
       </button>
 

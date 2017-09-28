@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component,NgZone } from '@angular/core';
 import { ModalController, AlertController, IonicPage, NavController, NavParams } from 'ionic-angular';
 
 import { DevicesDataProvider,lightDeviceType } from '../../providers/devices-data/devices-data';
@@ -18,7 +18,7 @@ export class SyncPage {
     "fanSpeed":number
   }={
     "nowStatus":null,
-    "fanSpeed":null
+    "fanSpeed":50
   }
   devices : {
     "list":lightDeviceType[]
@@ -39,6 +39,7 @@ export class SyncPage {
     ]
   }
   constructor(
+    private ngZone: NgZone,
     public bleCtrl: BleCtrlProvider,
     private alertCtrl: AlertController,
     private modalCtrl: ModalController,
@@ -50,6 +51,7 @@ export class SyncPage {
         }
       );
       this.devices = this.bleCtrl.scanListStore;
+      
   }
 
   ionViewDidLoad() {
@@ -90,10 +92,40 @@ export class SyncPage {
       this.bleCtrl.stopScan();
     }
   }
+  delDevice(idx){
+    this.devices.list.splice(idx,1);
+  }
   syncDevices(){
     this.bleCtrl.syncSunlights(this.devices.list,this.blueInfo.fanSpeed).subscribe(
       isScc=>{
-        alert('結束！'+isScc);
+        alert('結束！'+JSON.stringify(isScc));
+        let noSyncList =[];
+        let tempLen = this.devices.list.length;
+        for(let i=0;i<tempLen;i++){
+          
+          if(!isScc[i]){
+            this.ngZone.run(() => {
+              this.devices.list.push(Object.assign({},this.devices.list[i]));
+            });
+          }else{
+            if((isScc[i].find(val=>!val)==false)){
+              this.ngZone.run(() => {
+                this.devices.list.push(Object.assign({},this.devices.list[i]));
+              });
+             
+            }else{
+              this.ngZone.run(() => {
+                this.devices.list[i].hadGroupSync = true;
+              });
+              
+            }
+          }
+        }
+        this.ngZone.run(() => {
+          this.devices.list.splice(0,tempLen);
+        });
+        
+        
       }
     );
   }

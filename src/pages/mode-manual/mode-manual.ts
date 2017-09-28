@@ -14,6 +14,29 @@ import { LightsInfoProvider } from  '../../providers/lights-info/lights-info'
   templateUrl: 'mode-manual.html',
 })
 export class ModeManual {
+  demoDevice = [
+    {
+      "name":'裝置1',
+      "gid":1,
+      "checked":false,
+    },{
+      "name":'裝置2',
+      "gid":2,
+      "checked":false,
+    },{
+      "name":'裝置3',
+      "gid":3,
+      "checked":false,
+    },{
+      "name":'裝置4',
+      "gid":4,
+      "checked":false,
+    },{
+      "name":'裝置5',
+      "gid":5,
+      "checked":false,
+    },
+  ]
   deviceMeta :  {
     "groups" : Array<number>,
     "curType" : number,
@@ -54,11 +77,24 @@ export class ModeManual {
   ngOnInit() {
     this.lightsType = this.lightsInfo.getTypes();
   }
+  sendManualBrod(){
+    let type=this.deviceMeta.curType;
+    let multi=this.deviceMeta.curMultiple;
+    this.bleCmd.goManual(
+      multi,
+      type,
+      0,
+    );
+  }
   sendManual(power:boolean){
     let type=this.deviceMeta.curType;
     let multi=this.deviceMeta.curMultiple;
-    if(power){
-      this.deviceMeta.groups.forEach((group,idx) => {
+
+    let sendDemoList = this.demoDevice.filter( val=>val.checked).map(val=>val.gid);
+    console.log(JSON.stringify(sendDemoList));
+    if(power && sendDemoList.length>0){
+      this.bleCmd.goManualMulti(multi,type,sendDemoList);
+      /*this.deviceMeta.groups.forEach((group,idx) => {
         setTimeout(()=>{
           this.bleCmd.goManual(
             multi,
@@ -66,9 +102,10 @@ export class ModeManual {
             group,
           );
          }, 1000*idx)
-      });
-    }else{
-      this.deviceMeta.groups.forEach((group,idx) => {
+      });*/
+    }else if(sendDemoList.length>0){
+      this.bleCmd.goManualMulti(multi,0,sendDemoList);
+      /*this.deviceMeta.groups.forEach((group,idx) => {
         setTimeout(()=>{
           this.bleCmd.goManual(
             multi,
@@ -76,7 +113,9 @@ export class ModeManual {
             group,
           );
          }, 1000*idx)
-      });
+      });*/
+    }else{
+      
     }
   }
   openBleModal(){

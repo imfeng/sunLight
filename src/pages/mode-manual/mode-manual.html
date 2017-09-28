@@ -24,15 +24,25 @@
 
 
 <ion-content padding>
-  <ion-list>
+  <ion-grid >
+    <ion-row class="devices-demo" align-items-center justify-content-center>
 
-    <ion-item>
+        <ion-col *ngFor="let item of demoDevice" text-center>
+            <ion-checkbox [(ngModel)]="item.checked"></ion-checkbox>
+            <p>{{item.name}}</p>
+        </ion-col>
+
+    </ion-row>
+  </ion-grid>
+  <hr>
+  <ion-list class="manual">
+      <!--<ion-item>
       <ion-icon name="ios-pricetags-outline" item-start></ion-icon>
       <ion-label>群組</ion-label>
       <ion-select interface="alert" multiple="true" cancelText="取消" [(ngModel)]="deviceMeta.groups">
         <ion-option *ngFor="let type of deviceMeta.groupsList; let i = index" value="{{type.id}}">{{type.name}} (#{{type.id}})</ion-option>
       </ion-select>
-    </ion-item>
+    </ion-item>-->
     <ion-item>
       <ion-icon name="ios-sunny-outline" item-start></ion-icon>
       <ion-label>發光模式</ion-label>
@@ -46,7 +56,8 @@
         <ion-icon range-right name="sunny"></ion-icon>
       </ion-range>
     </ion-item>
-    <button ion-button block color="dark" (click)="sendManual(true)">傳送指令</button>
+    <button ion-button block color="primary" (click)="sendManual(true)">傳送指令</button>
+    <button ion-button block color="dark" (click)="sendManualBrod()">廣播</button>
     <button ion-button block color="dark" (click)="sendManual(false)">關燈</button>
 
   </ion-list>

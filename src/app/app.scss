@@ -15,7 +15,12 @@
 .scroll-content{
     /*overflow: hidden;*/
 }
-
+.badge.badge-nongroup{
+    background-color: #e13838;
+}
+.badge.badge-async{
+    background-color: #ddc900;
+}
 /* OVERRIDE IONIC-MD */
 ion-action-sheet.action-sheet-md{
     .action-sheet-group{

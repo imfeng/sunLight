@@ -90,7 +90,7 @@ export class DevicesDataProvider {
         if(device.name!='Sunlight'){
           observer.error(false);
         }else{
-          this.list.subscribe(
+          this.list.take(1).subscribe(
             list =>{
               let finded = list.find(
                 (val) =>{
@@ -138,7 +138,9 @@ export class DevicesDataProvider {
     this.dataStore.deviceList.push(dd);
     let sub = Observable.fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,this.dataStore.deviceList));
     sub.subscribe(
-      (obj)=>{alert('ADD DEVICE!!');this._list.next(obj);}
+      (obj)=>{
+        //alert('ADD DEVICE!!');
+        this._list.next(obj);}
     );
     //return sub;
   }

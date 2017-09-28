@@ -3,10 +3,10 @@ import { Injectable } from '@angular/core';
 import { BleCtrlProvider } from '../ble-ctrl/ble-ctrl'
 import { DevicesDataProvider } from '../devices-data/devices-data'
 import { SectionDataType } from '../../providers/patterns-data/patterns-data';
-/*
+
 import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/withLatestFrom';
-import { Observable } from 'rxjs/Observable';*/
+import { Observable } from 'rxjs/Observable';
+
 const _START = 0xFA;
 const _END = 0xFF;
 /** */
@@ -42,39 +42,43 @@ export class BleCommandProvider {
   goSetGroupOther(gid,deviceId){
     gid = parseInt(gid);
     let data = new Uint8Array([_START,_CMD_SET_GROUP,gid,_END]);
-    this.bleCtrl.connectOnce(deviceId).subscribe(
-      isScc=>{
-        if(isScc){
-          this.bleCtrl.write(data,
-            (id)=>{
-              this.devicesData.modify(id,null,gid).subscribe();
+
+    return Observable.create(
+      observer => {
+        gid = parseInt(gid);
+        let data = new Uint8Array([_START,_CMD_SET_GROUP,gid,_END]);
+        this.bleCtrl.forceWriteOnce(data,deviceId).subscribe(
+          isScc=>{
+            if(isScc){
+              this.devicesData.modify(deviceId,null,gid,true).subscribe();
               alert('修改群組成功！');
-            },
-            (id)=>{
-              this.devicesData.modify(id,null,gid).subscribe();
-              alert('成功連接但傳送時失敗，但仍會在APP顯示方才所更改的群組值');
-            },true,deviceId
-          );
-        }else{
-          this.devicesData.modify(deviceId,null,gid).subscribe();
-          alert('修改該裝置群組失敗(找不到裝置)，但仍會在APP顯示方才所更改的群組值');
-        }
+            }else{
+              this.devicesData.modify(deviceId,null,gid,false).subscribe();
+              alert('無法連接至裝置，但仍會在APP顯示方才所更改的群組值');
+            }
+          }
+        );
       }
     );
   }
   goSetGroup(gid){
-    gid = parseInt(gid);
-    let data = new Uint8Array([_START,_CMD_SET_GROUP,gid,_END]);
-    this.bleCtrl.write(data,
-      (id)=>{
-        this.devicesData.modify(id,null,gid).subscribe();
-        alert('修改群組成功！');
-      },
-      (id)=>{
-        this.devicesData.modify(id,null,gid).subscribe();
-        alert('成功連接但傳送時失敗，但仍會在APP顯示方才所更改的群組值');
-      },true
+    return Observable.create(
+      observer => {
+        gid = parseInt(gid);
+        let data = new Uint8Array([_START,_CMD_SET_GROUP,gid,_END]);
+        this.bleCtrl.write(data,
+          (id)=>{
+            this.devicesData.modify(id,null,gid,true).subscribe();
+            observer.next(true);observer.complete();
+          },
+          (id)=>{
+            this.devicesData.modify(id,null,gid,false).subscribe();
+            observer.next(false);observer.complete();
+          },true
+        );
+      }
     );
+
 
     /*this.bleCtrl.write(data).subscribe(
       (id)=>{
@@ -89,7 +93,12 @@ export class BleCommandProvider {
   }
   goManual(multi,type,gid){
     let data = new Uint8Array([_START,_CMD_MANUAL_MODE,multi,type,gid,_END]);
-    this.bleCtrl.write(data);
+    this.bleCtrl.write_d(data).subscribe();
+  }
+  goManualMulti(multi,type,gidList:Array<any>){
+    let cmds= gidList.map(gid=>new Uint8Array([_START,_CMD_MANUAL_MODE,multi,type,gid,_END]));
+
+    this.bleCtrl.write_many(cmds,150).subscribe();
   }
   goSchedule(sectionsList:SectionDataType[],gid){
     //let time = new Date();
@@ -154,11 +163,13 @@ export class BleCommandProvider {
   };
   goDev(multi,gid,arr){
     let data = new Uint8Array([_START,_CMD_DEV_MODE,multi,gid, ...arr ,_END]);
-    this.bleCtrl.write(data);;
+    //this.bleCtrl.write(data);
+    this.bleCtrl.write_d(data).subscribe();
   }
   goFan(speed){
     let data = new Uint8Array([_START,_CMD_FAN_SPEED,speed ,_END]);
     this.bleCtrl.write(data);;
+    
   }
 
 
