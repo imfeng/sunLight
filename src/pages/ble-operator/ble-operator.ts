@@ -213,6 +213,7 @@ export class bleListPage implements OnInit{
   }
 
   connectDevice(deviceId){
+    console.log('>>> connectDevice()');
     this.bleCtrl.connectDevice(deviceId,()=>{this.navCtrl.pop});
     
   }

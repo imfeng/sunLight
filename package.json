@@ -1,58 +1,91 @@
 {
-  "name": "SunLight",
-  "version": "0.0.0",
-  "author": "Hermitf",
-  "homepage": "http://ionicframework.com/",
-  "private": true,
-  "scripts": {
-    "clean": "ionic-app-scripts clean",
-    "build": "ionic-app-scripts build",
-    "lint": "ionic-app-scripts lint",
-    "ionic:build": "ionic-app-scripts build",
-    "ionic:serve": "ionic-app-scripts serve"
-  },
-  "dependencies": {
-    "@angular/common": "4.1.3",
-    "@angular/compiler": "4.1.3",
-    "@angular/compiler-cli": "4.1.3",
-    "@angular/core": "4.1.3",
-    "@angular/forms": "4.1.3",
-    "@angular/http": "4.1.3",
-    "@angular/platform-browser": "4.1.3",
-    "@angular/platform-browser-dynamic": "4.1.3",
-    "@ionic-native/android-permissions": "^4.2.1",
-    "@ionic-native/ble": "^4.2.1",
-    "@ionic-native/bluetooth-serial": "^4.2.1",
-    "@ionic-native/core": "^3.12.1",
-    "@ionic-native/native-storage": "^4.2.1",
-    "@ionic-native/splash-screen": "3.12.1",
-    "@ionic-native/status-bar": "3.12.1",
-    "@ionic-native/wheel-selector": "^4.2.1",
-    "@ionic/storage": "^2.0.1",
-    "ajv": "^5.2.2",
-    "angular2-number-picker": "^0.8.8",
-    "chart.js": "^2.6.0",
-    "cordova-wheel-selector-plugin": "^1.0.9",
-    "ionic-angular": "^3.6.0",
-    "ionicons": "3.0.0",
-    "ng2-charts": "^1.6.0",
-    "rxjs": "5.4.0",
-    "sw-toolbox": "3.6.0",
-    "zone.js": "0.8.12"
-  },
-  "devDependencies": {
-    "@ionic/app-scripts": "^2.1.4",
-    "typescript": "2.3.4"
-  },
-  "cordovaPlugins": [
-    "cordova-plugin-bluetoothle",
-    "cordova-plugin-whitelist",
-    "cordova-plugin-console",
-    "cordova-plugin-statusbar",
-    "cordova-plugin-device",
-    "cordova-plugin-splashscreen",
-    "ionic-plugin-keyboard"
-  ],
-  "cordovaPlatforms": [],
-  "description": "SunLight: An Ionic project"
+    "name": "SunLight",
+    "version": "0.0.0",
+    "author": "Hermitf",
+    "homepage": "http://ionicframework.com/",
+    "private": true,
+    "scripts": {
+        "clean": "ionic-app-scripts clean",
+        "build": "ionic-app-scripts build",
+        "lint": "ionic-app-scripts lint",
+        "ionic:build": "ionic-app-scripts build",
+        "ionic:serve": "ionic-app-scripts serve"
+    },
+    "dependencies": {
+        "@angular/common": "4.1.3",
+        "@angular/compiler": "4.1.3",
+        "@angular/compiler-cli": "4.1.3",
+        "@angular/core": "4.1.3",
+        "@angular/forms": "4.1.3",
+        "@angular/http": "4.1.3",
+        "@angular/platform-browser": "4.1.3",
+        "@angular/platform-browser-dynamic": "4.1.3",
+        "@ionic-native/android-permissions": "^4.2.1",
+        "@ionic-native/ble": "^4.2.1",
+        "@ionic-native/bluetooth-serial": "^4.2.1",
+        "@ionic-native/core": "^3.12.1",
+        "@ionic-native/native-storage": "^4.2.1",
+        "@ionic-native/splash-screen": "3.12.1",
+        "@ionic-native/status-bar": "3.12.1",
+        "@ionic-native/wheel-selector": "^4.2.1",
+        "@ionic/storage": "^2.0.1",
+        "ajv": "^5.2.2",
+        "angular2-number-picker": "^0.8.8",
+        "chart.js": "^2.6.0",
+        "cordova-browser": "~4.1.0",
+        "cordova-ios": "^4.5.1",
+        "cordova-plugin-android-permissions": "^1.0.0",
+        "cordova-plugin-background-mode": "^0.7.2",
+        "cordova-plugin-ble-central": "^1.1.4",
+        "cordova-plugin-compat": "^1.2.0",
+        "cordova-plugin-console": "^1.0.5",
+        "cordova-plugin-device": "^1.1.4",
+        "cordova-plugin-nativestorage": "^2.2.2",
+        "cordova-plugin-splashscreen": "^4.0.3",
+        "cordova-plugin-statusbar": "^2.2.2",
+        "cordova-plugin-whitelist": "^1.3.1",
+        "cordova-wheel-selector-plugin": "^1.0.9",
+        "ionic-angular": "^3.6.0",
+        "ionic-plugin-keyboard": "^2.2.1",
+        "ionicons": "3.0.0",
+        "ng2-charts": "^1.6.0",
+        "rxjs": "5.4.0",
+        "sw-toolbox": "3.6.0",
+        "zone.js": "0.8.12"
+    },
+    "devDependencies": {
+        "@ionic/app-scripts": "^2.1.4",
+        "typescript": "2.3.4"
+    },
+    "cordovaPlugins": [
+        "cordova-plugin-bluetoothle",
+        "cordova-plugin-whitelist",
+        "cordova-plugin-console",
+        "cordova-plugin-statusbar",
+        "cordova-plugin-device",
+        "cordova-plugin-splashscreen",
+        "ionic-plugin-keyboard"
+    ],
+    "cordovaPlatforms": [],
+    "description": "SunLight: An Ionic project",
+    "cordova": {
+        "plugins": {
+            "cordova-plugin-ble-central": {
+                "BLUETOOTH_USAGE_DESCRIPTION": "This app likes to use your bluetooth..."
+            },
+            "cordova-plugin-android-permissions": {},
+            "cordova-plugin-background-mode": {},
+            "cordova-plugin-console": {},
+            "cordova-plugin-device": {},
+            "cordova-plugin-nativestorage": {},
+            "cordova-plugin-splashscreen": {},
+            "cordova-plugin-statusbar": {},
+            "cordova-plugin-whitelist": {},
+            "cordova-wheel-selector-plugin": {},
+            "ionic-plugin-keyboard": {}
+        },
+        "platforms": [
+            "browser"
+        ]
+    }
 }

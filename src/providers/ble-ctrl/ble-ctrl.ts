@@ -12,8 +12,10 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { DevicesDataProvider,lightDeviceType } from '../devices-data/devices-data'
 
 
-const _LIGHTS_SERVICE_UUID = '0000fff0-0000-1000-8000-00805f9b34fb';
-const _LIGHTS_CHAR_UUID = '0000fff3-0000-1000-8000-00805f9b34fb';
+//const _LIGHTS_SERVICE_UUID = '0000fff0-0000-1000-8000-00805f9b34fb';
+//const _LIGHTS_CHAR_UUID = '0000fff3-0000-1000-8000-00805f9b34fb';
+const _LIGHTS_SERVICE_UUID = 'fff0'; 
+const _LIGHTS_CHAR_UUID = 'fff3';
 //7bb104bf-abf8-4a91-9385-9c3e07cf7c30
 //b9403000-f5f8-466e-aff9-25556b57fe6d
 //const _LIGHTS_SERVICE_UUID = 'b9406000-f5f8-466e-aff9-25556b57fe6d';
@@ -78,22 +80,24 @@ export class BleCtrlProvider {
     this._nowStatus = <BehaviorSubject<nowStatus>>new BehaviorSubject({});
     this.nowStatus = this._nowStatus.asObservable();
     this.dataStore = {
-        "hadConnected":true,
+        
         "useable": false,
         "statusMessage": "initialized...",
         "isEnabled": false,
         "isConnected": false,
         "isDiscovered": false,
         "isSearching": false,
+
+        "hadConnected":false,
         "peripheral": {
           "name": "無裝置",
           "slug": "無裝置",
-          "id": null,
+          "id": '',
         },
         "device":{
           "name":null,
           "o_name" :null,
-          "id": null,
+          "id": '',
           "group":null,
           "last_sended": null,
           "hadGroupSync": false,
@@ -163,7 +167,7 @@ export class BleCtrlProvider {
         this.checkConnectOnce(deviceId).subscribe(
           ()=>{
             Observable.fromPromise(
-              this.ble.writeWithoutResponse(
+              this.ble.write(
                 deviceId,
                 _LIGHTS_SERVICE_UUID,
                 _LIGHTS_CHAR_UUID,
@@ -187,7 +191,7 @@ export class BleCtrlProvider {
           }
         );/*
         Observable.fromPromise(
-          this.ble.writeWithoutResponse(
+          this.ble.write(
             id,
             _LIGHTS_SERVICE_UUID,
             _LIGHTS_CHAR_UUID,
@@ -210,7 +214,7 @@ export class BleCtrlProvider {
   }
   syncMultiWrite(deviceId,observer,cmds:Uint8Array[],idx,isOk:boolean[]){
     Observable.fromPromise(
-      this.ble.writeWithoutResponse(
+      this.ble.write(
         deviceId,
         _LIGHTS_SERVICE_UUID,
         _LIGHTS_CHAR_UUID,
@@ -354,7 +358,7 @@ export class BleCtrlProvider {
     let loadObj = this._presentLoading();
     this.scanedDevices["list"] = [];
     this._setStatus('掃描中');
-    this.ble.scan([], sec).subscribe(
+    this.ble.scan([_LIGHTS_SERVICE_UUID], sec).subscribe(
       device => {
         this._onDeviceDiscovered(device);
         this._dismissLoading(loadObj);
@@ -379,9 +383,13 @@ export class BleCtrlProvider {
       observer => {
         this.nowStatus.take(1).subscribe(
           obj => {
+            console.log(obj.hadConnected);
             if(obj.hadConnected){
+              console.log('>>> ble.isConnected()');
+              if(!obj.peripheral.id)obj.peripheral.id='';  
               Observable.fromPromise(this.ble.isConnected(obj.peripheral.id)).subscribe(
                 ()=>{
+                  console.log('>>> ble.disconnect()');
                   Observable.fromPromise(this.ble.disconnect(obj.peripheral.id))
                   .subscribe( 
                     () => {
@@ -410,9 +418,11 @@ export class BleCtrlProvider {
   }
   /** CONNECT DEVICE series */
   connectDevice(deviceId,todoFn = (p=null)=>{}){
+    console.log('>>> blectrl.connectDevice()');
     let loadObj = this._presentLoading();
     this.disconnectCurrent().subscribe(
       ()=>{
+        console.log('>>> ble.connect()');
         this.ble.connect(deviceId).subscribe(
           peripheral => {
             setTimeout(()=>{
@@ -587,7 +597,7 @@ export class BleCtrlProvider {
   }
   write_many_go(observer,cmds:Uint8Array[],idx,isOk:boolean[],loadObj){
     Observable.fromPromise(
-      this.ble.writeWithoutResponse(
+      this.ble.write(
         this.dataStore.peripheral.id,
         _LIGHTS_SERVICE_UUID,
         _LIGHTS_CHAR_UUID,
@@ -645,7 +655,7 @@ export class BleCtrlProvider {
     this.checkConnect(deviceId).subscribe(
       ()=>{
         Observable.fromPromise(
-          this.ble.writeWithoutResponse(
+          this.ble.write(
             this.dataStore.peripheral.id,
             _LIGHTS_SERVICE_UUID,
             _LIGHTS_CHAR_UUID,
@@ -672,7 +682,7 @@ export class BleCtrlProvider {
           peripheral => {
             console.log('重新連線成功！！');
             Observable.fromPromise(
-              this.ble.writeWithoutResponse(
+              this.ble.write(
                 this.dataStore.peripheral.id,
                 _LIGHTS_SERVICE_UUID,
                 _LIGHTS_CHAR_UUID,
