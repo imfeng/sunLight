@@ -280,6 +280,27 @@ export class pr2ModesNav {
     delSection(idx){
       this.sections.splice(idx,1);
     }
+    editSection(idx){
+      let modal = this.modalCtrl.create(modalSectionEdit,{ "time":this.sections[idx].time,"multiple":this.sections[idx].multiple },{cssClass:'modal-section'});
+      modal.onDidDismiss(data => {
+        let repeated =this.detectRepeat(data)
+        if(data && !repeated){
+          //this.sections.push(data);
+          this.sections[idx].time = data.time;
+          this.sections[idx].multiple = data.multiple;
+          this.sections.sort( 
+            (a,b) => 
+            ( (a.time_num[0]==b.time_num[0])?(a.time_num[1]-b.time_num[1]):(a.time_num[0]-b.time_num[0])  ) 
+          );
+        }else if(repeated){
+          this.toastCtrl.showToast('「開始時間」重複，請試試別的時間唷');
+        }else{
+
+        }
+        //console.log(this.sections);
+      });
+      modal.present();
+    }
     addSection() {
       if(this.sections.length>=30){
         alert('排程數量已經額滿(上限為30組)');

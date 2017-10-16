@@ -42,16 +42,28 @@
       </ion-row>
       <ion-icon item-end></ion-icon>
     </ion-list-header>
-    <ion-item *ngFor="let item of sections;let idx =index">
-      <ion-row text-center>
-          <ion-col col-5>
-          {{item.mode | light:'name'}}</ion-col>
-        <ion-col col-4><span>{{item.time}}</span></ion-col>
-        <ion-col col-3><span>{{item.multiple}}%</span></ion-col>
+    <ion-item-sliding *ngFor="let item of sections;let idx =index">
+      <ion-item>
+        <ion-row text-center>
+            <ion-col col-5>
+            {{item.mode | light:'name'}}</ion-col>
+          <ion-col col-4><span>{{item.time}}</span></ion-col>
+          <ion-col col-3><span>{{item.multiple}}</span></ion-col>
 
-      </ion-row>
-      <button *ngIf="isShowDel" (click)="delSection(idx)" ion-button class="btn-remove" clear icon-only color="dark" item-end><ion-icon name="trash"></ion-icon></button>
-    </ion-item>
+        </ion-row>
+        
+      </ion-item>
+      <ion-item-options side="right">
+        <button (click)="editSection(idx)" ion-button color="primary">
+          <ion-icon name="settings"></ion-icon>
+          EDIT
+        </button>
+        <button (click)="delSection(idx)" ion-button color="danger">
+          <ion-icon name="close"></ion-icon>
+          DEL
+        </button>
+      </ion-item-options>
+    </ion-item-sliding>
 
       <button ion-button block color="primary" (click)="saveSections()">儲存</button>
       <button ion-button block color="secondary" (click)="sendSections()">傳送</button>

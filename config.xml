@@ -91,7 +91,7 @@
     <plugin name="cordova-plugin-ble-central" spec="~1.1.4" />
     <plugin name="cordova-plugin-bluetoothle" spec="~4.4.2" />
     <plugin name="cordova-plugin-background-mode" spec="~0.7.2" />
-    <engine name="android" spec="~6.1.2" />
     <plugin name="cordova-plugin-android-permissions" spec="~1.0.0" />
     <plugin name="cordova-plugin-nativestorage" spec="~2.2.2" />
+    <engine name="android" spec="~6.1.2" />
 </widget>

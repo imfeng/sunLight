@@ -99,7 +99,13 @@ export class BleCommandProvider {
     let cmds =[];
     let data = new Uint8Array([]);
     let cursor = 1;
+    let lastVal = {
+      multiple:0,
+      mode:0,
+      time_num:[]
+    }
     sectionsList.forEach(val => {
+      lastVal = val;
       cmds.push(
         new Uint8Array([
           _START,
@@ -112,21 +118,21 @@ export class BleCommandProvider {
           cursor++,
           _END])
       );
-    });/*
+    });
     for(let i=cursor;i<=30;i++){
       cmds.push(
         new Uint8Array([
           _START,
           _CMD_SCHEDULE_MODE,
-          0,
-          0,
+          lastVal.multiple,
+          lastVal.mode,
           gid,
-          0,
-          0,
+          lastVal.time_num[0],
+          lastVal.time_num[1],
           i,
           _END])
       );
-    }*/
+    }
 
     /*sectionsList.forEach(val => {
       data = this._appendBuffer(data,new Uint8Array([

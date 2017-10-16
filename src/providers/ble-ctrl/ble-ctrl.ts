@@ -604,7 +604,7 @@ export class BleCtrlProvider {
             observer.next(isOk);
             observer.complete();
           }else{
-            setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj);},150);
+            setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj);},200);
             
           }
         },
