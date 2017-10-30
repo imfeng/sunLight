@@ -57,7 +57,8 @@ export class editDevicePage {
       "group":0,
       "last_sended": 0,
 
-      "hadGroupSync":false
+      "hadGroupSync":false,
+      "collection":null,
     }
   };
   constructor(

@@ -31,6 +31,9 @@ export class BleOperatorPage implements OnInit{
       "name":string,
       "o_name":string,
       "group":number
+    },
+    "devices":{
+      "list": Array<object>
     }
     //"details":nowStatus
   };
@@ -39,6 +42,7 @@ export class BleOperatorPage implements OnInit{
   }
   devices_list:Observable<lightDeviceType[]>;
   constructor(
+    public platform: Platform,
     private ngZone: NgZone,
     private bleCmd: BleCommandProvider,
     private alertCtrl:AlertController,
@@ -56,8 +60,8 @@ export class BleOperatorPage implements OnInit{
           "name":null,
           "o_name":null,
           "group":null
-        }
-        //"details":this.bleCtrl.dataStore
+        },
+        "devices":this.bleCtrl.scanedDevices
       };/*
       this.bleCtrl.nowStatus.subscribe(
         data => {
@@ -70,6 +74,23 @@ export class BleOperatorPage implements OnInit{
       this.bleToggle = {
         "checked": false
       };
+      this.platform.ready().then(ready=>{
+        //this.blueInfo = this.bleCtrl.dataStore;
+        this.blueInfo.details.take(1).subscribe(
+          obj => {
+            if(obj["isEnabled"]){
+              this.doRefresh();
+              /* HACK refresher EVENT */
+              /*this.refresher._top = this.content.contentTop + 'px';
+              this.refresher.state = 'ready';
+              this.refresher._onEnd();*/
+            }else{
+              alert('請開啟藍芽才能正常運作唷～');
+            }
+          }
+        );
+
+      });
   }
   ionViewDidEnter(){
     console.log('>>>>>>>>>>>>>>>>>>>>>>BleOperatorPage ionViewDidEnter');
@@ -88,6 +109,25 @@ export class BleOperatorPage implements OnInit{
   }
   ngOnInit(){
   }
+  // TODO
+  doRefresh() {
+    this.scan();
+    /*
+    setTimeout(() => {
+      console.log('Async operation has ended');
+      refresher.complete();
+    }, 2000);*/
+  }
+  connectDevice(deviceId){
+    this.bleCtrl.connectDevice(deviceId,()=>{this.navCtrl.pop});
+    
+  }
+  scan(){
+    //console.log(JSON.stringify(this.blueInfo));
+    //console.log(JSON.stringify(this.devices.list));
+    this.bleCtrl.scan();
+  }
+  //
   setBleInfo(s:boolean){
   }
   enableBle() {

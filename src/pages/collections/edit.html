@@ -1,0 +1,30 @@
+<ion-header>
+  <ion-navbar>
+
+    <ion-title>
+      編輯群組
+    </ion-title>
+
+  </ion-navbar>
+
+</ion-header>
+
+<ion-content class="outer-content">
+  <ion-list>
+    <ion-item *ngFor="let item of devices_list.data;let idx =index;">
+        <ion-label>{{item.name || "無名稱"}}  ({{item.id}})</ion-label>
+        <ion-checkbox [(ngModel)]="item.isCheck" [disabled]="item.isDisabled"></ion-checkbox>
+        <ion-badge item-end>#{{ item.collection || "無群組"}}</ion-badge>
+    </ion-item>
+    <ion-item *ngFor="let device of devicesList; let idx=index">
+      <ion-label>{{device.name || device.o_name || "無名稱"}}  ({{device.id}})</ion-label>
+      <ion-checkbox [(ngModel)]="devicesCheckList[idx]" [disabled]="device.collection"></ion-checkbox>
+      <ion-badge item-end>#{{ device.collection || "無群組"}}</ion-badge>
+    </ion-item>
+    <button ion-button block color="primary" (click)="save()">儲存</button>
+  </ion-list>
+</ion-content>
+
+<ion-footer>
+
+</ion-footer>

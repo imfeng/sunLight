@@ -43,6 +43,7 @@ import { ToastCtrlProvider } from '../providers/toast-ctrl/toast-ctrl';
 import { BleCtrlProvider } from '../providers/ble-ctrl/ble-ctrl';
 import { BleCommandProvider } from '../providers/ble-command/ble-command';
 import { DevicesDataProvider } from '../providers/devices-data/devices-data';
+import { CollectionsDataProvider } from '../providers/collections-data/collections-data';
 
 @NgModule({
   declarations: [
@@ -99,7 +100,8 @@ import { DevicesDataProvider } from '../providers/devices-data/devices-data';
     ToastCtrlProvider,
     BleCtrlProvider,
     BleCommandProvider,
-    DevicesDataProvider
+    DevicesDataProvider,
+    CollectionsDataProvider
     
   ]
 })

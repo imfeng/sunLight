@@ -29,13 +29,16 @@ export class SyncPage {
       "id": '00:11:22:33:4:55:66',
       "group":null,
       "last_sended": null,
-      "hadGroupSync":false},
+      "hadGroupSync":false,
+      "collection":null,
+    },
       {"name":'測試2',
       "o_name" :'測試2o',
       "id": '22:11:22:33:4:55:66',
       "group":2,
       "last_sended": null,
-      "hadGroupSync":false}
+      "hadGroupSync":false,
+      "collection":null,}
     ]
   }
   constructor(
@@ -150,8 +153,8 @@ export class editDeviceSyncPage {
         "id": '',
         "group":0,
         "last_sended": 0,
-
-        "hadGroupSync": false
+        "hadGroupSync": false,
+        "collection":null,
       }
     };
     constructor(

@@ -97,6 +97,7 @@ export class BleCtrlProvider {
           "group":null,
           "last_sended": null,
           "hadGroupSync": false,
+          "collection":null,
         }
     };
 

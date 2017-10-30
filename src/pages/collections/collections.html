@@ -1,0 +1,22 @@
+<!--
+  Generated template for the CollectionPage page.
+
+  See http://ionicframework.com/docs/components/#navigation for more info on
+  Ionic pages and navigation.
+-->
+<ion-header>
+
+  <ion-navbar>
+    <ion-title>collections</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+    <ion-list>
+        <button ion-item *ngFor="let item of collectionsList" (click)="edit(item.cid)">
+          {{ item.name }}
+        </button>  
+    </ion-list>
+</ion-content>

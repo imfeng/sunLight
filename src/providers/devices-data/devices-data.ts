@@ -14,9 +14,9 @@ export interface lightDeviceType {
   "id": string,
   "group":number,
   //"isGroupSync":boolean
-  "last_sended": number
-
+  "last_sended": number,
   "hadGroupSync":boolean,
+  "collection": number,
 }
 @Injectable()
 export class DevicesDataProvider {
@@ -28,7 +28,6 @@ export class DevicesDataProvider {
     "deviceList": Array<lightDeviceType>
   }
   constructor(
-
     private storage:NativeStorage) {
       this._list = <BehaviorSubject<lightDeviceType[]>>new BehaviorSubject([]);
       this.list = this._list.asObservable();
@@ -62,7 +61,8 @@ export class DevicesDataProvider {
             "group":2,
             "last_sended": 0
           }]
-          Observable.fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,temp)).subscribe();;
+          Observable.fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,temp)).subscribe();
+          this._list.next(Object.assign({}, this.dataStore).deviceList);
         }else{
           alert("錯誤" + JSON.stringify(error));
         }
@@ -107,7 +107,8 @@ export class DevicesDataProvider {
                   "id": device.id,
                   "group":null,
                   "hadGroupSync":false,
-                  "last_sended": 0
+                  "last_sended": 0,
+                  "collection": null,
                 };
                 this.add(newDevice);
                 observer.next(newDevice);
@@ -142,14 +143,15 @@ export class DevicesDataProvider {
     );
     //return sub;
   }
-  modify(d_id,d_name,d_gid,hadGroupSync=false){
-    console.log(this.dataStore.deviceList);
+  modify(d_id,d_name,d_gid,hadGroupSync=false,collection=0){
+    console.log(d_id);
     let isNext = false;
     let tmpOb = Observable.create(
       observer => {
         this.dataStore.deviceList.forEach(
           (ele,idx) =>{
             if(ele.id == d_id){
+              this.dataStore.deviceList[idx].collection = collection;
               if(d_name)this.dataStore.deviceList[idx].name = d_name;
               if(d_gid){
                 this.dataStore.deviceList[idx].group = d_gid;

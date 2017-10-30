@@ -15,11 +15,11 @@
       <button (click)="editGroup(deviceInfo.data.id)" ion-item>
         <ion-icon name="wifi" item-start color="primary"></ion-icon>
         <ion-label>群組</ion-label>
-        <ion-badge item-end>#{{deviceInfo.data.group}}</ion-badge>
+        <ion-badge item-end>#{{deviceInfo.data.collection}}</ion-badge>
       </button>
       <button (click)="editName()" ion-item>
         <ion-icon name="wifi" item-start color="primary"></ion-icon>
-        <ion-label>裝置名稱</ion-label>
+        <ion-label>自訂名稱</ion-label>
         <ion-note item-end>{{deviceInfo.data.name}}</ion-note>
       </button>
       <ion-item>
@@ -27,6 +27,11 @@
         <ion-label>原始名稱</ion-label>
         <ion-note item-end>{{deviceInfo.data.o_name}}</ion-note>
       </ion-item>
+      <ion-item>
+          <ion-icon name="wifi" item-start color="primary"></ion-icon>
+          <ion-label>編號</ion-label>
+          <ion-note item-end>{{deviceInfo.data.group}}</ion-note>
+        </ion-item>
       <ion-item>
         <ion-icon name="wifi" item-start color="primary"></ion-icon>
         <ion-label>ID</ion-label>
