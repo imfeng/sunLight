@@ -13,28 +13,16 @@ import { CollectionsDataProvider,collectionType } from '../../providers/collecti
 })
 export class CollectionsPage {
   
-  collectionsList : Array<any>;
+  collectionsList : Observable<collectionType[]>;
 
   constructor(
+    private clProv : CollectionsDataProvider,
     public navCtrl: NavController,
     public navParams: NavParams
   ) {
-    
-    this.collectionsList = [
-      {
-        "cid" : 1,
-        "name" : '群組1',
-        "devices" : []
-      },{
-        "cid" : 2,
-        "name" : '群組2',
-        "devices" : []
-      },{
-        "cid" : 3,
-        "name" : '群組3',
-        "devices" : []
-      }
-    ]
+
+    this.collectionsList = this.clProv.list;
+
   }
 
   ionViewDidLoad() {

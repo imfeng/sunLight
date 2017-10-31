@@ -12,8 +12,14 @@ import { LightsInfoProvider,lightsTypesPipe } from './lights-info';
   ],
     imports: [CommonModule],
   providers: [
-    LightsInfoProvider,
-    lightsTypesPipe
+    LightsInfoProvider
   ],
 })
-export class LightsInfoModule {}
+export class LightsInfoModule {
+  static forRoot() {
+    return {
+        ngModule: LightsInfoModule,
+        providers: [],
+    };
+ }
+}

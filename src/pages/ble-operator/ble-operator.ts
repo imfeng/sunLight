@@ -119,8 +119,14 @@ export class BleOperatorPage implements OnInit{
     }, 2000);*/
   }
   connectDevice(deviceId){
-    this.bleCtrl.connectDevice(deviceId,()=>{this.navCtrl.pop});
+    this.bleCtrl.connectDevice(deviceId,(p)=>{
+      setTimeout(()=>{
+        this.bleCmd.goSetGroup( this.blueInfo.devices.list.length );
+      },2800);
+      this.navCtrl.pop
+    });
     
+    //
   }
   scan(){
     //console.log(JSON.stringify(this.blueInfo));

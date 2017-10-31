@@ -9,14 +9,14 @@
   <ion-navbar>
 
 
- 
-      <ion-title >mode-manual</ion-title>
-      <ion-buttons end>
-        <button ion-button icon-only color="royal" (click)="openBleModal()">
-          <ion-icon name="bluetooth" ></ion-icon>
-          
-        </button>
-      </ion-buttons>
+
+    <ion-title>mode-manual</ion-title>
+    <ion-buttons end>
+      <button ion-button icon-only color="royal" (click)="openBleModal()">
+        <ion-icon name="bluetooth"></ion-icon>
+
+      </button>
+    </ion-buttons>
 
   </ion-navbar>
 
@@ -24,8 +24,19 @@
 
 
 <ion-content padding>
-  <ion-list>
+  <ion-grid>
+    <ion-row class="collections" align-items-center justify-content-center>
 
+      <ion-col *ngFor="let item of collectionsList|async;let idx = index;" text-center>
+        <ion-checkbox [(ngModel)]="collectionsChecks[idx]"></ion-checkbox>
+        <p>{{item.name}}</p>
+      </ion-col>
+
+    </ion-row>
+  </ion-grid>
+  <hr>
+  <ion-list>
+    <!--
     <ion-item>
       <ion-icon name="ios-pricetags-outline" item-start></ion-icon>
       <ion-label>群組</ion-label>
@@ -39,14 +50,15 @@
       <ion-select interface="action-sheet" cancelText="取消" [(ngModel)]="deviceMeta.curType">
         <ion-option *ngFor="let type of lightsType;" value="{{type.value}}">{{type.name}}</ion-option>
       </ion-select>
-    </ion-item>
-    <ion-item>
-      <ion-range min="0" max="30" pin="true" [(ngModel)]="deviceMeta.curMultiple">
-        <ion-icon range-left small name="sunny"></ion-icon>
-        <ion-icon range-right name="sunny"></ion-icon>
+    </ion-item>-->
+    <ion-item *ngFor="let item of lightsType;let idx=index;">
+      <ion-range [color]="(curType==(idx+1))?'primary':'dark'" debounce="0" min="0" max="30" [(ngModel)]="deviceMeta.multipleList[idx]" (ionBlur)="trigger($event,idx+1)">
+        <ion-label range-left>{{(idx+1)|light:'slug'}}</ion-label>
+        <ion-badge [color]="(curType==(idx+1))?'primary':'dark'" range-right>{{deviceMeta.multipleList[idx]}}</ion-badge>
       </ion-range>
     </ion-item>
-    <button ion-button block color="dark" (click)="sendManual(true)">傳送指令</button>
+    
+    <button ion-button block color="dark" (click)="disableManual(true)">取消手動</button>
     <button ion-button block color="dark" (click)="sendManual(false)">關燈</button>
 
   </ion-list>

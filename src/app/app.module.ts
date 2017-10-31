@@ -25,7 +25,7 @@ import { ModeDevicesPage,editDevicePage } from '../pages/mode-devices/mode-devic
 */
 //import { TabsPage } from '../pages/tabs/tabs';
 import { TabsPageModule } from '../pages/tabs/tabs.module';
-
+import { CollectionsModule } from '../providers/collections-data/collections-data.module';
 /* IONIC NATIVE */
 import { WheelSelector } from '@ionic-native/wheel-selector';
 import { StatusBar } from '@ionic-native/status-bar';
@@ -43,7 +43,7 @@ import { ToastCtrlProvider } from '../providers/toast-ctrl/toast-ctrl';
 import { BleCtrlProvider } from '../providers/ble-ctrl/ble-ctrl';
 import { BleCommandProvider } from '../providers/ble-command/ble-command';
 import { DevicesDataProvider } from '../providers/devices-data/devices-data';
-import { CollectionsDataProvider } from '../providers/collections-data/collections-data';
+import { ScheduleDataProvider } from '../providers/schedule-data/schedule-data';
 
 @NgModule({
   declarations: [
@@ -71,6 +71,7 @@ import { CollectionsDataProvider } from '../providers/collections-data/collectio
     FormsModule,
     BrowserModule,
     IonicModule.forRoot(MyApp),
+    CollectionsModule
     
 
     //BleOperatorPageModule
@@ -101,7 +102,7 @@ import { CollectionsDataProvider } from '../providers/collections-data/collectio
     BleCtrlProvider,
     BleCommandProvider,
     DevicesDataProvider,
-    CollectionsDataProvider
+    ScheduleDataProvider
     
   ]
 })

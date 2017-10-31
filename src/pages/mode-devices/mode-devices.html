@@ -38,22 +38,8 @@
         <ion-icon item-start name="sunny"></ion-icon>
         <h2>{{item.name || item.o_name || "無名稱"}} - {{ item.group || "無ID"}}</h2>
         <p>{{item.id}}</p>
-        <ion-badge item-end>#{{ item.collection || "無群組"}}</ion-badge>
+        <ion-badge item-end>#{{ (item.collection | collection_name )}}</ion-badge>
         <button (click)="editDevice(item.id)" ion-button outline item-end><ion-icon ios="ios-settings" md="md-settings"></ion-icon></button>
-      </ion-item>
-      <ion-item>
-        <ion-icon item-start name="sunny"></ion-icon>
-        <h2>裝置名１</h2>
-        <p>11:22:33:44:55:66</p>
-        <ion-badge item-end>裝置1</ion-badge>
-        <button (click)="editDevice(5)" ion-button outline item-end><ion-icon ios="ios-settings" md="md-settings"></ion-icon></button>
-      </ion-item>
-      <ion-item>
-        <ion-icon item-start name="sunny"></ion-icon>
-        <h2>裝置名２</h2>
-        <p>AA:BB:CC:DD:EE:FF</p>
-        <ion-badge item-end>裝置2</ion-badge>
-        <button (click)="editDevice(6)" ion-button outline item-end><ion-icon ios="ios-settings" md="md-settings"></ion-icon></button>
       </ion-item>
     </ion-list>
 

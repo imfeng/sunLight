@@ -15,10 +15,10 @@
 
 <ion-content class="card-bg outer-content">
   <ion-fab top right edge>
-    <button ion-fab color="vibrant" mini (click)="addSchedule()"><ion-icon name="add"></ion-icon></button>
+    <button ion-fab color="vibrant" mini (click)="addLightsGroup()"><ion-icon name="add"></ion-icon></button>
   </ion-fab>
   <!-- CARD START ngFor-->
-  <ng-container *ngFor="let item of scheduleList|async;let idx = index">
+  <ng-container *ngFor="let item of testGroups|async;let idx = index">
   <ion-card>
       <!-- ROW_1-->
       <ion-item>
@@ -26,9 +26,9 @@
           <ion-icon name="quote"></ion-icon>
           <!-- R<span class="gidTitle">#1</span>-->
         </ion-avatar>
-        <h2>{{item.name}}</h2>
-        <p>{{item.lastModified | date: 'dd/MM/yyyy H:mm'}}</p>
-        <button (click)="rmSchedule(idx)" clear ion-button outline item-end><ion-icon name="close"></ion-icon></button>
+        <h2>{{item.name}} - #{{item.gid}}</h2>
+        <p>{{item.lastSended}}</p>
+        <button (click)="rmLightsGroup(item.gid)" clear ion-button outline item-end><ion-icon name="close"></ion-icon></button>
       </ion-item>
       <!-- ROW_2 -->
       <div class="lightsChart-cont">
@@ -44,7 +44,12 @@
       <!-- ROW_4 -->
       <ion-row>
         <ion-col col-9>
-            <ion-badge *ngFor="let c of item.checks;let ci=index" item-end [color]="(c)?'primary':'light'">#{{(ci+1) | collection_name}}</ion-badge>
+            <ion-badge item-end>#群組1</ion-badge>
+            <ion-badge item-end>#群組1</ion-badge>
+            <ion-badge item-end>#群組1</ion-badge>
+            <ion-badge item-end>#群組1</ion-badge>
+            <ion-badge item-end>#群組1</ion-badge>
+            <ion-badge item-end>#群組1</ion-badge>
         </ion-col>
         <ion-col col-3 align-self-center text-center>
           <!-- <ion-note>
@@ -55,7 +60,7 @@
       <div style="position: relative">
   
         <ion-fab right bottom>
-          <button ion-fab mini class="fab-map" color="light" (click)="goSchedule(idx)">
+          <button ion-fab mini class="fab-map" color="light" (click)="goPatterns(item.gid,item.name)">
               <ion-icon name="arrow-forward"></ion-icon>            
             </button>
         </ion-fab>
@@ -70,9 +75,3 @@
 
 
 </ion-content>
-<ion-footer>
-    <ion-toolbar>
-        <button (click)="syncSchedule()" ion-button full>同步</button>
-        
-    </ion-toolbar>
-  </ion-footer>

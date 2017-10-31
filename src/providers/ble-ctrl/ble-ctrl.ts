@@ -422,6 +422,7 @@ export class BleCtrlProvider {
                 this.showToast('已將裝置時間同步！');
               },()=>{},true);
             },2500);
+
             this._change("hadConnected",true);
             //console.log(JSON.stringify(peripheral));
             this.devicesData.check(peripheral,true).subscribe(

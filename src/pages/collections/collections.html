@@ -7,7 +7,7 @@
 <ion-header>
 
   <ion-navbar>
-    <ion-title>collections</ion-title>
+    <ion-title>Groups</ion-title>
   </ion-navbar>
 
 </ion-header>
@@ -15,7 +15,7 @@
 
 <ion-content padding>
     <ion-list>
-        <button ion-item *ngFor="let item of collectionsList" (click)="edit(item.cid)">
+        <button ion-item *ngFor="let item of collectionsList|async" (click)="edit(item.cid)">
           {{ item.name }}
         </button>  
     </ion-list>

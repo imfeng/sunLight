@@ -141,6 +141,15 @@ export class LightsGoupsProvider {
       err => {trackFn(false,err)}
     );
   }
+  remove(gid:number){
+    this.infos.take(1).subscribe(
+      arr => {
+        this.dataStore.infos = arr.filter(v => v.gid!==gid);
+        let sub = Observable.fromPromise(this.storage.setItem(__REF_BASE,this.dataStore.infos));
+        this._infos.next(Object.assign({}, this.dataStore).infos);
+      }
+    );
+  }
   addNew(gid:number,name:string="無群組名") {
     let tmpOb = Observable.create( observer => {
       
@@ -164,7 +173,7 @@ export class LightsGoupsProvider {
       // ADD *"patternsArr-_GID_"*
       let sub_2 =this.PatternsDataProvider.createNull(gid);
       sub.withLatestFrom( sub_2 ).subscribe(
-        res =>{ this._infos.next(this.dataStore.infos); observer.next(true,res);observer.complete();},
+        res =>{ this._infos.next(Object.assign({}, this.dataStore).infos); observer.next(true,res);observer.complete();},
         err =>{ observer.next(false,err);observer.complete();}
       );
 

@@ -2,24 +2,32 @@ import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
 import { ModeSchedulePage } from './mode-schedule';
 import { ChartsModule } from 'ng2-charts';
-import {NavMainModule} from './nav-main.module'
+import { editSchedulePage,modalSectionEdit } from './edit-schedule';
+import { NavMainModule} from './nav-main.module'
 import { LightsChartComponent } from '../../components/lights-chart/lights-chart';
+import { LightsInfoModule } from '../../providers/lights-info/lights-info.module';
+import { CollectionsModule } from '../../providers/collections-data/collections-data.module';
 @NgModule({
   declarations: [
     ModeSchedulePage,
     LightsChartComponent,
-
+    editSchedulePage,
+    modalSectionEdit
   ],
   imports: [
+    CollectionsModule,
+    LightsInfoModule.forRoot(),
     IonicPageModule.forChild(ModeSchedulePage),
     NavMainModule,
-    ChartsModule
+    ChartsModule,
+
   ],
   exports:[
     LightsChartComponent,    
   ],
   entryComponents:[
-    
+    editSchedulePage,
+    modalSectionEdit
   ],
 })
 export class ModeSchedulePageModule {}

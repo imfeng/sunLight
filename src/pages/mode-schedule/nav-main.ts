@@ -3,16 +3,13 @@ import { AlertController ,ViewController, ModalController, NavController, NavPar
 
 import { ToastCtrlProvider } from  '../../providers/toast-ctrl/toast-ctrl'
 import { LightsInfoProvider,lightsTypesPipe } from  '../../providers/lights-info/lights-info'
-//import { SectionsDataProvider,sectioDataType } from '../../providers/sections-data/sections-data';
-import { PatternsDataProvider,PatternDataType,SectionDataType } from '../../providers/patterns-data/patterns-data';
 
+import { PatternsDataProvider,PatternDataType,SectionDataType } from '../../providers/patterns-data/patterns-data';
 import 'rxjs/add/operator/map';
 
 import { BleOperatorPage } from '../ble-operator/ble-operator';
-//import { BleCtrlProvider } from '../../providers/ble-ctrl/ble-ctrl';
 import { BleCommandProvider } from '../../providers/ble-command/ble-command';
 //Math.floor(new Date().getTime()%(86400000)/60000)*60000;
-
 
 /**
  * Note :
@@ -63,7 +60,6 @@ import { BleCommandProvider } from '../../providers/ble-command/ble-command';
 
 export interface patternData {
   "gid" : number,
-
   "pid" : number,
   "patternSlug" : string,
   "name" : string,

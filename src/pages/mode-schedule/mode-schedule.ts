@@ -2,9 +2,9 @@ import { OnInit, Component } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
 import { LightsInfoProvider } from '../../providers/lights-info/lights-info'
 import { LightsGoupsProvider,lightsGroupsData } from '../../providers/lights-goups/lights-goups'
-
-
-
+import { ScheduleDataProvider,scheduleType } from '../../providers/schedule-data/schedule-data'
+import { BleCommandProvider } from '../../providers/ble-command/ble-command';
+import { editSchedulePage } from './edit-schedule';
 
 import * as subMain from './nav-main'
 
@@ -23,65 +23,21 @@ import { Observable } from 'rxjs/Observable';
 })
 export class ModeSchedulePage implements OnInit{
   lightsColor : any = this.lightsInfo.getTypes('color');
-  chartDatasArr: Array<any> = [
-    [{
-      data:[
-        0,   0,   5, 15, 30, 45,
-      70, 90,100, 80, 55, 35,
-        5,  0,  0,  0
-      ]
-    }],[{
-      data:[
-        50,  60,   55, 15, 30, 45,
-      70, 70,60, 30, 20, 0,
-        5,  50, 70,  70
-      ]
-    }],[{
-      data:[
-        10, 20,  30, 40, 50, 60,
-      80, 90,100, 85, 70, 55,
-        40,  25, 10,  0
-      ]
-    }]
-  ];
-  groupsInfo: Array < lightsGroupsData > = [{
-    "gid": 1,
-    "name": "養殖區A",
-    "lastSended": "11min ago command sended",
-    "devicesTotal": 22,
-    "chartDatas": {
-      "colors": [this.getRandomColorsArr()],
-      "datasets": this.chartDatasArr[0]
-    }
-  }, {
-    "gid": 2,
-    "name": "養殖區B",
-    "lastSended": "1day ago command sended",
-    "devicesTotal": 10,
-    "chartDatas": {
-      "colors": [this.getRandomColorsArr()],
-      "datasets": [this.getRandomDatasetArr()]
-    }
-  }, {
-    "gid": 3,
-    "name": "養殖區C",
-    "lastSended": "1month ago command sended",
-    "devicesTotal": 31,
-    "chartDatas": {
-      "colors": [this.getRandomColorsArr()],
-      "datasets": [this.getRandomDatasetArr()]
-    }
-  }, ]
-
 
   /** IONIC lifeCycle*/
   testGroups:Observable<lightsGroupsData[]>;
+
+  scheduleList:Observable<scheduleType[]>;
+
   constructor(
+    private bleCmd: BleCommandProvider,
+    private scheduleProv:ScheduleDataProvider,
     private lightsGroups:LightsGoupsProvider,
     private lightsInfo:LightsInfoProvider,
     public navCtrl: NavController,
     public navParams: NavParams) {
       this.testGroups = this.lightsGroups.infos;
+      this.scheduleList = this.scheduleProv.list;
       //this.lightsGroups.loadAll();
   }
   ngOnInit(){
@@ -99,7 +55,19 @@ export class ModeSchedulePage implements OnInit{
   ionViewDidEnter(){
     console.log('ionViewDidEnter "Schedule tab"');
   }
-  
+  /** */
+  syncSchedule(){
+    this.bleCmd.goSyncSchedule();
+  }
+  goSchedule(idx:number){
+    this.navCtrl.push(editSchedulePage, { "idx": idx});
+  }
+  addSchedule(){
+    this.scheduleProv.addNew();
+  }
+  rmSchedule(idx){
+    this.scheduleProv.remove(idx);
+  }
   /** */
   goPatterns(goGid:number,goName:string){   // lightsGroupsData .getGid(gid)
     this.navCtrl.push(subMain.pr1patternsNav, { "gid": goGid,"name": goName});
@@ -107,43 +75,10 @@ export class ModeSchedulePage implements OnInit{
   goDevices(goGid:number){  //TODO
     this.navCtrl.push(subMain.pr1patternsNav, { "gid": goGid });
   }
-  addLightsGroup(){
-    // TODO : show moda to config group name and id
-    
-    this.testGroups.take(1).subscribe(
-      arr=>{
-        console.log('arr.length+1 = '+ arr.length);
-        let cursor = arr.length+1;
-        this.lightsGroups.addNew(
-          cursor,  //TODO choose gid
-          "群組"+cursor
-        ).take(1).subscribe(
-          (isScc,res)=>{
-            if(isScc)console.log('addLightsGroup() Done!');
-            else {console.log('addLightsGroup() Failed!'); console.log(res)};
-          }
-        );
-
-      }
-    );
-    //avoidRepeatGid(this.lightsGroups.getList(),gid);
-
-    
-    //DEBUG
-    /*
-    this.groupsInfo.unshift(
-      {
-        "gid": cursor,
-        "name": "養殖區"+cursor,
-        "lastSended": this.getRandomInt(1,59)+"min",
-        "devicesTotal": 0,
-        "chartDatas": {
-          "colors": [this.getRandomColorsArr()],
-          "datasets": [this.getRandomDatasetArr()]
-        }
-      }
-    );*/
+  rmLightsGroup(gid:number){
+    this.lightsGroups.remove(gid);
   }
+
   /** */
 
   getRandomDatasetArr(){
@@ -166,9 +101,10 @@ export class ModeSchedulePage implements OnInit{
 
   /* CHART SETTINGS */
   chartLabels = [
-    "00:00","","03:00","","06:00","",
-    "09:00","","12:00","","15:00","",
-    "18:00","","21:00","","24:00"
+    "00:00","","02:00","","04:00","",
+    "06:00","","08:00","","10:00","",
+    "12:00","","14:00","","16:00","",
+    "18:00","","20:00","","22:00","","24:00"
   ];
   chartOptions = {
     padding:0,

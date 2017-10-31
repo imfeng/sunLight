@@ -52,16 +52,37 @@ export class DevicesDataProvider {
             "name":"",
             "o_name" :"測試裝置1_o",
             "id": "11:22:33:44:55:66:77",
-            "group":0,
-            "last_sended": 0
+            "group":1,
+            "last_sended": 0,
+            "collection": 0,
+            "hadGroupSync":false,
           },{
             "name":"測試裝置2",
             "o_name" :"測試裝置2_o",
             "id": "22:44:66:88:AA:CC:FF",
             "group":2,
-            "last_sended": 0
+            "last_sended": 0,
+            "collection": 0,
+            "hadGroupSync":false,
+          },{
+            "name":"測試裝置3",
+            "o_name" :"測試裝置3_o",
+            "id": "33:44:66:88:AA:CC:FF",
+            "group":3,
+            "last_sended": 0,
+            "collection": 0,
+            "hadGroupSync":false,
+          },{
+            "name":"測試裝置4",
+            "o_name" :"測試裝置4_o",
+            "id": "44:44:66:88:AA:CC:FF",
+            "group":4,
+            "last_sended": 0,
+            "collection": 0,
+            "hadGroupSync":false,
           }]
           Observable.fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,temp)).subscribe();
+          this.dataStore.deviceList = temp;
           this._list.next(Object.assign({}, this.dataStore).deviceList);
         }else{
           alert("錯誤" + JSON.stringify(error));

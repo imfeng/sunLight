@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { PipeTransform,Pipe,Injectable } from '@angular/core';
 
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/take';
@@ -17,10 +17,10 @@ export interface collectionType {
 export class CollectionsDataProvider {
   list:Observable<collectionType[]>;
   private _list:BehaviorSubject<collectionType[]>;
-
   dataStore:{
     "collectionList": Array<collectionType>
   }
+
   constructor(
     private storage:NativeStorage
   ) {
@@ -40,10 +40,10 @@ export class CollectionsDataProvider {
         this._list.next(Object.assign({}, this.dataStore).collectionList);
       },
       (err)=>{
-        if(err.code.code=2){
+        if(err.code.code==2){
           let temp = Array.from({length: 6}, 
             (v, i) => ({
-                "name":"群組"+(i+1),
+                "name":"群組"+ String.fromCharCode(64 + i+1),
                 "cid": (i+1),
                 "devices":[]
               })
@@ -51,6 +51,8 @@ export class CollectionsDataProvider {
 
           Observable.fromPromise(this.storage.setItem(_STORAGE_COLLECTIONS_NAME,temp))
             .subscribe();
+          this.dataStore.collectionList = temp;
+          this._list.next(Object.assign({}, this.dataStore).collectionList);
         }else{
           alert("錯誤" + JSON.stringify(err));
         }
@@ -85,11 +87,12 @@ export class CollectionsDataProvider {
               }
             }
             console.log(arr);
+            this.dataStore.collectionList = arr;
             Observable
               .fromPromise(this.storage.setItem(_STORAGE_COLLECTIONS_NAME,arr))
               .subscribe(
                 (res)=>{
-                  this._list.next(Object.assign({}, arr));
+                  this._list.next(Object.assign({}, this.dataStore).collectionList);
                   console.log('>>>> _STORAGE_COLLECTIONS_NAME SAVE!');
                   observer.next(true);
                   observer.complete();
@@ -103,4 +106,18 @@ export class CollectionsDataProvider {
     ); 
   }
 
+}
+@Pipe({
+  name: 'collection_name',
+  pure: false
+})
+export class collectionNamePipe implements PipeTransform {
+  constructor(){
+  }
+  transform(value, args) {
+    let clName = [
+      '無群組',"群組A","群組B","群組C","群組D","群組E","群組F",
+    ]
+    return (value)?clName[value]:'無群組';
+  }
 }

@@ -1,0 +1,72 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>
+      編輯排程
+    </ion-title>
+  </ion-navbar>
+</ion-header>>
+<ion-content id="schedule-nav-sctions">
+  <ion-fab bottom right>
+    <button ion-fab color="light" mini (click)="addSection()">
+      <ion-icon name="add"></ion-icon>
+    </button>
+  </ion-fab>
+  <ion-grid>
+    <ion-row class="collections" align-items-center justify-content-center>
+
+        <ion-col *ngFor="let item of collectionsList|async;let idx = index;" text-center>
+        <ion-checkbox [(ngModel)]="data.checks[idx]"></ion-checkbox>
+        <p>{{item.name}}</p>
+        </ion-col>
+
+    </ion-row>
+    </ion-grid>
+    <hr>
+  <ion-list inset>
+
+    <ion-list-header>
+      <ion-row text-center>
+        <ion-col col-5>
+          <ion-icon name="sunny"></ion-icon>
+          模式</ion-col>
+        <ion-col col-4>
+          <ion-icon name="time"></ion-icon>
+          起始時間</ion-col>
+        <ion-col col-3>
+          <ion-icon name="bonfire"></ion-icon>
+          亮度</ion-col>
+      </ion-row>
+      <ion-icon item-end></ion-icon>
+    </ion-list-header>
+    <ion-item-sliding *ngFor="let item of data.sections;let idx =index">
+      <ion-item>
+        <ion-row text-center>
+          <ion-col col-5>
+            {{item.mode | light:'name'}}</ion-col> <!--   -->
+          <ion-col col-4>
+            <span>{{item.time}}</span>
+          </ion-col>
+          <ion-col col-3>
+            <span>{{item.multiple}}</span>
+          </ion-col>
+        </ion-row>
+      </ion-item>
+      <ion-item-options side="right">
+        <button (click)="editSection(idx)" ion-button color="primary">
+          <ion-icon name="settings"></ion-icon>
+          EDIT
+        </button>
+        <button (click)="delSection(idx)" ion-button color="danger">
+          <ion-icon name="close"></ion-icon>
+          DEL
+        </button>
+      </ion-item-options>
+    </ion-item-sliding>
+
+    <button ion-button block color="primary" (click)="saveSections()">儲存</button>
+
+  </ion-list>
+</ion-content>
+<ion-footer>
+
+</ion-footer>

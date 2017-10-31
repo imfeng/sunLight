@@ -10,9 +10,9 @@ import * as subMain from './nav-main'
     subMain.modalSectionEdit
   ],
   imports: [
+    LightsInfoModule.forRoot(),
     IonicPageModule.forChild(subMain.pr1patternsNav),
     IonicPageModule.forChild(subMain.pr2ModesNav),
-    LightsInfoModule
   ],
   entryComponents:[
     subMain.pr1patternsNav,

@@ -1,8 +1,16 @@
 import { Injectable } from '@angular/core';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/take';
+import 'rxjs/add/operator/withLatestFrom';
+import 'rxjs/add/observable/fromPromise';
+import { Observable } from 'rxjs/Observable';
 
 import { BleCtrlProvider } from '../ble-ctrl/ble-ctrl'
 import { DevicesDataProvider } from '../devices-data/devices-data'
 import { SectionDataType } from '../../providers/patterns-data/patterns-data';
+
+import { ScheduleDataProvider,scheduleType } from '../../providers/schedule-data/schedule-data'
+import { CollectionsDataProvider } from '../../providers/collections-data/collections-data'
 /*
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/withLatestFrom';
@@ -29,10 +37,158 @@ const _CMD_FAN_SPEED = 0xAD; // s,cmd, fan, e
 export class BleCommandProvider {
   //devicesList:any;//lightDeviceType[]
   constructor(
+    private ScheduleProv: ScheduleDataProvider,
+    private clProv: CollectionsDataProvider,
     private devicesData: DevicesDataProvider,
     public bleCtrl: BleCtrlProvider) {
     //this.devicesList = this.devicesData.list;
     console.log('Hello BleCommandProvider Provider');
+  }
+  goSyncSchedule(){
+    let sendCmds = [];
+
+    this.ScheduleProcessGo().subscribe(
+      allCmds => {
+        console.log(allCmds);
+        allCmds.map(
+          device => {
+            sendCmds.push(
+              new Uint8Array([
+                _START,
+                _CMD_SCHEDULE_MODE,
+                0,
+                0,
+                device.gid,
+                0,
+                0,
+                0xaa,
+                _END])
+            );
+            /*scheduleCheckNow*/
+            let nowHour = new Date().getHours();
+            let detectNow = {
+              "multiple":0,
+              "mode":0,
+              "time_num":[0,0]
+            }
+            /** */
+            device.sections.map(
+              (section,idx)=>{
+                if(nowHour>=section.time_num[0]){
+                  detectNow.multiple = section.multiple;
+                  detectNow.mode = section.mode;
+                  detectNow.time_num = section.time_num;
+                  console.log('nowHour');
+                }
+                sendCmds.push(
+                  new Uint8Array([
+                    _START,
+                    _CMD_SCHEDULE_MODE,
+                    section.multiple,
+                    section.mode,
+                    device.gid,
+                    section.time_num[0],
+                    section.time_num[1],
+                    idx,
+                    _END])
+                );
+              }
+            );
+            //[_START,_CMD_MANUAL_MODE,multi,type,gid,_END
+            sendCmds.push(
+              new Uint8Array([
+                _START,
+                _CMD_MANUAL_MODE,
+                detectNow.multiple,
+                detectNow.mode,
+                device.gid,
+                _END])
+            );
+          }
+        );
+        console.log(sendCmds);
+        this.ScheduleProv.saveSyncSchedule(sendCmds);
+        this.bleCtrl.write_many(sendCmds).subscribe(
+          (isOkList)=>{
+            if(isOkList.find( val=>val==false )){
+              alert('傳送排程過程中發生問題，請重新傳送QQ');
+            }else{}
+          }
+        );
+      }
+    );
+  }
+  scheduleCheckNow(){
+    let time = new Date();
+  }
+  ScheduleProcessGo(){
+    return Observable.create(
+      observer =>{
+        this.ScheduleProcess1().subscribe(
+          clId_sections => {
+            this.ScheduleProcess2(clId_sections).subscribe(
+              allCmds => {
+                observer.next(allCmds);
+                observer.complete();
+              }
+            );
+          }
+        );
+      }
+    );
+  }
+  ScheduleProcess1(){
+    /**
+     *  schedules -> **clList**, sections -> **clId**,sections
+     */
+    return Observable.create(
+      observer => {
+        let tmp_clId_sections = [ [],[],[],[],[],[] ];
+
+        this.ScheduleProv.list.take(1).subscribe(
+          schedules => {
+            schedules.map(//   **clId** (key),  sections (merge)
+              sche => {
+                sche.checks.map(    
+                  (sv,sidx)=>{
+                    if(sv){ tmp_clId_sections[sidx]=tmp_clId_sections[sidx].concat(sche.sectionsList) }
+                  }
+                );
+              }
+            );
+          }
+        );
+        observer.next(tmp_clId_sections);
+        observer.complete();
+      }
+    );
+  }
+  ScheduleProcess2(clId_sections){
+    return Observable.create(
+      observer => {
+        let allCmds = [];
+        this.clProv.list.take(1).subscribe(
+          clList => {
+            
+              clList.map(
+                (cl,cidx) => {
+                  cl.devices.map(
+                    gid=>{
+                      allCmds.push({
+                        "gid":gid,
+                        "sections":clId_sections[cidx]});
+                    }
+                  )
+                }
+              );
+            
+          }
+        );
+        observer.next(allCmds);
+        observer.complete();
+      }
+    );
+
   }
   goSyncTime(){
     let time = new Date();
@@ -86,6 +242,34 @@ export class BleCommandProvider {
         alert('修改該裝置群組失敗，但仍會在APP顯示方才所更改的群組值');
       }
     );*/
+  }
+  disableManaul(){
+    this.ScheduleProv.getSyncSchedule().subscribe(
+      cmds => {
+        this.bleCtrl.write_many(cmds).subscribe(
+          (isOkList)=>{
+            if(isOkList.find( val=>val==false )){
+              alert('傳送排程過程中發生問題，請重新傳送QQ');
+            }else{}
+          }
+        );
+      }
+    );
+  }
+  goManualMode(multi,type,gid){
+    let cmds = 
+      [
+        new Uint8Array([_START,_CMD_SCHEDULE_MODE,0,0,gid,0,0,0xaa,_END]),
+        new Uint8Array([_START,_CMD_MANUAL_MODE,multi,type,gid,_END])
+      ];
+    this.bleCtrl.write_many(cmds).subscribe(
+      (isOkList)=>{
+        if(isOkList.find( val=>val==false )){
+          alert('傳送排程過程中發生問題，請重新傳送QQ');
+        }else{}
+      }
+    );
+
   }
   goManual(multi,type,gid){
     let data = new Uint8Array([_START,_CMD_MANUAL_MODE,multi,type,gid,_END]);
