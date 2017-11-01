@@ -81,7 +81,7 @@ export class ModeManual {
     }*/
     //this.sendManual(true);
     this.curType = (type);
-    this.sendManual(true,type,this.deviceMeta.multipleList[type]);
+    this.sendManual(true,type,this.deviceMeta.multipleList[type-1]);
     /*for(let i=0;i<6;i++){
       if(i != idx){
        this.deviceMeta.multipleList[i]=0;

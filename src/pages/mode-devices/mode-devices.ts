@@ -16,14 +16,37 @@ import { BleCommandProvider } from '../../providers/ble-command/ble-command';
 })
 export class ModeDevicesPage {
   devices_list:Observable<lightDeviceType[]>;
-  
+  wtfDevices:{
+    "list":Array<lightDeviceType>
+  }
   constructor(
     private devicesProv:DevicesDataProvider,    
     public modalCtrl: ModalController,
     public navCtrl: NavController,
     public navParams: NavParams) {
       this.devices_list = this.devicesProv.list;
-      
+      this.wtfDevices = {
+        "list":[]
+      };
+      this.devices_list.subscribe(
+        list => {
+          let tmp = Array.from({length: (list.length<=6)?(6-list.length):0}, 
+            (v, i) => ({
+              "name":'bulb'+(list.length+i+1),
+              "o_name" :'bulb'+(list.length+i+1),
+              "id": '空',
+              "group":0,
+              //"isGroupSync":boolean
+              "last_sended": null,
+              "hadGroupSync":null,
+              "collection": null,
+              })
+          );
+          console.log(tmp);
+          this.wtfDevices.list = tmp;
+        }
+      );
+
   }
 
   editDevice(id:string){
@@ -65,10 +88,11 @@ export class editDevicePage {
     private bleCmd: BleCommandProvider,
     private devicesProv:DevicesDataProvider,  
     private alertCtrl: AlertController,
-    private navCtrl: NavParams,
+    public navCtrl: NavController,
+    public navParams: NavParams,
   ){
-    console.log(navCtrl);
-    devicesProv.get(navCtrl.data["id"]).subscribe(
+    console.log(navParams);
+    devicesProv.get(navParams.data["id"]).subscribe(
       (obj) => {
         this.deviceInfo.data = obj;
       },
@@ -77,6 +101,13 @@ export class editDevicePage {
       }
     );
     
+  }
+  delDevice(){
+    this.devicesProv.del(this.deviceInfo.data.id).subscribe(
+      isOk => {
+        if(isOk) this.navCtrl.pop();
+      }
+    );
   }
   
   editName(){

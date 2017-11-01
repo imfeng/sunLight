@@ -1,4 +1,4 @@
-import { Injectable,NgZone } from '@angular/core';
+import { Injectable,NgZone,Inject, forwardRef } from '@angular/core';
 import { Platform,ToastController, LoadingController } from 'ionic-angular';
 import { BLE } from '@ionic-native/ble';
 import { AndroidPermissions } from '@ionic-native/android-permissions';
@@ -10,7 +10,7 @@ import 'rxjs/add/observable/fromPromise';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { DevicesDataProvider,lightDeviceType } from '../devices-data/devices-data'
-
+//import { BleCommandProvider } from '../ble-command/ble-command';
 
 const _LIGHTS_SERVICE_UUID = '0000fff0-0000-1000-8000-00805f9b34fb';
 const _LIGHTS_CHAR_UUID = '0000fff3-0000-1000-8000-00805f9b34fb';
@@ -63,6 +63,8 @@ export class BleCtrlProvider {
   };
 
   constructor(
+    //@Inject(forwardRef(() => BleCommandProvider)) public bleCmd: BleCommandProvider,
+    //private bleCmd: BleCommandProvider,
     private devicesData:DevicesDataProvider,
     private androidPermissions: AndroidPermissions,
     private ble: BLE,
@@ -324,7 +326,7 @@ export class BleCtrlProvider {
         this.devicesData.check(device,true).subscribe(
           findDevice => {
             this.ngZone.run(() => {
-              this.scanListStore.list.push(findDevice);
+              this.scanListStore.list.push(findDevice.device);
               this._scanListOb.next(this.scanListStore.list);
               //this._scanListOb.next(Object.assign({},this.scanListStore).list);
             });
@@ -369,7 +371,7 @@ export class BleCtrlProvider {
     this.devicesData.check(device,false).subscribe(
       findDevice => {
         this.ngZone.run(() => {
-          this.scanedDevices["list"].push(findDevice);
+          this.scanedDevices["list"].push(findDevice.device);
         });
       }
     );
@@ -415,22 +417,47 @@ export class BleCtrlProvider {
       ()=>{
         this.ble.connect(deviceId).subscribe(
           peripheral => {
+            this._onConnected(peripheral);
+            this._change("hadConnected",true);
+            let tmpGid = 0;
+            this.devicesData.check(peripheral,true).subscribe(
+              (checkData) => {
+                /*if(checkData.device.group){
+                  //this.bleCmd.goSetGroup( isAddNew );
+                  
+                  let data = new Uint8Array([0xfa,0xa1,checkData.device.group,0xff]);
+                  this.write(data,()=>{
+                    //this.devicesData.modify(checkData.device.id,null,checkData.isNew).subscribe();
+                    this.showToast('已將裝置編號同步！');
+                  },()=>{},true);
+                  
+                }*/
+                tmpGid=checkData.device.group;
+                this.dataStore.device = checkData.device;
+              }
+            );
+            
             setTimeout(()=>{
               let time = new Date();
               let data = new Uint8Array([0xfa,0xa0,time.getHours(),time.getMinutes(),time.getSeconds(),0xff]);
-              this.write(data,()=>{
+              let data2 = new Uint8Array([0xfa,0xa1,tmpGid,0xff]);
+              let cmds = [data,data2];
+              /*this.write(data,()=>{
                 this.showToast('已將裝置時間同步！');
-              },()=>{},true);
-            },2500);
-
-            this._change("hadConnected",true);
-            //console.log(JSON.stringify(peripheral));
-            this.devicesData.check(peripheral,true).subscribe(
-              device => {
-                this.dataStore.device = device;
-              }
-            );
-            this._onConnected(peripheral);this._dismissLoading(loadObj);todoFn(peripheral);
+              },()=>{},true);*/
+              this.write_many(cmds).subscribe(
+                (isOkList)=>{
+                  if(isOkList.find( val=>val==false )){
+                    this.showToast('已將裝置時間、編號同步！');
+                  }else{}
+                }
+              );
+            
+              todoFn(peripheral);
+              this._dismissLoading(loadObj);
+            },2800);
+        
+            
           },
           peripheral => {this._onDeviceDisconnected();this._dismissLoading(loadObj);}
         );

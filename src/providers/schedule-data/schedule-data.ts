@@ -57,7 +57,7 @@ export class ScheduleDataProvider {
         this._list.next(Object.assign({}, this.dataStore).scheduleList);
       },
       (err)=>{
-        if(err.code.code==2){
+        if(err.code==2 ||err.code.code==2 ){
           let temp = [];
           Observable.fromPromise(this.storage.setItem(_STORAGE_SCHEDULE_NAME,temp))
             .subscribe(

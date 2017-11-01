@@ -120,10 +120,7 @@ export class BleOperatorPage implements OnInit{
   }
   connectDevice(deviceId){
     this.bleCtrl.connectDevice(deviceId,(p)=>{
-      setTimeout(()=>{
-        this.bleCmd.goSetGroup( this.blueInfo.devices.list.length );
-      },2800);
-      this.navCtrl.pop
+      this.navCtrl.pop();
     });
     
     //

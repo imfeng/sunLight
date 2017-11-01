@@ -36,7 +36,14 @@
       </ion-list-header>
       <ion-item *ngFor="let item of devices_list|async;let idx =index;">
         <ion-icon item-start name="sunny"></ion-icon>
-        <h2>{{item.name || item.o_name || "無名稱"}} - {{ item.group || "無ID"}}</h2>
+        <h2>{{item.name || item.o_name || "無名稱"}} - {{ item.group || "錯誤"}}</h2>
+        <p>{{item.id}}</p>
+        <ion-badge item-end>#{{ (item.collection | collection_name )}}</ion-badge>
+        <button (click)="editDevice(item.id)" ion-button outline item-end><ion-icon ios="ios-settings" md="md-settings"></ion-icon></button>
+      </ion-item>
+      <ion-item *ngFor="let item of wtfDevices.list;let idx =index;">
+        <ion-icon item-start name="sunny"></ion-icon>
+        <h2>{{item.name || item.o_name || "無名稱"}}</h2>
         <p>{{item.id}}</p>
         <ion-badge item-end>#{{ (item.collection | collection_name )}}</ion-badge>
         <button (click)="editDevice(item.id)" ion-button outline item-end><ion-icon ios="ios-settings" md="md-settings"></ion-icon></button>

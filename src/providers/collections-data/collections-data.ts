@@ -40,7 +40,7 @@ export class CollectionsDataProvider {
         this._list.next(Object.assign({}, this.dataStore).collectionList);
       },
       (err)=>{
-        if(err.code.code==2){
+        if(err.code==2 || err.code.code==2){
           let temp = Array.from({length: 6}, 
             (v, i) => ({
                 "name":"群組"+ String.fromCharCode(64 + i+1),

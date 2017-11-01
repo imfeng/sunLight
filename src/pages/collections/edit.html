@@ -12,7 +12,7 @@
 <ion-content class="outer-content">
   <ion-list>
     <ion-item *ngFor="let item of devices_list.data;let idx =index;">
-        <ion-label><h2>{{item.name || "無名稱"}} </h2>
+        <ion-label><h2>{{item.name || "無名稱"}} - {{ item.group || "錯誤"}}</h2>
           <p>{{item.id}}</p></ion-label>
         
         <ion-checkbox [(ngModel)]="item.isCheck" [disabled]="item.isDisabled"></ion-checkbox>

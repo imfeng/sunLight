@@ -204,16 +204,16 @@ export class BleCommandProvider {
           this.bleCtrl.write(data,
             (id)=>{
               this.devicesData.modify(id,null,gid).subscribe();
-              alert('修改群組成功！');
+              alert('修改"編號"成功！');
             },
             (id)=>{
               this.devicesData.modify(id,null,gid).subscribe();
-              alert('成功連接但傳送時失敗，但仍會在APP顯示方才所更改的群組值');
+              alert('成功連接但傳送時失敗，但仍會在APP顯示方才所更改的"編號"值');
             },true,deviceId
           );
         }else{
           this.devicesData.modify(deviceId,null,gid).subscribe();
-          alert('修改該裝置群組失敗(找不到裝置)，但仍會在APP顯示方才所更改的群組值');
+          alert('修改該裝置"編號"失敗(找不到裝置)，但仍會在APP顯示方才所更改的"編號"值');
         }
       }
     );
@@ -224,22 +224,22 @@ export class BleCommandProvider {
     this.bleCtrl.write(data,
       (id)=>{
         this.devicesData.modify(id,null,gid).subscribe();
-        alert('修改群組成功！');
+        alert('修改"編號"成功！');
       },
       (id)=>{
         this.devicesData.modify(id,null,gid).subscribe();
-        alert('成功連接但傳送時失敗，但仍會在APP顯示方才所更改的群組值');
+        alert('成功連接但傳送時失敗，但仍會在APP顯示方才所更改的"編號"值');
       },true
     );
 
     /*this.bleCtrl.write(data).subscribe(
       (id)=>{
         this.devicesData.modify(id,null,gid);
-        alert('修改群組成功！');
+        alert('修改"編號"成功！');
       },
-      (id)=>{ //失敗仍然修改 devicesData"的群組值
+      (id)=>{ //失敗仍然修改 devicesData"的"編號"值
         this.devicesData.modify(id,null,gid);
-        alert('修改該裝置群組失敗，但仍會在APP顯示方才所更改的群組值');
+        alert('修改該裝置"編號"失敗，但仍會在APP顯示方才所更改的"編號"值');
       }
     );*/
   }

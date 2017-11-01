@@ -7,6 +7,8 @@ import 'rxjs/add/observable/fromPromise';
 import { Observable } from 'rxjs/Observable';
 import { NativeStorage } from '@ionic-native/native-storage';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+//import { BleCommandProvider } from '../ble-command/ble-command';
+
 const _STORAGE_DEVICES_NAME = "devicesList";
 export interface lightDeviceType {
   "name":string,
@@ -28,6 +30,7 @@ export class DevicesDataProvider {
     "deviceList": Array<lightDeviceType>
   }
   constructor(
+    //private bleCmd: BleCommandProvider,
     private storage:NativeStorage) {
       this._list = <BehaviorSubject<lightDeviceType[]>>new BehaviorSubject([]);
       this.list = this._list.asObservable();
@@ -47,7 +50,7 @@ export class DevicesDataProvider {
         this._list.next(Object.assign({}, this.dataStore).deviceList);
       },
       (error)=>{
-        if(error.code.code=2){
+        if(error.code.code==2){
           let temp = [{
             "name":"",
             "o_name" :"測試裝置1_o",
@@ -84,6 +87,11 @@ export class DevicesDataProvider {
           Observable.fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,temp)).subscribe();
           this.dataStore.deviceList = temp;
           this._list.next(Object.assign({}, this.dataStore).deviceList);
+        }else if(error.code==2){
+          let temp = [];
+          Observable.fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,temp)).subscribe();
+          this.dataStore.deviceList = temp;
+          this._list.next(Object.assign({}, this.dataStore).deviceList);
         }else{
           alert("錯誤" + JSON.stringify(error));
         }
@@ -110,8 +118,9 @@ export class DevicesDataProvider {
       observer => {
         if(device.name!='Sunlight'){
           observer.error(false);
+          observer.complete();
         }else{
-          this.list.subscribe(
+          this.list.take(1).subscribe(
             list =>{
               let finded = list.find(
                 (val) =>{
@@ -122,7 +131,25 @@ export class DevicesDataProvider {
                 }
               );
               if(!finded && toAdd){
+                
                 let newDevice = {
+                  "name": device.name,
+                  "o_name" :device.name,
+                  "id": device.id,
+                  "group":this.dataStore.deviceList.length+1,
+                  "hadGroupSync":false,
+                  "last_sended": 0,
+                  "collection": null,
+                };
+                this.add(newDevice).subscribe(
+                  isAdd => {
+                    //this.bleCmd.goSetGroup();
+                    observer.next({"device":newDevice , "isNew":true});
+                    observer.complete();
+                  }
+                );
+              }else if(!finded && !toAdd){
+                let tmpDevice = {
                   "name": device.name,
                   "o_name" :device.name,
                   "id": device.id,
@@ -131,20 +158,13 @@ export class DevicesDataProvider {
                   "last_sended": 0,
                   "collection": null,
                 };
-                this.add(newDevice);
-                observer.next(newDevice);
-              }else if(!finded && !toAdd){
-                let tmpDevice = {
-                  "name": device.name,
-                  "o_name" :device.name,
-                  "id": device.id,
-                  "group":null,
-                  "hadGroupSync":false,
-                  "last_sended": 0
-                };
-                observer.next(tmpDevice);
-              }else observer.next(finded);
-              observer.complete();
+                observer.next({"device":tmpDevice , "isNew":false});
+                observer.complete();
+              }else {
+                observer.next({"device":finded , "isNew":false});
+                observer.complete();
+              }
+              
             }
           );                                                                  
         }
@@ -154,14 +174,53 @@ export class DevicesDataProvider {
 
   }
   del(deviceId:string){
-    // TODO
+    return Observable.create(
+      observer => {
+
+        let tmp = this.dataStore.deviceList.filter(
+          v => v.id !== deviceId
+        );
+        let sub = Observable.fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,tmp));
+        sub.subscribe(
+          (obj)=>{
+            alert('裝置刪除成功！');
+            
+            this.dataStore.deviceList=obj;
+            this._list.next(Object.assign({}, this.dataStore).deviceList);
+            //this.bleCmd.goSetGroup( this.dataStore.deviceList.length );
+
+            observer.next(true);
+            observer.complete();
+          },
+          err => {
+            alert('發生錯誤！');
+            observer.next(true);
+            observer.complete();
+          }
+        );
+      }
+    );
   }
   add( dd:lightDeviceType ){
-    this.dataStore.deviceList.push(dd);
-    let sub = Observable.fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,this.dataStore.deviceList));
-    sub.subscribe(
-      (obj)=>{alert('ADD DEVICE!!');this._list.next(obj);}
+    return Observable.create(
+      observer => {
+        this.dataStore.deviceList.push(dd);
+        let sub = Observable.fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,this.dataStore.deviceList));
+        sub.subscribe(
+          (obj)=>{
+            alert('裝置新增成功！');
+            
+            this.dataStore.deviceList=obj;
+            this._list.next(Object.assign({}, this.dataStore).deviceList);
+            //this.bleCmd.goSetGroup( this.dataStore.deviceList.length );
+
+            observer.next(true);
+            observer.complete();
+          }
+        );
+      }
     );
+    
     //return sub;
   }
   modify(d_id,d_name,d_gid,hadGroupSync=false,collection=0){
@@ -187,7 +246,8 @@ export class DevicesDataProvider {
                 .fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,this.dataStore.deviceList))
                 .subscribe(
                   (obj)=>{
-                    this._list.next(obj);
+                    this.dataStore.deviceList = obj;
+                    this._list.next(Object.assign({}, this.dataStore).deviceList);
                     observer.next(true);
                     observer.complete();
                     console.log('>>> modify成功!!');
