@@ -97,7 +97,7 @@ export class editDevicePage {
         this.deviceInfo.data = obj;
       },
       () => {
-        alert('錯誤');
+        alert('無此Device ID！');
       }
     );
     
@@ -140,13 +140,13 @@ export class editDevicePage {
   }
   editGroup(deviceId){
     let alert = this.alertCtrl.create({
-      title: '調整群組5',
-      message: '數值"0"為無群組，如果裝置不在附近時，將無法正確地更改，但在此APP中會仍會顯示您更改的群組，建議使用右上角的「藍芽連結頁面」修改！',
+      title: '調整編號',
+      message: '數值"0"為無編號，如果裝置不在附近時，將無法正確地更改，但在此APP中會仍會顯示您更改的編號，建議使用右上角的「藍芽連結頁面」修改！',
       inputs: [
         {
           name: 'gid',
           type: 'number',
-          placeholder: '請輸入群組0~255'
+          placeholder: '請輸入編號1~255'
         }
       ],
       buttons: [

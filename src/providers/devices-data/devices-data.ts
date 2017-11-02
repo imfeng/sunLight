@@ -106,7 +106,9 @@ export class DevicesDataProvider {
             let finded = list.find(
               item => (item.id==id)
             );
-            if(finded) observer.next(finded); else observer.error(false);
+            if(finded) observer.next(finded);
+            else observer.error(false);
+            observer.complete();
           }
         );
       }

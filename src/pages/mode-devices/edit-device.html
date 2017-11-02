@@ -19,16 +19,16 @@
   
   <ion-content class="outer-content">
     <ion-item-group>
-      <button (click)="editGroup(deviceInfo.data.id)" ion-item>
+      <ion-item ion-item>
         <ion-icon name="wifi" item-start color="primary"></ion-icon>
         <ion-label>群組</ion-label>
         <ion-badge item-end>#{{deviceInfo.data.collection}}</ion-badge>
-      </button>
-      <ion-item>
+      </ion-item>
+      <button ion-item (click)="editGroup(deviceInfo.data.id)" >
         <ion-icon name="wifi" item-start color="primary"></ion-icon>
         <ion-label>編號</ion-label>
         <ion-note item-end>{{deviceInfo.data.group}}</ion-note>
-      </ion-item>
+      </button>
       
       <button (click)="editName()" ion-item>
         <ion-icon name="wifi" item-start color="primary"></ion-icon>
