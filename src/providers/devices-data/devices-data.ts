@@ -18,7 +18,7 @@ export interface lightDeviceType {
   //"isGroupSync":boolean
   "last_sended": number,
   "hadGroupSync":boolean,
-  "collection": number,
+  "collection": Array<number>, // 1~6 to A~F
 }
 @Injectable()
 export class DevicesDataProvider {
@@ -51,13 +51,13 @@ export class DevicesDataProvider {
       },
       (error)=>{
         if(error.code.code==2){
-          let temp = [{
+          let temp : Array<lightDeviceType> = [{
             "name":"",
             "o_name" :"測試裝置1_o",
             "id": "11:22:33:44:55:66:77",
             "group":1,
             "last_sended": 0,
-            "collection": 0,
+            "collection": [],
             "hadGroupSync":false,
           },{
             "name":"測試裝置2",
@@ -65,7 +65,7 @@ export class DevicesDataProvider {
             "id": "22:44:66:88:AA:CC:FF",
             "group":2,
             "last_sended": 0,
-            "collection": 0,
+            "collection": [],
             "hadGroupSync":false,
           },{
             "name":"測試裝置3",
@@ -73,7 +73,7 @@ export class DevicesDataProvider {
             "id": "33:44:66:88:AA:CC:FF",
             "group":3,
             "last_sended": 0,
-            "collection": 0,
+            "collection": [],
             "hadGroupSync":false,
           },{
             "name":"測試裝置4",
@@ -81,7 +81,7 @@ export class DevicesDataProvider {
             "id": "44:44:66:88:AA:CC:FF",
             "group":4,
             "last_sended": 0,
-            "collection": 0,
+            "collection": [],
             "hadGroupSync":false,
           }]
           Observable.fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,temp)).subscribe();
@@ -141,7 +141,7 @@ export class DevicesDataProvider {
                   "group":this.dataStore.deviceList.length+1,
                   "hadGroupSync":false,
                   "last_sended": 0,
-                  "collection": null,
+                  "collection": [],
                 };
                 this.add(newDevice).subscribe(
                   isAdd => {
@@ -158,7 +158,7 @@ export class DevicesDataProvider {
                   "group":null,
                   "hadGroupSync":false,
                   "last_sended": 0,
-                  "collection": null,
+                  "collection": [],
                 };
                 observer.next({"device":tmpDevice , "isNew":false});
                 observer.complete();
@@ -225,16 +225,18 @@ export class DevicesDataProvider {
     
     //return sub;
   }
-  modify(d_id,d_name,d_gid,hadGroupSync=false,collection=0){
-    console.log(d_id);
+  modify(d_id:string,d_name:string,d_gid:number,hadGroupSync:boolean=false,collection:Array<number>=null){
+    console.log('>>> Device "'+ d_id + '" modifying!');
     let isNext = false;
     let tmpOb = Observable.create(
       observer => {
         this.dataStore.deviceList.forEach(
           (ele,idx) =>{
             if(ele.id == d_id){
-              this.dataStore.deviceList[idx].collection = collection;
-              if(d_name)this.dataStore.deviceList[idx].name = d_name;
+              if(collection){
+      
+                this.dataStore.deviceList[idx].collection = collection;}
+              if(d_name){this.dataStore.deviceList[idx].name = d_name;}
               if(d_gid){
                 this.dataStore.deviceList[idx].group = d_gid;
                 this.dataStore.deviceList[idx].hadGroupSync = hadGroupSync;
@@ -244,6 +246,8 @@ export class DevicesDataProvider {
                 this.dataStore.deviceList[idx].hadGroupSync = hadGroupSync;
                 this.dataStore.deviceList[idx].last_sended = new Date().getDate();
               };
+              console.log('DEBUG');
+              console.log(this.dataStore.deviceList[idx]);
               Observable
                 .fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,this.dataStore.deviceList))
                 .subscribe(

@@ -652,13 +652,13 @@ export class BleCtrlProvider {
         }
       );
   }
-  write_many(value:Uint8Array[]){
+  write_many(value:Uint8Array[],waitSec=null){
     console.log('=== CMD VALUE ===');
     console.log(JSON.stringify(value));
     console.log('======');
     return Observable.create(
       observer=>{
-        let loadObj = this._presentLoading();
+        let loadObj = this._presentLoading(!waitSec,waitSec);
         
         this.checkConnect(this.dataStore.device.id).subscribe(
           ()=>{
@@ -723,19 +723,39 @@ export class BleCtrlProvider {
 
   }
   /* */
-  private _presentLoading() {
-    let loading = this.loadingCtrl.create({
-      content: 'Please wait...'
-    });
-    loading.present();
-    let time = setTimeout(()=>{
-      alert('逾時');
-      loading.dismiss();
-    }, 1000*12);
-    return {
-      "time":time,
-      "loading":loading
-    };
+  private _presentLoading(isTimeout=true,messageSec=null) {
+    let loadingObj = {
+      "time":null,
+      "loading": this.loadingCtrl.create({
+        content: 'Please wait...'
+      })
+    }
+    loadingObj.loading 
+    
+    if(isTimeout){
+      loadingObj.time = setTimeout(()=>{
+        alert('逾時');
+        loadingObj.loading.dismiss();
+      }, 1000*12);
+    }else{
+      if(messageSec){
+        loadingObj.loading = this.loadingCtrl.create({
+          content: 'Please wait...</br>(about '+messageSec+' sec)'
+        });
+        loadingObj.time = setTimeout(()=>{
+          alert('逾時');
+          loadingObj.loading.dismiss();
+        }, 1000*messageSec);
+      }else{
+        loadingObj.time = setTimeout(()=>{
+          alert('逾時');
+          loadingObj.loading.dismiss();
+        }, 10000);
+      }
+      
+    }
+    loadingObj.loading.present();
+    return loadingObj;
     /*
       setTimeout(() => {
         loading.dismiss();

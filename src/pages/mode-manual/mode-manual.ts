@@ -96,33 +96,24 @@ export class ModeManual {
     //let type=this.deviceMeta.curType;
     //let multi=this.deviceMeta.curMultiple;
     let sendList = [];
-    this.collectionsList.take(1).subscribe(
-      arr => {
-        this.collectionsChecks.map(
-          (isCheck,idx) => {
-            if(isCheck){
-              arr[idx].devices.map(
-                v => sendList.push(v)
-              )
-            }
-          }
-        );
-      }
-    );
-    console.log('SendList:');
-    console.log(sendList);
 
     
+
     if(power){
-      sendList.forEach((group,idx) => {
-        setTimeout(()=>{
-          this.bleCmd.goManualMode(
-            multi,
-            type,
-            group,
-          );
-         }, 400*idx)
-      });
+      this.bleCmd.collectionsToDeviceGid(this.collectionsChecks).subscribe(
+        allDevices => {
+          allDevices.forEach((group,idx) => {
+            setTimeout(()=>{
+              this.bleCmd.goManualMode(
+                multi,
+                type,
+                group,
+              );
+             }, 400*idx);
+          });
+        }
+      );
+
     }else{
       sendList.forEach((group,idx) => {
         setTimeout(()=>{

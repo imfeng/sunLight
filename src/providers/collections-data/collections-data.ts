@@ -118,6 +118,10 @@ export class collectionNamePipe implements PipeTransform {
     let clName = [
       '無群組',"群組A","群組B","群組C","群組D","群組E","群組F",
     ]
-    return (value)?clName[value]:'無群組';
+    let slug = [
+      '',"A","B","C","D","E","F",
+    ]
+    //value.map( v => clName[v] ).toString();
+    return (value)?((args)?slug[value]:clName[value]):'無';
   }
 }

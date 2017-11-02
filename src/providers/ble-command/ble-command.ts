@@ -46,75 +46,114 @@ export class BleCommandProvider {
   }
   goSyncSchedule(){
     let sendCmds = [];
+    /* 清除所有群組內的排程 -> 寫入排程 -> 將目前光譜設定為當下排程的光譜  */
+    let deviceRmScheduleList = [];
+    let deviceScheduleList =[];
+    let deviceSetCurrent = [];
+    
 
-    this.ScheduleProcessGo().subscribe(
-      allCmds => {
-        console.log(allCmds);
-        allCmds.map(
-          device => {
-            sendCmds.push(
-              new Uint8Array([
-                _START,
-                _CMD_SCHEDULE_MODE,
-                0,
-                0,
-                device.gid,
-                0,
-                0,
-                0xaa,
-                _END])
-            );
-            /*scheduleCheckNow*/
-            let nowHour = new Date().getHours();
-            let detectNow = {
-              "multiple":0,
-              "mode":0,
-              "time_num":[0,0]
-            }
-            /** */
-            device.sections.map(
-              (section,idx)=>{
-                if(nowHour>=section.time_num[0]){
-                  detectNow.multiple = section.multiple;
-                  detectNow.mode = section.mode;
-                  detectNow.time_num = section.time_num;
-                  console.log('nowHour');
-                }
-                sendCmds.push(
+    /** deviceRmScheduleList END */
+
+    /*scheduleCheckNow*/
+    let nowHour = new Date().getHours();
+    let detectNow = {
+      "multiple":0,
+      "mode":0,
+      "time_num":[0,0]
+    }
+    /** */
+    this.ScheduleProcess1().subscribe(
+      deNor => {
+        /** deviceRmScheduleList START 
+         *  清除所有群組內的排程
+         * */
+        this.devicesData.list.subscribe(
+          dList => {
+            dList.map(
+              dd => {
+                deviceRmScheduleList.push(
                   new Uint8Array([
                     _START,
                     _CMD_SCHEDULE_MODE,
-                    section.multiple,
-                    section.mode,
-                    device.gid,
-                    section.time_num[0],
-                    section.time_num[1],
-                    idx,
+                    0,
+                    0,
+                    dd.group,
+                    0,
+                    0,
+                    0xaa,
+                    _END])
+                );
+              }
+            );
+          }
+        );
+        console.log('deNormalization:');
+        console.log(deNor);
+        Object.keys(deNor).map( 
+          (key,idx) => {
+            deNor[key].map(
+              (ss,sid) => {
+                if(nowHour>=ss.time_num[0]){
+                  detectNow.multiple = ss.multiple;
+                  detectNow.mode = ss.mode;
+                  detectNow.time_num = ss.time_num;
+                  console.log('nowHour');
+                }
+                deviceScheduleList.push(
+                  new Uint8Array([
+                    _START,
+                    _CMD_SCHEDULE_MODE,
+                    ss.multiple,
+                    ss.mode,
+                    key,
+                    ss.time_num[0],
+                    ss.time_num[1],
+                    sid,
                     _END])
                 );
               }
             );
             //[_START,_CMD_MANUAL_MODE,multi,type,gid,_END
-            sendCmds.push(
+            deviceSetCurrent.push(
               new Uint8Array([
                 _START,
                 _CMD_MANUAL_MODE,
                 detectNow.multiple,
                 detectNow.mode,
-                device.gid,
+                parseInt(key),
                 _END])
             );
+  
           }
-        );
-        console.log(sendCmds);
+        );/*
+        console.log('deviceScheduleList');
+        console.log(deviceScheduleList);
+        console.log('deviceSetCurrent');
+        console.log(deviceSetCurrent);*/
+        /*
+            1 devices To N colletions 複雜啊！
+            先刪除重複 -> 排序
+        */
+        /** deviceScheduleList SORT */
+        /*deviceScheduleList.filter(
+          (a,b) => {
+            return 1;
+          }
+        );*/
+        /** deviceSetCurrent SORT */
+
+        sendCmds = sendCmds.concat(deviceRmScheduleList)
+                            .concat(deviceScheduleList)
+                            .concat(deviceSetCurrent);
         this.ScheduleProv.saveSyncSchedule(sendCmds);
-        this.bleCtrl.write_many(sendCmds).subscribe(
+        this.bleCtrl.write_many(sendCmds,sendCmds.length*0.4).subscribe(
           (isOkList)=>{
             if(isOkList.find( val=>val==false )){
               alert('傳送排程過程中發生問題，請重新傳送QQ');
             }else{}
           }
         );
+      
       }
     );
   }
@@ -125,70 +164,72 @@ export class BleCommandProvider {
     return Observable.create(
       observer =>{
         this.ScheduleProcess1().subscribe(
-          clId_sections => {
-            this.ScheduleProcess2(clId_sections).subscribe(
-              allCmds => {
-                observer.next(allCmds);
-                observer.complete();
+          deNor => {
+           
+          }
+        );
+      }
+    );
+  }
+  collectionsToDeviceGid(checks:Array<boolean>){
+    return Observable.create(
+      observer => {
+        this.clProv.list.take(1).subscribe(
+          clList => {
+            let allDevices = []
+            clList.map(
+              (cl,idx) => {
+                if(checks[idx]){
+                  allDevices = allDevices.concat(cl.devices);
+                }
               }
             );
+            allDevices = allDevices.filter(
+              (ele,idx,self) => {
+                return idx == self.indexOf(ele);
+              }
+            );
+            observer.next(allDevices);
+            observer.complete();
           }
         );
       }
     );
   }
   ScheduleProcess1(){
-    /**
-     *  schedules -> **clList**, sections -> **clId**,sections
-     */
     return Observable.create(
       observer => {
-        let tmp_clId_sections = [ [],[],[],[],[],[] ];
-
+        let deNormalization = {};
+        
         this.ScheduleProv.list.take(1).subscribe(
-          schedules => {
-            schedules.map(//   **clId** (key),  sections (merge)
-              sche => {
-                sche.checks.map(    
-                  (sv,sidx)=>{
-                    if(sv){ tmp_clId_sections[sidx]=tmp_clId_sections[sidx].concat(sche.sectionsList) }
+          ssList=>{
+            ssList.map(
+              ss=>{
+                console.log('ss');
+                console.log(ss);
+                this.collectionsToDeviceGid(ss.checks).subscribe(
+                  allDevices => {
+                    allDevices.map(
+                      v => {
+                        if(deNormalization[v]) deNormalization[v] = deNormalization[v].concat(ss.sectionsList);
+                        else {
+                          deNormalization[v] = [];
+                          deNormalization[v] = deNormalization[v].concat(ss.sectionsList);
+                        }
+                      }
+                    )
                   }
                 );
+                
               }
             );
           }
         );
-        observer.next(tmp_clId_sections);
+        
+        observer.next(deNormalization);
         observer.complete();
       }
     );
-  }
-  ScheduleProcess2(clId_sections){
-    return Observable.create(
-      observer => {
-        let allCmds = [];
-        this.clProv.list.take(1).subscribe(
-          clList => {
-            
-              clList.map(
-                (cl,cidx) => {
-                  cl.devices.map(
-                    gid=>{
-                      allCmds.push({
-                        "gid":gid,
-                        "sections":clId_sections[cidx]});
-                    }
-                  )
-                }
-              );
-            
-          }
-        );
-        observer.next(allCmds);
-        observer.complete();
-      }
-    );
-
   }
   goSyncTime(){
     let time = new Date();

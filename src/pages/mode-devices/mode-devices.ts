@@ -30,7 +30,7 @@ export class ModeDevicesPage {
       };
       this.devices_list.subscribe(
         list => {
-          let tmp = Array.from({length: (list.length<=6)?(6-list.length):0}, 
+          let tmp:Array<lightDeviceType> = Array.from({length: (list.length<=6)?(6-list.length):0}, 
             (v, i) => ({
               "name":'bulb'+(list.length+i+1),
               "o_name" :'bulb'+(list.length+i+1),
@@ -39,7 +39,7 @@ export class ModeDevicesPage {
               //"isGroupSync":boolean
               "last_sended": null,
               "hadGroupSync":null,
-              "collection": null,
+              "collection": [],
               })
           );
           console.log(tmp);
@@ -81,7 +81,7 @@ export class editDevicePage {
       "last_sended": 0,
 
       "hadGroupSync":false,
-      "collection":null,
+      "collection":[],
     }
   };
   constructor(

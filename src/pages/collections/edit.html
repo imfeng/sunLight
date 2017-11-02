@@ -13,10 +13,17 @@
   <ion-list>
     <ion-item *ngFor="let item of devices_list.data;let idx =index;">
         <ion-label><h2>{{item.name || "無名稱"}} - {{ item.group || "錯誤"}}</h2>
-          <p>{{item.id}}</p></ion-label>
+          <p>{{item.id}}</p>
+          <p>
+              <ion-badge class="collection-badge" item-end *ngFor="let clect of item.collection">
+                #{{ ( clect | collection_name:true )}}
+              </ion-badge>
+            </p>
+        </ion-label>
         
         <ion-checkbox [(ngModel)]="item.isCheck" [disabled]="item.isDisabled"></ion-checkbox>
-        <ion-badge item-end>#{{ item.collection | collection_name }}</ion-badge>
+        <!-- <ion-badge item-end>#{{ item.collection | collection_name }}</ion-badge> -->
+        
     </ion-item>
     <!--<ion-item *ngFor="let device of devicesList; let idx=index">
       <ion-label>{{device.name || device.o_name || "無名稱"}}  ({{device.id}})</ion-label>

@@ -41,27 +41,7 @@ export class cListPage{
     "data":Array<any>;
   };
   thisCid:number;
-  devicesList:Array<any>=[
-    {
-      "name":"測試裝置1",
-      "o_name" :"裝置1",
-      "id": "11:22:33",
-      "group":1,
-      "collection": null,
-    },{
-      "name":"裝置2",
-      "o_name" :"裝置2",
-      "id": "11:22:33",
-      "group":2,
-      "collection": 2,
-    },{
-      "name":"裝置3",
-      "o_name" :"裝置3",
-      "id": "11:22:33",
-      "group":3,
-      "collection": null,
-    }
-  ];
+
   devicesCheckList:{
     "data":Array<any>
   };
@@ -85,18 +65,21 @@ export class cListPage{
   load(){
     this.devicesProv.list.take(1).subscribe(
       arr => {
+        console.log(arr);
         this.devices_list.data = arr.map(
           (v,idx)=>{
             return {
               "name":v.o_name,
-              "collection": (v.collection)?((v.collection!=0)?v.collection:null):null,
+              "collection": v.collection,
               "group":v.group,
               "id":v.id,
-              "isDisabled":(
+              "isDisabled": false, // 1 Device to N Collections
+              /*"isDisabled":(    // 1 Device to 1 Collection
                 (v.collection && v.collection!=0)?
                   ((v.collection==this.thisCid)?false:true)
-                  :false),
-              "isCheck":((v.collection==this.thisCid)?true:false)
+                  :false),*/
+              "isCheck": ((v.collection.find(v => v==this.thisCid))?true:false)
+              //((v.collection==this.thisCid)?true:false)
             }
           }
         );
@@ -110,10 +93,16 @@ export class cListPage{
     this.devices_list.data
       .map(
         v => {
-          if((v.isCheck==false && v.collection == this.thisCid)){
-            this.devicesProv.modify(v.id,null,null,false,null).take(1).subscribe();
-          }else if(v.isCheck){
-            this.devicesProv.modify(v.id,null,null,false,this.thisCid).take(1).subscribe();
+          let cidFinded = (v.collection.find(v => v==this.thisCid));
+          if(( (v.isCheck==false) && cidFinded )){
+            this.devicesProv.modify(v.id,null,null,true, v.collection.filter(v=>v!==this.thisCid) ).take(1).subscribe();
+
+
+          }else if( v.isCheck && !cidFinded ){
+            v.collection.push(this.thisCid);
+            this.devicesProv.modify(v.id,null,null,true, v.collection ).take(1).subscribe();
+            devices.push(v.group);
+          }else if(  v.isCheck && cidFinded ){
             devices.push(v.group);
           }else{
           }
