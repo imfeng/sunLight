@@ -25,7 +25,9 @@ export interface scheduleType {
   },
   "lastModified":number,
   "sectionsList":Array<sectionDataType>,
-  "checks":Array<boolean>
+  "checks":Array<boolean>,
+
+  "dateRange":Array<number> // [ start ,end ]
 }
 @Injectable()
 export class ScheduleDataProvider {
@@ -70,6 +72,54 @@ export class ScheduleDataProvider {
       }
     );
   }
+  dateRangeToStringObj(range:Array<number>){
+    if(!(range[0]==null)||!(range[1]==null)){
+      return {
+        start: '',
+        end: '',
+      }
+    }else{
+      return {
+        start: (((range[0]<10)?('0'+range[0]):range[0]) + ':00'),
+        end: (((range[1]<10)?('0'+range[1]):range[1]) + ':00'),
+      }
+    }
+    
+  }
+  detectDateRange(range:Array<number>,scheIdx:number){
+    let isInRange = false;
+    return Observable.create(
+      observer => {
+        this.list.take(1).subscribe(
+          arr => {
+            let isRepeat = arr.find(
+              (ss,idx)=>{
+                if(idx==scheIdx)return false;
+                if(range[0]<ss.dateRange[0]){
+                  if(range[1]>=ss.dateRange[0]){
+                    return true;
+                  }else{
+                    return false;
+                  }
+                }else if(range[0] == ss.dateRange[0]){
+                  return true;
+                }else{  // range[0] > ss.dateRange[0]
+                  if(range[0]<=ss.dateRange[1]){
+                    return true;
+                  }else{
+                    return false;
+                  }
+                }
+              }
+            );
+            if(!isRepeat)isRepeat=null;
+            observer.next(isRepeat);
+            observer.complete();
+          }
+        );
+      }
+    );
+  }
   getSyncSchedule(){
     return Observable.create(
       observer => {
@@ -104,13 +154,39 @@ export class ScheduleDataProvider {
         err => { alert('錯誤!'); }
       );
   }
-  modifySchedule(idx:number,sections:Array<sectionDataType>,checks:Array<boolean>){
+  sectionsToCharts(sections:Array<sectionDataType>,dateRange){
+    let chart = {
+      "data":[],
+      "backgroundColor": []
+    }
+    for(let i =0;i<24;i++){
+      if(i>=dateRange[0] && i<=dateRange[1]){
+        let tmp = sections[i-dateRange[0]];
+        chart.data.push((tmp.multiple==0)?-1:tmp.multiple);
+        chart.backgroundColor.push(this.lightsColor[ tmp.mode-1 ]);
+      }else{
+        chart.data.push(0);
+        chart.backgroundColor.push('rgb(0,0,0)');
+      }
+    }
+    return chart;
+  }
+  modifySchedule(idx:number,sections:Array<sectionDataType>,checks:Array<boolean>,dateRange:Array<number>){
     return Observable.create(
       observer => {
         this.list.take(1).subscribe(
           arr => {
+            arr[idx].dateRange = dateRange;
             arr[idx].sectionsList = sections;
             arr[idx].checks = checks;
+            let chart =  this.sectionsToCharts(sections,dateRange);
+            arr[idx].chartDatas = {
+              "datasets": [{"data":chart.data},{"data":chart.data}],
+              "colors":[{"backgroundColor":chart.backgroundColor}]
+            }
+            arr[idx].lastModified = new Date().getTime();
+           
+            
             Observable.fromPromise(this.storage.setItem(_STORAGE_SCHEDULE_NAME,arr))
               .subscribe(
                 res => { this._list.next(Object.assign({}, this.dataStore).scheduleList); },
@@ -159,11 +235,14 @@ export class ScheduleDataProvider {
           "name":'排程',
           "chartDatas":{
             "colors": [this.getRandomColorsArr()],
-            "datasets": [this.getRandomDatasetArr()]
+            "datasets": [this.getRandomDatasetZero()]
+            
           },
-          "lastModified":new Date().getDate(),
+          "lastModified":new Date().getTime(),
           "sectionsList":[],
-          "checks":[false,false,false,false,false,false]
+          "checks":[false,false,false,false,false,false],
+
+          "dateRange":[null,null]
         });
         console.log(arr);
         let tempSetOb = Observable.fromPromise(this.storage.setItem(_STORAGE_SCHEDULE_NAME,arr));
@@ -178,6 +257,11 @@ export class ScheduleDataProvider {
   getRandomDatasetArr(){
     return {
       "data": Array.from( new Array(24), ()=>(this.getRandomInt(0,100)) )
+    }
+  }
+  getRandomDatasetZero(){
+    return {
+      "data": Array.from( new Array(24), ()=>(0) )
     }
   }
   getRandomColorsArr(){

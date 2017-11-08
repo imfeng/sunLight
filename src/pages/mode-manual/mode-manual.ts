@@ -7,6 +7,7 @@ import { BleCommandProvider } from  '../../providers/ble-command/ble-command'
 import { LightsGoupsProvider } from '../../providers/lights-goups/lights-goups'
 import { Observable } from 'rxjs/Observable';
 
+import { ScheduleDataProvider,scheduleType } from '../../providers/schedule-data/schedule-data'
 import { LightsInfoProvider,lightsTypesPipe } from  '../../providers/lights-info/lights-info'
 import { CollectionsDataProvider,collectionType } from '../../providers/collections-data/collections-data';
 
@@ -32,7 +33,7 @@ export class ModeManual {
   lightsType : Array<object>;
   lightsGroupsList : Array<object>;
   constructor(
-
+    private ScheduleProv: ScheduleDataProvider,
     private clProv : CollectionsDataProvider,
     //private blePage: BleOperatorPage,
     private lightsGroups:LightsGoupsProvider,
@@ -69,8 +70,13 @@ export class ModeManual {
     this.lightsType = this.lightsInfo.getTypes();
   }
   disableManual(){
+    /*this.ScheduleProv.getSyncSchedule().subscribe(
+      syncSche => {
 
-
+      }
+    );*/
+    this.bleCmd.goSyncSchedule();
+    this.curType = 0;
   }
   trigger(event,type:number){
 /*
@@ -115,15 +121,20 @@ export class ModeManual {
       );
 
     }else{
-      sendList.forEach((group,idx) => {
-        setTimeout(()=>{
-          this.bleCmd.goManualMode(
-            multi,
-            0,
-            group,
-          );
-         }, 400*idx)
-      });
+      this.bleCmd.collectionsToDeviceGid(this.collectionsChecks).subscribe(
+        allDevices => {
+          allDevices.forEach((group,idx) => {
+            setTimeout(()=>{
+              this.bleCmd.goManualMode(
+                0,
+                0,
+                group,
+              );
+             }, 400*idx);
+          });
+        }
+      );
+      
     }
   }
   openBleModal(){

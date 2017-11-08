@@ -124,6 +124,8 @@ export class ModeSchedulePage implements OnInit{
       }],
       yAxes: [{
         ticks: {
+          max: 30,
+          min: -2,
           display:false,
           beginAtZero: true,
           padding: 0,

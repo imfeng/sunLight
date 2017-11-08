@@ -15,11 +15,19 @@ import { BleCommandProvider } from '../../providers/ble-command/ble-command';
   templateUrl: 'mode-devices.html',
 })
 export class ModeDevicesPage {
+  fanCtrl = {
+    isFanCheckbox: false,
+    currentFanSpeed: 60,
+    checks:[]
+  }
+  
+
   devices_list:Observable<lightDeviceType[]>;
   wtfDevices:{
     "list":Array<lightDeviceType>
   }
   constructor(
+    private bleCmd: BleCommandProvider,
     private devicesProv:DevicesDataProvider,    
     public modalCtrl: ModalController,
     public navCtrl: NavController,
@@ -30,6 +38,7 @@ export class ModeDevicesPage {
       };
       this.devices_list.subscribe(
         list => {
+          this.fanCtrl.checks = Array.from(new Array(list.length), ()=>false);
           let tmp:Array<lightDeviceType> = Array.from({length: (list.length<=6)?(6-list.length):0}, 
             (v, i) => ({
               "name":'bulb'+(list.length+i+1),
@@ -48,7 +57,19 @@ export class ModeDevicesPage {
       );
 
   }
-
+  triggerFan(){
+    console.log('triggerFan');
+    console.log(this.fanCtrl.checks);
+    this.devices_list.take(1).subscribe(
+      list => {
+        let gids = list.filter( (v,idx)=>this.fanCtrl.checks[idx] ).map( (v)=>v.group );
+        this.bleCmd.goFanMultiple(gids,this.fanCtrl.currentFanSpeed);
+      }
+    );
+  }
+  toggleFanCheckbox(){
+    this.fanCtrl.isFanCheckbox = !this.fanCtrl.isFanCheckbox;
+  }
   editDevice(id:string){
     this.navCtrl.push(editDevicePage, { "id":id });
   }

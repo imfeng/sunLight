@@ -22,15 +22,16 @@
         <ion-option *ngFor="let type of lightsTypes;" value="{{type.value}}">{{type.name}}</ion-option>
       </ion-select>
     </ion-item>
+  <!--
   <ion-item>
       <ion-icon name="time" item-start></ion-icon>
     <ion-label>起始時間</ion-label>
     <ion-datetime displayFormat="HH:mm" [(ngModel)]="settings.time" color="primary"></ion-datetime>
-  </ion-item>
+  </ion-item> -->
   <ion-item>
-  <ion-range min="0" max="30" pin="true" [(ngModel)]="settings.multiple">
-    <ion-icon range-left small name="sunny"></ion-icon>
-    <ion-icon range-right name="sunny"></ion-icon>
+    <ion-range min="0" max="30" pin="true" [(ngModel)]="settings.multiple">
+      <ion-icon range-left small name="sunny"></ion-icon>
+      <ion-icon range-right name="sunny"></ion-icon>
   </ion-range>
 </ion-item>
 </ion-list>

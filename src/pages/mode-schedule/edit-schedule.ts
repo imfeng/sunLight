@@ -11,7 +11,11 @@ import { Observable } from 'rxjs/Observable';
 export class editSchedulePage {
   collectionsList:Observable<collectionType[]>;
 
-
+  datePicker :{
+    start:string,
+    end:string,
+    range:Array<number>
+  }
   data:{
     sections:Array < sectionDataType >,
     checks:Array<boolean>
@@ -28,6 +32,11 @@ export class editSchedulePage {
     public navCtrl: NavController,
     public navParams: NavParams
   ) {
+    this.datePicker = {
+      start:'',
+      end:'',
+      range:[null,null]
+    }
     this.collectionsList = this.clProv.list;
 
     this.thisIdx = this.navParams.get("idx");
@@ -35,13 +44,71 @@ export class editSchedulePage {
         arr => {
             this.data.sections = arr.sectionsList;
             this.data.checks = arr.checks;
-            
+            this.datePicker.range = arr.dateRange;
+            console.log('this.scheduleProv.dateRangeToStringObj(arr.dateRange)')
+            console.log(this.scheduleProv.dateRangeToStringObj(arr.dateRange))
+            let dateTmp = this.scheduleProv.dateRangeToStringObj(arr.dateRange);
+            this.datePicker.start = dateTmp.start;
+            this.datePicker.end = dateTmp.end;
         }
     );
     console.log('editSchedulePage: ' + this.thisIdx);
   }
+  ionViewDidLoad() {
+    console.log("I'm alive!");
+  }
+  dateChange(event){
+    console.log(this.datePicker);
+    
+    if(this.datePicker.end === null){
+      this.datePicker.end = '';
+    }else if(this.datePicker.start === null){
+      this.datePicker.start = '';
+    }else if(this.datePicker.start === '' || this.datePicker.end ===''){
+      return false;
+    }else{
+      if(this.datePicker.start > this.datePicker.end){
+        this.datePicker.start = [this.datePicker.end , this.datePicker.end=this.datePicker.start][0];
+      }else{}
+      let dateTmp = [ 
+        parseInt(this.datePicker.start.split(':')[0]),
+        parseInt(this.datePicker.end.split(':')[0]),
+      ];
+      this.datePicker.range = dateTmp;
+      this.data.sections = [];
+  
+      this.scheduleProv.detectDateRange(dateTmp,this.thisIdx).subscribe(
+        isRepeat => {
+          if(!isRepeat || this.datePicker.end=='00:00'){
+            for( let i=dateTmp[0];i<=dateTmp[1];i++  ){
+              this.data.sections.push({
+                "mode":1,
+                "time": ((i<10)?('0'+i):i)+':00',
+                "time_num":[i,0],  // [ HOUR , MIN ]
+                "multiple":0,
+              });
+            } 
+          }else{
+            setTimeout(
+              ()=>{
+                this.datePicker.range = [null,null];
+                this.data.sections = [];
+                this.datePicker.start = '';
+                this.datePicker.end = '';
+              },500
+            );
+            alert('時間重疊到其他排程！('+isRepeat.dateRange[0]+':00~'+isRepeat.dateRange[1]+':00)');
+            
+          }
+        }
+      );
+    }
+    
+    
+    //this.data.sections
+  }
   saveSections(isSended=false){
-    this.scheduleProv.modifySchedule(this.thisIdx,this.data.sections,this.data.checks).subscribe(
+    this.scheduleProv.modifySchedule(this.thisIdx,this.data.sections,this.data.checks,this.datePicker.range).subscribe(
         res => {
             this.toastCtrl.showToast('儲存成功！');
         }
@@ -54,6 +121,7 @@ export class editSchedulePage {
   }
   editSection(idx) {
     let modal = this.modalCtrl.create(modalSectionEdit, {
+      "mode": this.data.sections[idx].mode,
       "time": this.data.sections[idx].time,
       "multiple": this.data.sections[idx].multiple
     }, {
@@ -63,6 +131,7 @@ export class editSchedulePage {
       let repeated = this.detectRepeat(data)
       if (data && !repeated) {
         //this.data.sections.push(data);
+        this.data.sections[idx].mode = data.mode;
         this.data.sections[idx].time = data.time;
         this.data.sections[idx].multiple = data.multiple;
         this.data.sections.sort(
@@ -109,9 +178,12 @@ export class editSchedulePage {
 
   }
   detectRepeat(data) {
-    if (this.data.sections.find((val, idx) => (val.time == data.time) ? true : false)) {
+    /*if (this.data.sections.find((val, idx) => (val.time == data.time) ? true : false)) {
       return true;
-    }
+    }else{
+      return false;
+    }*/
+    return false;
   }
 }
 @Component({
@@ -129,7 +201,7 @@ export class modalSectionEdit{
       public navParams: NavParams) {
         this.lightsTypes = this.lightsType.getTypes();
         this.settings= {
-          "mode":1,
+          "mode":this.navParams.data["mode"],
           "time":this.navParams.data["time"],
           "time_num":[],
           "multiple":this.navParams.data["multiple"]

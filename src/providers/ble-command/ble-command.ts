@@ -11,17 +11,13 @@ import { SectionDataType } from '../../providers/patterns-data/patterns-data';
 
 import { ScheduleDataProvider,scheduleType } from '../../providers/schedule-data/schedule-data'
 import { CollectionsDataProvider } from '../../providers/collections-data/collections-data'
-/*
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/withLatestFrom';
-import { Observable } from 'rxjs/Observable';*/
+
 const _START = 0xFA;
 const _END = 0xFF;
-/** */
+/* */
 const _CMD_TIME = 0xA0;  // s,cmd, HOUR,MIN,SEC ,e
 const _CMD_SET_GROUP = 0xA1;// s,cmd, GROUP, ,e
 const _CMD_MANUAL_MODE = 0xAA;// s,cmd, MULTIPLE,TYPE,GROUP ,e
-
 const _CMD_SCHEDULE_MODE = 0xAB;// s,cmd, MULTIPLE,TYPE,GROUP,HOUR,MIN,KEY ,e
 
 const _CMD_DEV_MODE = 0xAC; // s,cmd, MULTIPLE,GROUP, L1~L12, e
@@ -108,7 +104,7 @@ export class BleCommandProvider {
                     key,
                     ss.time_num[0],
                     ss.time_num[1],
-                    sid,
+                    sid+1,
                     _END])
                 );
               }
@@ -145,6 +141,8 @@ export class BleCommandProvider {
         sendCmds = sendCmds.concat(deviceRmScheduleList)
                             .concat(deviceScheduleList)
                             .concat(deviceSetCurrent);
+        console.log('====SEND CMDS====');
+        console.log(sendCmds);
         this.ScheduleProv.saveSyncSchedule(sendCmds);
         this.bleCtrl.write_many(sendCmds,sendCmds.length*0.4).subscribe(
           (isOkList)=>{
@@ -201,7 +199,8 @@ export class BleCommandProvider {
       observer => {
         let deNormalization = {};
         
-        this.ScheduleProv.list.take(1).subscribe(
+        this.ScheduleProv.list
+        .take(1).subscribe(
           ssList=>{
             ssList.map(
               ss=>{
@@ -390,6 +389,17 @@ export class BleCommandProvider {
   goFan(speed){
     let data = new Uint8Array([_START,_CMD_FAN_SPEED,speed ,_END]);
     this.bleCtrl.write(data);;
+  }
+  goFanMultiple(gids:Array<number>,speed){
+    
+    let cmds = gids.map(gid=>new Uint8Array([_START,_CMD_FAN_SPEED,gid,speed,_END]));
+    this.bleCtrl.write_many(cmds).subscribe(
+      (isOkList)=>{
+        if(isOkList.find( val=>val==false )){
+          alert('傳送排程過程中發生問題，請重新傳送QQ');
+        }else{}
+      }
+    );
   }
 
 

@@ -434,28 +434,32 @@ export class BleCtrlProvider {
                 }*/
                 tmpGid=checkData.device.group;
                 this.dataStore.device = checkData.device;
+
+                setTimeout(()=>{
+                  let time = new Date();
+                  let data = new Uint8Array([0xfa,0xa0,time.getHours(),time.getMinutes(),time.getSeconds(),0xff]);
+                  let data2 = new Uint8Array([0xfa,0xa1,tmpGid,0xff]);
+                  let cmds = [data,data2];
+                  /*this.write(data,()=>{
+                    this.showToast('已將裝置時間同步！');
+                  },()=>{},true);*/
+                  this.write_many(cmds).subscribe(
+                    (isOkList)=>{
+                      if(isOkList.find( val=>val==false )){
+                        this.showToast('已將裝置時間、編號同步！');
+                      }else{
+                        alert('同步裝置發生錯誤，請斷開並再次連結！')
+                      }
+                    }
+                  );
+                
+                  todoFn(peripheral);
+                  this._dismissLoading(loadObj);
+                },2500);
               }
             );
             
-            setTimeout(()=>{
-              let time = new Date();
-              let data = new Uint8Array([0xfa,0xa0,time.getHours(),time.getMinutes(),time.getSeconds(),0xff]);
-              let data2 = new Uint8Array([0xfa,0xa1,tmpGid,0xff]);
-              let cmds = [data,data2];
-              /*this.write(data,()=>{
-                this.showToast('已將裝置時間同步！');
-              },()=>{},true);*/
-              this.write_many(cmds).subscribe(
-                (isOkList)=>{
-                  if(isOkList.find( val=>val==false )){
-                    this.showToast('已將裝置時間、編號同步！');
-                  }else{}
-                }
-              );
             
-              todoFn(peripheral);
-              this._dismissLoading(loadObj);
-            },2800);
         
             
           },

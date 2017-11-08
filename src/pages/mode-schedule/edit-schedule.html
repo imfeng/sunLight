@@ -6,11 +6,15 @@
   </ion-navbar>
 </ion-header>>
 <ion-content id="schedule-nav-sctions">
+  <!--
   <ion-fab bottom right>
     <button ion-fab color="light" mini (click)="addSection()">
       <ion-icon name="add"></ion-icon>
     </button>
   </ion-fab>
+-->
+  
+
   <ion-grid>
     <ion-row class="collections" align-items-center justify-content-center>
 
@@ -22,6 +26,26 @@
     </ion-row>
     </ion-grid>
     <hr>
+    <ion-grid>
+        <ion-row>
+            <ion-col col-5>
+                <ion-item>
+                        <ion-datetime (ionChange)="dateChange()" [(ngModel)]="datePicker.start" displayFormat="HH:mm" minuteValues="00"></ion-datetime>
+                </ion-item>
+            </ion-col>
+            <ion-col col-2>
+                    <ion-item no-lines>
+                            <ion-label>～</ion-label>
+                    </ion-item>
+            </ion-col>
+            <ion-col col-5>
+                <ion-item>
+                        
+                        <ion-datetime (ionChange)="dateChange()" [(ngModel)]="datePicker.end" displayFormat="HH:mm" minuteValues="00"></ion-datetime>
+                </ion-item>
+            </ion-col>
+        </ion-row>
+    </ion-grid>
   <ion-list inset>
 
     <ion-list-header>
@@ -56,10 +80,12 @@
           <ion-icon name="settings"></ion-icon>
           EDIT
         </button>
+        <!--
         <button (click)="delSection(idx)" ion-button color="danger">
           <ion-icon name="close"></ion-icon>
           DEL
         </button>
+      -->
       </ion-item-options>
     </ion-item-sliding>
 
