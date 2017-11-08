@@ -40,6 +40,10 @@ export class editSchedulePage {
     this.collectionsList = this.clProv.list;
 
     this.thisIdx = this.navParams.get("idx");
+    
+    console.log('editSchedulePage: ' + this.thisIdx);
+  }
+  ionViewDidLoad() {
     this.scheduleProv.getSchedule(this.navParams.get("idx")).subscribe(
         arr => {
             this.data.sections = arr.sectionsList;
@@ -52,10 +56,6 @@ export class editSchedulePage {
             this.datePicker.end = dateTmp.end;
         }
     );
-    console.log('editSchedulePage: ' + this.thisIdx);
-  }
-  ionViewDidLoad() {
-    console.log("I'm alive!");
   }
   dateChange(event){
     console.log(this.datePicker);

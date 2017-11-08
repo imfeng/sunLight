@@ -73,7 +73,9 @@ export class ScheduleDataProvider {
     );
   }
   dateRangeToStringObj(range:Array<number>){
-    if(!(range[0]==null)||!(range[1]==null)){
+
+    if((!range[0] && range[0]!=0)||(!range[1] && range[1]!=0)){
+      console.log('GG');
       return {
         start: '',
         end: '',
@@ -181,7 +183,7 @@ export class ScheduleDataProvider {
             arr[idx].checks = checks;
             let chart =  this.sectionsToCharts(sections,dateRange);
             arr[idx].chartDatas = {
-              "datasets": [{"data":chart.data},{"data":chart.data}],
+              "datasets": [{"data":chart.data}],
               "colors":[{"backgroundColor":chart.backgroundColor}]
             }
             arr[idx].lastModified = new Date().getTime();
