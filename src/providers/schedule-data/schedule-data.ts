@@ -73,7 +73,6 @@ export class ScheduleDataProvider {
     );
   }
   dateRangeToStringObj(range:Array<number>){
-
     if((!range[0] && range[0]!=0)||(!range[1] && range[1]!=0)){
       console.log('GG');
       return {
@@ -82,11 +81,13 @@ export class ScheduleDataProvider {
       }
     }else{
       return {
-        start: (((range[0]<10)?('0'+range[0]):range[0]) + ':00'),
-        end: (((range[1]<10)?('0'+range[1]):range[1]) + ':00'),
+        start: this.dateHourNumberToString(range[0]),
+        end: this.dateHourNumberToString(range[1]),
       }
     }
-    
+  }
+  dateHourNumberToString(hour:number){
+    return (((hour<10)?('0'+hour):hour) + ':00');
   }
   detectDateRange(range:Array<number>,scheIdx:number){
     let isInRange = false;
@@ -156,21 +157,32 @@ export class ScheduleDataProvider {
         err => { alert('錯誤!'); }
       );
   }
-  sectionsToCharts(sections:Array<sectionDataType>,dateRange){
+  sectionsToCharts(sections:Array<sectionDataType>,dateRange,isOnlyRange=false){
     let chart = {
       "data":[],
-      "backgroundColor": []
+      "backgroundColor": [],
+      "labels":[]
     }
-    for(let i =0;i<24;i++){
-      if(i>=dateRange[0] && i<=dateRange[1]){
+    if(isOnlyRange){
+      for(let i =dateRange[0];i<=dateRange[1];i++){
         let tmp = sections[i-dateRange[0]];
         chart.data.push((tmp.multiple==0)?-1:tmp.multiple);
         chart.backgroundColor.push(this.lightsColor[ tmp.mode-1 ]);
-      }else{
-        chart.data.push(0);
-        chart.backgroundColor.push('rgb(0,0,0)');
+        chart.labels.push( this.dateHourNumberToString(tmp.time_num[0]) );
+      }
+    }else{
+      for(let i =0;i<24;i++){
+        if(i>=dateRange[0] && i<=dateRange[1]){
+          let tmp = sections[i-dateRange[0]];
+          chart.data.push((tmp.multiple==0)?-1:tmp.multiple);
+          chart.backgroundColor.push(this.lightsColor[ tmp.mode-1 ]);
+        }else{
+          chart.data.push(0);
+          chart.backgroundColor.push('rgb(0,0,0)');
+        }
       }
     }
+
     return chart;
   }
   modifySchedule(idx:number,sections:Array<sectionDataType>,checks:Array<boolean>,dateRange:Array<number>){
@@ -183,7 +195,10 @@ export class ScheduleDataProvider {
             arr[idx].checks = checks;
             let chart =  this.sectionsToCharts(sections,dateRange);
             arr[idx].chartDatas = {
-              "datasets": [{"data":chart.data}],
+              "datasets": [
+                {"data":chart.data},
+                {"data":chart.data,"type":'line',borderColor: 'rgba(72,138,255,0.8)',}
+              ],
               "colors":[{"backgroundColor":chart.backgroundColor}]
             }
             arr[idx].lastModified = new Date().getTime();
@@ -233,12 +248,17 @@ export class ScheduleDataProvider {
   addNew(){
     this.list.take(1).subscribe(
       arr => {
+        let rdnDataset = Array.from( new Array(24), ()=>(this.getRandomInt(0,30)) );
+
+
         arr.push({
           "name":'排程',
           "chartDatas":{
-            "colors": [this.getRandomColorsArr()],
-            "datasets": [this.getRandomDatasetZero()]
-            
+            "colors": [ {borderColor: 'rgba(72,138,255,0.5)'},this.getRandomColorsArr()],
+            //"datasets": [this.getRandomDatasetZero()]
+            "datasets": [ 
+              {data:rdnDataset,type:'line'},
+              {data:rdnDataset} ]
           },
           "lastModified":new Date().getTime(),
           "sectionsList":[],
@@ -258,9 +278,10 @@ export class ScheduleDataProvider {
 
   getRandomDatasetArr(){
     return {
-      "data": Array.from( new Array(24), ()=>(this.getRandomInt(0,100)) )
+      "data": Array.from( new Array(24), ()=>(this.getRandomInt(0,100)) ),
     }
   }
+
   getRandomDatasetZero(){
     return {
       "data": Array.from( new Array(24), ()=>(0) )

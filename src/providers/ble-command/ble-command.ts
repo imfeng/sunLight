@@ -392,7 +392,7 @@ export class BleCommandProvider {
   }
   goFanMultiple(gids:Array<number>,speed){
     
-    let cmds = gids.map(gid=>new Uint8Array([_START,_CMD_FAN_SPEED,gid,speed,_END]));
+    let cmds = gids.map(gid=>new Uint8Array([_START,_CMD_FAN_SPEED,speed,gid,_END]));
     this.bleCtrl.write_many(cmds).subscribe(
       (isOkList)=>{
         if(isOkList.find( val=>val==false )){

@@ -110,11 +110,11 @@ export class ModeSchedulePage implements OnInit{
     padding:0,
     scaleShowLabels: false,
     scales: {
-
       xAxes: [{
         gridLines: {
           offsetGridLines : true
         },
+        pointDotRadius:50,
         barPercentage:1.0,
         categoryPercentage:1.0,
         ticks:{
@@ -124,8 +124,8 @@ export class ModeSchedulePage implements OnInit{
       }],
       yAxes: [{
         ticks: {
-          max: 30,
-          min: -2,
+          max: 31,
+          min: -1,
           display:false,
           beginAtZero: true,
           padding: 0,

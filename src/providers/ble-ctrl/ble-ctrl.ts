@@ -12,6 +12,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { DevicesDataProvider,lightDeviceType } from '../devices-data/devices-data'
 //import { BleCommandProvider } from '../ble-command/ble-command';
 
+const _WRITEMANY_INTERVAL = 200;
 const _LIGHTS_SERVICE_UUID = '0000fff0-0000-1000-8000-00805f9b34fb';
 const _LIGHTS_CHAR_UUID = '0000fff3-0000-1000-8000-00805f9b34fb';
 //7bb104bf-abf8-4a91-9385-9c3e07cf7c30
@@ -637,7 +638,7 @@ export class BleCtrlProvider {
             observer.next(isOk);
             observer.complete();
           }else{
-            setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj);},200);
+            setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj);},_WRITEMANY_INTERVAL);
             
           }
         },
@@ -651,7 +652,7 @@ export class BleCtrlProvider {
             observer.next(isOk);
             observer.complete();
           }else{
-            setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj);},150);
+            setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj);},_WRITEMANY_INTERVAL);
           }
         }
       );
