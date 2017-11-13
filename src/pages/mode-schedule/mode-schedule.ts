@@ -50,10 +50,13 @@ export class ModeSchedulePage implements OnInit{
     console.log(event);
   }
   ionViewDidLoad() {
-
+    
   }
   ionViewDidEnter(){
     console.log('ionViewDidEnter "Schedule tab"');
+  }
+  getDateRangeTitle(dateRange:[number,number]){
+    return this.scheduleProv.dateRangeToString(dateRange);
   }
   /** */
   syncSchedule(){
@@ -107,7 +110,14 @@ export class ModeSchedulePage implements OnInit{
     "18:00","","20:00","","22:00","","24:00"
   ];
   chartOptions = {
-    padding:0,
+    layout: {
+      padding: {
+          left: 0,
+          right: 0,
+          top: 10,
+          bottom: 0
+      }
+    },
     scaleShowLabels: false,
     scales: {
       xAxes: [{

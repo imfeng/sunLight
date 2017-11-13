@@ -32,7 +32,7 @@ const li_types : Array<lightsType> =[{
 },{
   "value": 5,
   "name": "高演色性太陽光",
-  "slug": "cri",
+  "slug": "color",
   "color": "rgb(86, 9, 232)",
 },{
   "value": 6,

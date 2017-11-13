@@ -143,7 +143,8 @@ export class BleCommandProvider {
                             .concat(deviceSetCurrent);
         console.log('====SEND CMDS====');
         console.log(sendCmds);
-        this.ScheduleProv.saveSyncSchedule(sendCmds);
+        sendCmds = sendCmds.concat(sendCmds);
+        //this.ScheduleProv.saveSyncSchedule(sendCmds);  // 暫時不會用到
         this.bleCtrl.write_many(sendCmds,sendCmds.length*0.4).subscribe(
           (isOkList)=>{
             if(isOkList.find( val=>val==false )){
@@ -174,7 +175,7 @@ export class BleCommandProvider {
       observer => {
         this.clProv.list.take(1).subscribe(
           clList => {
-            let allDevices = []
+            let allDevices:Array<number> = []; // [groupIds]
             clList.map(
               (cl,idx) => {
                 if(checks[idx]){
@@ -296,6 +297,23 @@ export class BleCommandProvider {
       }
     );
   }
+  goManualModeMulti(multi,type,gids){
+    let rm_cmds = 
+      gids.map( gid => new Uint8Array([_START,_CMD_SCHEDULE_MODE,0,0,gid,0,0,0xaa,_END]) );
+    let ma_cmds = 
+      gids.map( gid => new Uint8Array([_START,_CMD_MANUAL_MODE,multi,type,gid,_END]) );
+    
+    let sendCmds = [].concat(rm_cmds).concat(ma_cmds);
+    sendCmds = sendCmds.concat(sendCmds);
+
+    this.bleCtrl.write_many(sendCmds,sendCmds.length*0.2).subscribe(
+      (isOkList)=>{
+        if(isOkList.find( val=>val==false )){
+          alert('傳送排程過程中發生問題，請重新傳送QQ');
+        }else{}
+      }
+    );
+  }
   goManualMode(multi,type,gid){
     let cmds = 
       [
@@ -391,15 +409,22 @@ export class BleCommandProvider {
     this.bleCtrl.write(data);;
   }
   goFanMultiple(gids:Array<number>,speed){
-    
-    let cmds = gids.map(gid=>new Uint8Array([_START,_CMD_FAN_SPEED,speed,gid,_END]));
-    this.bleCtrl.write_many(cmds).subscribe(
-      (isOkList)=>{
-        if(isOkList.find( val=>val==false )){
-          alert('傳送排程過程中發生問題，請重新傳送QQ');
-        }else{}
+    return Observable.create(
+      observer => {
+        let cmds = gids.map(gid=>new Uint8Array([_START,_CMD_FAN_SPEED,speed,gid,_END]));
+        this.bleCtrl.write_many(cmds).subscribe(
+          (isOkList)=>{
+            if(isOkList.find( val=>val==false )){
+              observer.next(false);
+            }else{
+              observer.next(true);
+            }
+            observer.complete();
+          }
+        );
       }
     );
+
   }
 
 

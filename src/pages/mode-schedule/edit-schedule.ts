@@ -1,18 +1,38 @@
-import { Component } from '@angular/core';
-import { AlertController ,ViewController, ModalController, NavController, NavParams } from 'ionic-angular';
+import { ElementRef,ViewChild,Component } from '@angular/core';
+import { Select, AlertController ,ViewController, ModalController, NavController, NavParams } from 'ionic-angular';
 import {  ScheduleDataProvider,scheduleType,sectionDataType } from '../../providers/schedule-data/schedule-data'
 import { ToastCtrlProvider } from  '../../providers/toast-ctrl/toast-ctrl'
 import { LightsInfoProvider,lightsTypesPipe } from  '../../providers/lights-info/lights-info'
-import { CollectionsDataProvider,collectionType } from '../../providers/collections-data/collections-data';
+import { collectsChecksToSting,CollectionsDataProvider,collectionType } from '../../providers/collections-data/collections-data';
 import { Observable } from 'rxjs/Observable';
-import { ChartsModule } from 'ng2-charts';
+import { ChartsModule,BaseChartDirective } from 'ng2-charts';
 @Component({
   templateUrl: './edit-schedule.html',
 })
 export class editSchedulePage {
+  @ViewChild(BaseChartDirective) chartDi;
+  touchStatus = {
+    "curItem":null,
+    "curIndex":null,
+    "onTouched":false,
+    "pos":{
+      "x":0,
+      "y":0
+    },
+    "canvas_h":0,
+    "curCtrl_y":0,
+    "curStep":0,
+
+    "tmpLightType":1,
+    "tmpMulti":0,
+  }
+  
+  @ViewChild('typeselect') typeselect:any;
+  lightsTypes:Array<string>;
+
   collectionsList:Observable<collectionType[]>;
   temp = {
-    "data":Array.from( new Array(6), ()=>(10) ),
+    "data":Array.from( new Array(0), ()=>(0) ),
     "backgroundColor":Array.from( new Array(24), ()=>('#fff') )
   }
   chartDatas:{
@@ -23,29 +43,35 @@ export class editSchedulePage {
     "colors":{}
   } = {
     "type":'bar',
-
+  
     "datasets": [
       this.gChartLineSet(this.temp.data),
       {"data":this.temp.data}
       //{"data":this.temp.data,"type":'line',"borderColor": 'rgba(72,138,255,0.8)',}
     ],
     "colors":[{"backgroundColor":'transparent'},{"backgroundColor":[]}],
-
+  
     "labels": [
-      "00:00","","02:00","","04:00","",
+      //"00:00","","02:00","","04:00","",
       
     ],
     "options":{
-          layout: {
-            padding: {
-                left: 5,
-                right: 5,
-                top: 40,
-                bottom: 20
-            }
-        },
-        caleShowLabels:!1,scales:{xAxes:[{gridLines:{offsetGridLines:!0},
-        barPercentage:0.4,categoryPercentage:0.9,ticks:{padding:10,backdropPaddingX:20}}],yAxes:[{ticks:{max:30,min:0,display:true,beginAtZero:!0,padding:0}}]},responsive:!0},
+      tooltips:false,
+      onHover:function($e){
+        $e.preventDefault();
+      },
+      //onClick:this.testF(),
+      layout: {
+        padding: {
+            left: 5,
+            right: 5,
+            top: 40,
+            bottom: 10
+        }
+      },
+      caleShowLabels:!1,scales:{xAxes:[{gridLines:{offsetGridLines:!0},
+      barPercentage:0.4,categoryPercentage:0.9,ticks:{padding:10,backdropPaddingX:20}}],yAxes:[{ticks:{max:30,min:0,display:true,beginAtZero:!0,padding:0}}]},responsive:!0
+    },
   }
   datePicker :{
     start:string,
@@ -61,6 +87,7 @@ export class editSchedulePage {
   }
   thisIdx: number;
   constructor(
+    private lightsType: LightsInfoProvider,
     private clProv : CollectionsDataProvider,
     private scheduleProv: ScheduleDataProvider,
     private toastCtrl:ToastCtrlProvider,
@@ -68,6 +95,9 @@ export class editSchedulePage {
     public navCtrl: NavController,
     public navParams: NavParams
   ) {
+    
+    this.lightsTypes = this.lightsType.getTypes();
+    
     this.datePicker = {
       start:'',
       end:'',
@@ -77,25 +107,95 @@ export class editSchedulePage {
 
     this.thisIdx = this.navParams.get("idx");
     
-    console.log('editSchedulePage: ' + this.thisIdx);
-  }
-  ionViewDidLoad() {
+    console.log('editSchedulePage (schedule List Idx): ' + this.thisIdx);
     this.scheduleProv.getSchedule(this.navParams.get("idx")).subscribe(
-        arr => {
-            this.data.sections = arr.sectionsList;
-            this.data.checks = arr.checks;
-            this.datePicker.range = arr.dateRange;
-            console.log('this.scheduleProv.dateRangeToStringObj(arr.dateRange)')
-            console.log(this.scheduleProv.dateRangeToStringObj(arr.dateRange))
-            let dateTmp = this.scheduleProv.dateRangeToStringObj(arr.dateRange);
-            this.datePicker.start = dateTmp.start;
-            this.datePicker.end = dateTmp.end;
+      arr => {
+        console.log('ionViewDidEnter')
+        console.log(arr);
+          this.data.sections.push(...arr.sectionsList);
+          this.data.checks.push(...arr.checks);
 
-            this.changeSectionsEvent();
-            
-        }
-    );
+          this.datePicker.range = arr.dateRange;
+          let dateTmp = this.scheduleProv.dateRangeToStringObj(arr.dateRange);
+          this.datePicker.start = dateTmp.start;
+          this.datePicker.end = dateTmp.end;
+
+        console.log(this.data);
+          this.changeSectionsEvent();
+          
+      }
+  );
   }
+  ionViewDidEnter() {
+  }
+  onTouchStart($e){
+    
+    console.log('touchstart');
+    var item = this.chartDi.chart.getElementAtEvent($e)[0];
+    if((item||false)?((item._model.pointStyle||false)?true:false):false){
+      this.touchStatus.onTouched = true;
+      this.touchStatus.curItem = item;
+      this.touchStatus.curIndex = item._index;
+      this.touchStatus.canvas_h = item._chart.height-70;
+      this.touchStatus.curCtrl_y = $e.touches[0].pageY;
+      this.touchStatus.curStep = this.data.sections[item._index].multiple;
+
+      console.log(item);
+      console.log(this.touchStatus);
+
+    } 
+  }
+  countMoveRate(curY){
+    console.log('curY: ' + curY);
+    let nextStep = Math.round( this.touchStatus.curStep + ((this.touchStatus.curCtrl_y-curY)/this.touchStatus.canvas_h*30) );
+    console.log('nextStep '+ nextStep);
+    return (nextStep>30)?30:((nextStep<0)?0:nextStep);
+  }
+  onTouchMove($e){
+    $e.preventDefault();
+    if(this.touchStatus.onTouched){
+      console.log($e);
+      let tmp = this.countMoveRate($e.touches[0].pageY);
+      this.touchStatus.curItem._chart.config.data.datasets[0].data[this.touchStatus.curIndex]
+       = tmp;
+      this.touchStatus.curItem._chart.update();
+      this.data.sections[this.touchStatus.curIndex].multiple = tmp;
+
+      this.touchStatus.pos.y = $e.touches[0].pageY;
+    }
+      
+  }
+  onTouchEnd($e){
+    
+    console.log('touchend');
+    if(this.touchStatus.onTouched){
+      this.touchStatus.onTouched = false;
+      
+      console.log('this.typeselect');
+      console.log(this.typeselect);
+      this.touchStatus.tmpLightType = this.data.sections[this.touchStatus.curIndex].mode;
+      this.typeselect.open();
+      //this.typeselect._overlay.instance
+    }
+
+  }
+  typeselectChanged(){
+    this.data.sections[this.touchStatus.curIndex].mode = this.touchStatus.tmpLightType;
+    this.changeSectionsEvent();
+  }
+  chartClick($e){
+    let crt = this.chartDi;
+    console.log(crt);
+    console.log();
+    var item =crt.chart.getElementAtEvent($e);
+    if (item) {
+        var label = crt.data.labels[crt.datasets[0].data._index];
+        var value = crt.data.datasets[item._datasetIndex].data[item._index];
+    }
+    console.log($e);
+    
+  }
+
   gChartLineSet(data){
     return {
       "type":'line',
@@ -111,6 +211,28 @@ export class editSchedulePage {
       backgroundColor: 'rgba(0,0,0,0)',
     }
   }
+  detectRepeatChecks(idx:number){
+    this.scheduleProv.detectDateRange(this.datePicker.range,this.thisIdx,this.data.checks).subscribe(
+      isRepeat => {
+        if(!isRepeat){
+        }else{
+          setTimeout(
+            ()=>{
+              this.data.checks[idx] =false;
+            },500
+          );
+          
+          alert(
+            `
+            "時間"或"群組"和其他排程衝突！
+            ( ${ this.scheduleProv.dateRangeToString(isRepeat.dateRange)},群組${collectsChecksToSting(isRepeat.checks)}
+               )
+            `);
+            
+        }
+      }
+    );
+  }
   dateChange(event){
     //console.log(this.datePicker);
     
@@ -122,7 +244,9 @@ export class editSchedulePage {
       return false;
     }else{
       if(this.datePicker.start > this.datePicker.end){
-        this.datePicker.start = [this.datePicker.end , this.datePicker.end=this.datePicker.start][0];
+        let tmp = this.datePicker.start 
+        this.datePicker.start = this.datePicker.end;
+        this.datePicker.end = tmp;
       }else{}
       let dateTmp = [ 
         parseInt(this.datePicker.start.split(':')[0]),
@@ -131,9 +255,9 @@ export class editSchedulePage {
       this.datePicker.range = dateTmp;
       this.data.sections = [];
   
-      this.scheduleProv.detectDateRange(dateTmp,this.thisIdx).subscribe(
+      this.scheduleProv.detectDateRange(dateTmp,this.thisIdx,this.data.checks).subscribe(
         isRepeat => {
-          if(!isRepeat || this.datePicker.end=='00:00'){
+          if(!isRepeat){
             for( let i=dateTmp[0];i<=dateTmp[1];i++  ){
               this.data.sections.push({
                 "mode":1,
@@ -152,20 +276,22 @@ export class editSchedulePage {
                 this.datePicker.end = '';
               },500
             );
-            alert('時間重疊到其他排程！('+isRepeat.dateRange[0]+':00~'+isRepeat.dateRange[1]+':00)');
-            
+            alert(
+              `
+              "時間"或"群組"和其他排程衝突！
+              ( ${ this.scheduleProv.dateRangeToString(isRepeat.dateRange)},群組${collectsChecksToSting(isRepeat.checks)}
+                 )
+              `);
+              
           }
         }
       );
     }
-    
-    
-    //this.data.sections
   }
   changeSectionsEvent(){
     let chart = this.scheduleProv.sectionsToCharts(this.data.sections,this.datePicker.range,true);
     //this.temp.data.splice(0,this.temp.data.length).push.apply(this.temp.data,chart.data);
-    console.log(chart);
+    //console.log(chart);
     this.chartDatas.datasets = [
       this.gChartLineSet(chart.data),
       {data:chart.data}
@@ -176,8 +302,8 @@ export class editSchedulePage {
     this.chartDatas.labels = chart.labels;
     //this.temp.backgroundColor.splice(0,this.temp.backgroundColor.length).push.apply(this.temp.backgroundColor,chart.backgroundColor);
 
-    console.log('chart');
-    console.log(this.chartDatas);
+    //console.log('chart');
+    //console.log(this.chartDatas);
     //console.log(this.temp);
 
     /*this.chartDatas.datasets =
@@ -192,6 +318,8 @@ export class editSchedulePage {
     
   }
   saveSections(isSended=false){
+
+    
     this.scheduleProv.modifySchedule(this.thisIdx,this.data.sections,this.data.checks,this.datePicker.range).subscribe(
         res => {
             this.toastCtrl.showToast('儲存成功！');
@@ -212,7 +340,10 @@ export class editSchedulePage {
       cssClass: 'modal-section'
     });
     modal.onDidDismiss(data => {
+      /** DEPRECATED START*/
       let repeated = this.detectRepeat(data)
+      /** DEPRECATED END*/
+      
       if (data && !repeated) {
         //this.data.sections.push(data);
         this.data.sections[idx].mode = data.mode;
@@ -226,8 +357,9 @@ export class editSchedulePage {
       } else if (repeated) {
         this.toastCtrl.showToast('「開始時間」重複，請試試別的時間唷');
       } else {
-
       }
+      
+
       //console.log(this.data.sections);
     });
     modal.present();
@@ -264,12 +396,14 @@ export class editSchedulePage {
 
   }
   detectRepeat(data) {
+    return false;
+    // 時間重複取消
     /*if (this.data.sections.find((val, idx) => (val.time == data.time) ? true : false)) {
       return true;
     }else{
       return false;
     }*/
-    return false;
+    
   }
 }
 @Component({

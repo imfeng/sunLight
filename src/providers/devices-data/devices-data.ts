@@ -19,6 +19,7 @@ export interface lightDeviceType {
   "last_sended": number,
   "hadGroupSync":boolean,
   "collection": Array<number>, // 1~6 to A~F
+  "fanSpeed":number,
 }
 @Injectable()
 export class DevicesDataProvider {
@@ -59,6 +60,7 @@ export class DevicesDataProvider {
             "last_sended": 0,
             "collection": [],
             "hadGroupSync":false,
+            "fanSpeed":60,
           },{
             "name":"測試裝置2",
             "o_name" :"測試裝置2_o",
@@ -67,6 +69,7 @@ export class DevicesDataProvider {
             "last_sended": 0,
             "collection": [],
             "hadGroupSync":false,
+            "fanSpeed":60,
           },{
             "name":"測試裝置3",
             "o_name" :"測試裝置3_o",
@@ -75,6 +78,7 @@ export class DevicesDataProvider {
             "last_sended": 0,
             "collection": [],
             "hadGroupSync":false,
+            "fanSpeed":60,
           },{
             "name":"測試裝置4",
             "o_name" :"測試裝置4_o",
@@ -83,6 +87,7 @@ export class DevicesDataProvider {
             "last_sended": 0,
             "collection": [],
             "hadGroupSync":false,
+            "fanSpeed":60,
           }]
           Observable.fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,temp)).subscribe();
           this.dataStore.deviceList = temp;
@@ -142,6 +147,7 @@ export class DevicesDataProvider {
                   "hadGroupSync":false,
                   "last_sended": 0,
                   "collection": [],
+                  "fanSpeed":60,
                 };
                 this.add(newDevice).subscribe(
                   isAdd => {
@@ -225,6 +231,29 @@ export class DevicesDataProvider {
     
     //return sub;
   }
+  modifyFanSpeed(fanSpeed:number,gids:Array<number>){
+    return Observable.create(
+      observer => {
+        gids.map(
+          gid => {
+            this.dataStore.deviceList[gid].fanSpeed = fanSpeed;
+            Observable
+            .fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,this.dataStore.deviceList))
+            .subscribe(
+              (obj)=>{
+                this.dataStore.deviceList = obj;
+                this._list.next(Object.assign({}, this.dataStore).deviceList);
+                console.log('>>> modifyFanSpeed成功!!');
+                observer.next(true);
+                observer.complete();
+              },
+              ()=>{observer.error(false,'NO ITEM!');observer.complete();}
+            );
+          }
+        );
+      }
+    )
+  }
   modify(d_id:string,d_name:string,d_gid:number,hadGroupSync:boolean=false,collection:Array<number>=null){
     console.log('>>> Device "'+ d_id + '" modifying!');
     let isNext = false;
@@ -233,8 +262,8 @@ export class DevicesDataProvider {
         this.dataStore.deviceList.forEach(
           (ele,idx) =>{
             if(ele.id == d_id){
+
               if(collection){
-      
                 this.dataStore.deviceList[idx].collection = collection;}
               if(d_name){this.dataStore.deviceList[idx].name = d_name;}
               if(d_gid){

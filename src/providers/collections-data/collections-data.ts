@@ -8,6 +8,12 @@ import { Observable } from 'rxjs/Observable';
 import { NativeStorage } from '@ionic-native/native-storage';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 const _STORAGE_COLLECTIONS_NAME = "collectionsList";
+const clName = [
+  '無群組',"群組A","群組B","群組C","群組D","群組E","群組F",
+]
+const slug = [
+  '',"A","B","C","D","E","F",
+]
 export interface collectionType {
   "name":string,
   "cid": number,
@@ -43,7 +49,7 @@ export class CollectionsDataProvider {
         if(err.code==2 || err.code.code==2){
           let temp = Array.from({length: 6}, 
             (v, i) => ({
-                "name":"群組"+ String.fromCharCode(64 + i+1),
+                "name":colllectsIdxToString(i+1),
                 "cid": (i+1),
                 "devices":[]
               })
@@ -115,13 +121,13 @@ export class collectionNamePipe implements PipeTransform {
   constructor(){
   }
   transform(value, args) {
-    let clName = [
-      '無群組',"群組A","群組B","群組C","群組D","群組E","群組F",
-    ]
-    let slug = [
-      '',"A","B","C","D","E","F",
-    ]
-    //value.map( v => clName[v] ).toString();
-    return (value)?((args)?slug[value]:clName[value]):'無';
+    return colllectsIdxToString(value, args);
   }
+}
+
+export function colllectsIdxToString(idx, args=false){
+  return (idx)?((args)?slug[idx]:clName[idx]):((args)?'無':'無群組');
+}
+export function collectsChecksToSting(checks:Array<boolean>){
+  return checks.map((v,idx)=>(v)?colllectsIdxToString(idx+1,true):false).filter(v=>v).toString();
 }

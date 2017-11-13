@@ -9,9 +9,6 @@
       </button>
     </ion-buttons>
     <!-- <ion-buttons end>
-      <button ion-button icon-only color="primary" (click)="openSyncPage()">
-        <ion-icon name="pricetags" ></ion-icon>
-      </button>
       <button ion-button icon-only color="royal" (click)="openBleModal()">
         <ion-icon name="bluetooth" ></ion-icon>
       </button> </ion-buttons>-->
@@ -41,11 +38,16 @@
       <ion-icon *ngIf="!fanCtrl.isFanCheckbox" item-start name="sunny"></ion-icon>
       <h2>{{item.name || item.o_name || "無名稱"}} - {{ item.group || "錯誤"}}</h2>
       <p>{{item.id}}</p>
-      <p>
+      <!-- 1 Device to N Collections -->
+      <!-- <p>
         <ion-badge class="collection-badge" item-end *ngFor="let clect of item.collection">
           #{{ ( clect | collection_name:true )}}
         </ion-badge>
-      </p>
+      </p> -->
+
+      <!-- 1 Device to 1Collections -->
+      <ion-badge *ngIf="!fanCtrl.isFanCheckbox" item-end>#{{ item.collection[0] | collection_name }}</ion-badge>
+      <ion-badge *ngIf="fanCtrl.isFanCheckbox" color="light" item-end>{{ item.fanSpeed+'%' }}</ion-badge>
       <button (click)="editDevice(item.id)" ion-button outline item-end>
         <ion-icon ios="ios-settings" md="md-settings"></ion-icon>
       </button>
@@ -54,10 +56,7 @@
       <ion-icon item-start name="sunny"></ion-icon>
       <h2>{{item.name || item.o_name || "無名稱"}}</h2>
       <p>{{item.id}}</p>
-      <ion-badge item-end>#{{ (item.collection | collection_name )}}</ion-badge>
-      <button (click)="editDevice(item.id)" ion-button outline item-end>
-        <ion-icon ios="ios-settings" md="md-settings"></ion-icon>
-      </button>
+
     </ion-item>
   </ion-list>
   <br>

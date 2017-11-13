@@ -19,7 +19,7 @@
     <ion-row class="collections" align-items-center justify-content-center>
 
         <ion-col *ngFor="let item of collectionsList|async;let idx = index;" text-center>
-        <ion-checkbox [(ngModel)]="data.checks[idx]"></ion-checkbox>
+        <ion-checkbox [(ngModel)]="data.checks[idx]" (click)="detectRepeatChecks(idx)"></ion-checkbox>
         <p>{{item.name}}</p>
         </ion-col>
 
@@ -46,11 +46,17 @@
             </ion-col>
         </ion-row>
     </ion-grid>
-    <canvas height="170px" baseChart [chartType]="chartDatas.type" [datasets]="chartDatas.datasets" [labels]="chartDatas.labels" [options]="chartDatas.options"
+    <!-- (click)= "chartClick($event)"
+    (pan)="panEvent($event)" -->
+    <canvas height="170px" 
+    (touchstart)="onTouchStart($event)" (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd($event)"
+    
+     baseChart [chartType]="chartDatas.type" [datasets]="chartDatas.datasets" [labels]="chartDatas.labels" [options]="chartDatas.options"
     [legend]="false" [colors]="chartDatas.colors" >
   </canvas>
+  
   <ion-list inset>
-
+    <button ion-button block color="primary" (click)="saveSections()">儲存</button>
     <ion-list-header>
       <ion-row text-center>
         <ion-col col-5>
@@ -65,11 +71,24 @@
       </ion-row>
       <ion-icon item-end></ion-icon>
     </ion-list-header>
+    <button ion-item *ngFor="let item of data.sections;let idx =index" (click)="editSection(idx)" >
+      <ion-row text-center>
+        <ion-col col-5>
+          {{item.mode | light:'name'}}</ion-col> <!--   -->
+        <ion-col col-4>
+          <span>{{item.time}}</span>
+        </ion-col>
+        <ion-col col-3>
+          <span>{{item.multiple}}</span>
+        </ion-col>
+      </ion-row>
+    </button>
+<!--
     <ion-item-sliding *ngFor="let item of data.sections;let idx =index">
       <ion-item>
         <ion-row text-center>
           <ion-col col-5>
-            {{item.mode | light:'name'}}</ion-col> <!--   -->
+            {{item.mode | light:'name'}}</ion-col>
           <ion-col col-4>
             <span>{{item.time}}</span>
           </ion-col>
@@ -83,18 +102,24 @@
           <ion-icon name="settings"></ion-icon>
           EDIT
         </button>
-        <!--
+        
         <button (click)="delSection(idx)" ion-button color="danger">
           <ion-icon name="close"></ion-icon>
           DEL
         </button>
-      -->
+      
       </ion-item-options>
-    </ion-item-sliding>
+    </ion-item-sliding>-->
 
-    <button ion-button block color="primary" (click)="saveSections()">儲存</button>
+    
 
   </ion-list>
+
+  <ion-item style="display:none;">
+    <ion-select #typeselect interface="action-sheet" cancelText="取消" (ionCancel)="typeselectChanged()" [(ngModel)]="touchStatus.tmpLightType">
+      <ion-option *ngFor="let type of lightsTypes;" value="{{type.value}}" (ionSelect)="typeselectChanged()">{{type.name}}</ion-option>
+    </ion-select>
+  </ion-item>
 </ion-content>
 <ion-footer>
 

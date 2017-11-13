@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { AlertController,ModalController,IonicPage, NavController, NavParams } from 'ionic-angular';
 import { BleOperatorPage } from '../ble-operator/ble-operator';
-import { SyncPage } from '../sync/sync';
 import { DevicesDataProvider,lightDeviceType } from '../../providers/devices-data/devices-data';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/take';
@@ -49,6 +48,7 @@ export class ModeDevicesPage {
               "last_sended": null,
               "hadGroupSync":null,
               "collection": [],
+              "fanSpeed":null,
               })
           );
           console.log(tmp);
@@ -63,7 +63,12 @@ export class ModeDevicesPage {
     this.devices_list.take(1).subscribe(
       list => {
         let gids = list.filter( (v,idx)=>this.fanCtrl.checks[idx] ).map( (v)=>v.group );
-        this.bleCmd.goFanMultiple(gids,this.fanCtrl.currentFanSpeed);
+        this.bleCmd.goFanMultiple(gids,this.fanCtrl.currentFanSpeed).subscribe(
+          isOk => {
+            if(!isOk) alert('傳送排程過程中發生問題，請重新傳送QQ');
+            else this.devicesProv.modifyFanSpeed(this.fanCtrl.currentFanSpeed,gids).subscribe();
+          }
+        );
       }
     );
   }
@@ -78,11 +83,7 @@ export class ModeDevicesPage {
    /* let modal = this.modalCtrl.create(BleOperatorPage);
     modal.present();*/
   }
-  openSyncPage(){
-    this.navCtrl.push(SyncPage);
-   /* let modal = this.modalCtrl.create(BleOperatorPage);
-    modal.present();*/
-  }
+
   ionViewDidLoad() {
     console.log('ionViewDidLoad ModeDevicesPage');
   }
@@ -100,9 +101,9 @@ export class editDevicePage {
       "id": '',
       "group":0,
       "last_sended": 0,
-
       "hadGroupSync":false,
       "collection":[],
+      "fanSpeed":null,
     }
   };
   constructor(

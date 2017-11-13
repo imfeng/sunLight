@@ -26,7 +26,7 @@
           <ion-icon name="quote"></ion-icon>
           <!-- R<span class="gidTitle">#1</span>-->
         </ion-avatar>
-        <h2>{{item.name}}</h2>
+        <h2>{{item.name}} ({{getDateRangeTitle(item.dateRange)}})</h2>
         <p>last modeified: {{item.lastModified | date: 'dd/MM/yyyy H:mm'}}</p>
         <button (click)="rmSchedule(idx)" clear ion-button outline item-end><ion-icon name="close"></ion-icon></button>
       </ion-item>

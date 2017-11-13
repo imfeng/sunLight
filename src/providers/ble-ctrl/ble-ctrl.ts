@@ -101,6 +101,7 @@ export class BleCtrlProvider {
           "last_sended": null,
           "hadGroupSync": false,
           "collection":null,
+          "fanSpeed":null,
         }
     };
 
@@ -446,10 +447,11 @@ export class BleCtrlProvider {
                   },()=>{},true);*/
                   this.write_many(cmds).subscribe(
                     (isOkList)=>{
-                      if(isOkList.find( val=>val==false )){
-                        this.showToast('已將裝置時間、編號同步！');
-                      }else{
+                      if(!isOkList.find( val=>val==false )){
                         alert('同步裝置發生錯誤，請斷開並再次連結！')
+                        
+                      }else{
+                        this.showToast('已將裝置時間、編號同步！');
                       }
                     }
                   );

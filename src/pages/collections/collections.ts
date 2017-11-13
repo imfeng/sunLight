@@ -73,11 +73,11 @@ export class cListPage{
               "collection": v.collection,
               "group":v.group,
               "id":v.id,
-              "isDisabled": false, // 1 Device to N Collections
-              /*"isDisabled":(    // 1 Device to 1 Collection
-                (v.collection && v.collection!=0)?
-                  ((v.collection==this.thisCid)?false:true)
-                  :false),*/
+              //"isDisabled": false, // 1 Device to N Collections
+              "isDisabled":(    // 1 Device to 1 Collection
+                (v.collection.length>0)?
+                  ((v.collection.find(v=>v==this.thisCid))?false:true)
+                  : (v.collection[0]==this.thisCid)?false:true),
               "isCheck": ((v.collection.find(v => v==this.thisCid))?true:false)
               //((v.collection==this.thisCid)?true:false)
             }

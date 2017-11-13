@@ -108,7 +108,9 @@ export class ModeManual {
     if(power){
       this.bleCmd.collectionsToDeviceGid(this.collectionsChecks).subscribe(
         allDevices => {
-          allDevices.forEach((group,idx) => {
+
+          this.bleCmd.goManualModeMulti(multi,type,allDevices);
+          /*allDevices.forEach((group,idx) => {
             setTimeout(()=>{
               this.bleCmd.goManualMode(
                 multi,
@@ -116,14 +118,15 @@ export class ModeManual {
                 group,
               );
              }, 400*idx);
-          });
+          });*/
         }
       );
 
     }else{
       this.bleCmd.collectionsToDeviceGid(this.collectionsChecks).subscribe(
         allDevices => {
-          allDevices.forEach((group,idx) => {
+          this.bleCmd.goManualModeMulti(0,0,allDevices);
+          /*allDevices.forEach((group,idx) => {
             setTimeout(()=>{
               this.bleCmd.goManualMode(
                 0,
@@ -131,7 +134,7 @@ export class ModeManual {
                 group,
               );
              }, 400*idx);
-          });
+          });*/
         }
       );
       
