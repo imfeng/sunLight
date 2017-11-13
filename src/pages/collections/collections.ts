@@ -77,7 +77,7 @@ export class cListPage{
               "isDisabled":(    // 1 Device to 1 Collection
                 (v.collection.length>0)?
                   ((v.collection.find(v=>v==this.thisCid))?false:true)
-                  : (v.collection[0]==this.thisCid)?false:true),
+                  : false ),
               "isCheck": ((v.collection.find(v => v==this.thisCid))?true:false)
               //((v.collection==this.thisCid)?true:false)
             }
