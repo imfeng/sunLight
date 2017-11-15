@@ -239,7 +239,7 @@ export class bleListPage implements OnInit{
       this.blueInfo = this.bleCtrl.dataStore;
       this.devices = this.bleCtrl.scanedDevices;
       if(this.blueInfo["isEnabled"]){ //TODO
-        this.doRefresh();
+        //this.doRefresh();
         /* HACK refresher EVENT */
         /*this.refresher._top = this.content.contentTop + 'px';
         this.refresher.state = 'ready';
