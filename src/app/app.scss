@@ -15,9 +15,20 @@
 .scroll-content{
     /*overflow: hidden;*/
 }
-
-ion-badge.collection-badge.badge.badge-ios{
-    margin: 0 3px 0 0;
+.multi-badge-cont{
+    -ms-box-orient: horizontal;
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -moz-flex;
+    display: -webkit-flex;
+    display: flex;
+    list-style: none;
+    -webkit-flex-wrap: nowrap;
+    flex-wrap: nowrap;
+}
+.multi-badge-cont>ion-badge.badge.badge-ios{
+    margin: 3px;
 }
 
 /* OVERRIDE IONIC-MD */

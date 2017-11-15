@@ -7,10 +7,12 @@ import { Observable } from 'rxjs/Observable';
 
 import { BleCtrlProvider } from '../ble-ctrl/ble-ctrl'
 import { DevicesDataProvider } from '../devices-data/devices-data'
-import { SectionDataType } from '../../providers/patterns-data/patterns-data';
+
 
 import { ScheduleDataProvider,scheduleType } from '../../providers/schedule-data/schedule-data'
 import { CollectionsDataProvider } from '../../providers/collections-data/collections-data'
+import { AppStateProvider } from  '../../providers/app-state/app-state';
+import { ToastCtrlProvider } from  '../../providers/toast-ctrl/toast-ctrl';
 
 const _START = 0xFA;
 const _END = 0xFF;
@@ -33,6 +35,8 @@ const _CMD_FAN_SPEED = 0xAD; // s,cmd, fan, e
 export class BleCommandProvider {
   //devicesList:any;//lightDeviceType[]
   constructor(
+    private toastCtrl:ToastCtrlProvider,
+    private appStateProv: AppStateProvider,
     private ScheduleProv: ScheduleDataProvider,
     private clProv: CollectionsDataProvider,
     private devicesData: DevicesDataProvider,
@@ -41,118 +45,121 @@ export class BleCommandProvider {
     console.log('Hello BleCommandProvider Provider');
   }
   goSyncSchedule(){
-    let sendCmds = [];
-    /* 清除所有群組內的排程 -> 寫入排程 -> 將目前光譜設定為當下排程的光譜  */
-    let deviceRmScheduleList = [];
-    let deviceScheduleList =[];
-    let deviceSetCurrent = [];
+    return Observable.create(
+      observer => {
+        let sendCmds = [];
+        /* 清除所有群組內的排程 -> 寫入排程 -> 將目前光譜設定為當下排程的光譜  */
+        let deviceRmScheduleList = [];
+        let deviceScheduleList =[];
+        let deviceSetCurrent = [];
+        
     
-
-    /** deviceRmScheduleList END */
-
-    /*scheduleCheckNow*/
-    let nowHour = new Date().getHours();
-    let detectNow = {
-      "multiple":0,
-      "mode":0,
-      "time_num":[0,0]
-    }
-    /** */
-    this.ScheduleProcess1().subscribe(
-      deNor => {
-        /** deviceRmScheduleList START 
-         *  清除所有群組內的排程
-         * */
-        this.devicesData.list.subscribe(
-          dList => {
-            dList.map(
-              dd => {
-                deviceRmScheduleList.push(
-                  new Uint8Array([
-                    _START,
-                    _CMD_SCHEDULE_MODE,
-                    0,
-                    0,
-                    dd.group,
-                    0,
-                    0,
-                    0xaa,
-                    _END])
+        /** deviceRmScheduleList END */
+    
+        /*scheduleCheckNow*/
+        let nowHour = new Date().getHours();
+        let detectNow = {
+          "multiple":0,
+          "mode":0,
+          "time_num":[0,0]
+        }
+        /** */
+        this.ScheduleProcess1().subscribe(
+          deNor => {
+            /** deviceRmScheduleList START 
+             *  清除所有群組內的排程
+             * */
+            this.devicesData.list.subscribe(
+              dList => {
+                dList.map(
+                  dd => {
+                    deviceRmScheduleList.push(
+                      new Uint8Array([
+                        _START,
+                        _CMD_SCHEDULE_MODE,
+                        0,
+                        0,
+                        dd.group,
+                        0,
+                        0,
+                        0xaa,
+                        _END])
+                    );
+                  }
                 );
               }
             );
-          }
-        );
-        console.log('deNormalization:');
-        console.log(deNor);
-        Object.keys(deNor).map( 
-          (key,idx) => {
-            deNor[key].map(
-              (ss,sid) => {
-                if(nowHour>=ss.time_num[0]){
-                  detectNow.multiple = ss.multiple;
-                  detectNow.mode = ss.mode;
-                  detectNow.time_num = ss.time_num;
-                  console.log('nowHour');
-                }
-                deviceScheduleList.push(
+            console.log('deNormalization:');
+            console.log(deNor);
+            Object.keys(deNor).map( 
+              (key,idx) => {
+                deNor[key].map(
+                  (ss,sid) => {
+                    if(nowHour>=ss.time_num[0]){
+                      detectNow.multiple = ss.multiple;
+                      detectNow.mode = ss.mode;
+                      detectNow.time_num = ss.time_num;
+                      console.log('nowHour');
+                    }
+                    deviceScheduleList.push(
+                      new Uint8Array([
+                        _START,
+                        _CMD_SCHEDULE_MODE,
+                        ss.multiple,
+                        ss.mode,
+                        key,
+                        ss.time_num[0],
+                        ss.time_num[1],
+                        sid+1,
+                        _END])
+                    );
+                  }
+                );
+                //[_START,_CMD_MANUAL_MODE,multi,type,gid,_END
+                deviceSetCurrent.push(
                   new Uint8Array([
                     _START,
-                    _CMD_SCHEDULE_MODE,
-                    ss.multiple,
-                    ss.mode,
-                    key,
-                    ss.time_num[0],
-                    ss.time_num[1],
-                    sid+1,
+                    _CMD_MANUAL_MODE,
+                    detectNow.multiple,
+                    detectNow.mode,
+                    parseInt(key),
                     _END])
                 );
-              }
-            );
-            //[_START,_CMD_MANUAL_MODE,multi,type,gid,_END
-            deviceSetCurrent.push(
-              new Uint8Array([
-                _START,
-                _CMD_MANUAL_MODE,
-                detectNow.multiple,
-                detectNow.mode,
-                parseInt(key),
-                _END])
-            );
-  
-          }
-        );/*
-        console.log('deviceScheduleList');
-        console.log(deviceScheduleList);
-        console.log('deviceSetCurrent');
-        console.log(deviceSetCurrent);*/
-        /*
-            1 devices To N colletions 複雜啊！
-            先刪除重複 -> 排序
-        */
-        /** deviceScheduleList SORT */
-        /*deviceScheduleList.filter(
-          (a,b) => {
-            return 1;
-          }
-        );*/
-        /** deviceSetCurrent SORT */
-
-        sendCmds = sendCmds.concat(deviceRmScheduleList)
-                            .concat(deviceScheduleList)
-                            .concat(deviceSetCurrent);
-        console.log('====SEND CMDS====');
-        console.log(sendCmds);
-        sendCmds = sendCmds.concat(sendCmds);
-        //this.ScheduleProv.saveSyncSchedule(sendCmds);  // 暫時不會用到
-        this.bleCtrl.write_many(sendCmds,sendCmds.length*0.4).subscribe(
-          (isOkList)=>{
-            if(isOkList.find( val=>val==false )){
-              alert('傳送排程過程中發生問題，請重新傳送QQ');
-            }else{}
-          }
-        );
       
+              }
+            );/*
+            console.log('deviceScheduleList');
+            console.log(deviceScheduleList);
+            console.log('deviceSetCurrent');
+            console.log(deviceSetCurrent);*/
+            /*
+                1 devices To N colletions 複雜啊！
+                先刪除重複 -> 排序
+            */
+            /** deviceScheduleList SORT */
+            /*deviceScheduleList.filter(
+              (a,b) => {
+                return 1;
+              }
+            );*/
+            /** deviceSetCurrent SORT */
+    
+            sendCmds = sendCmds.concat(deviceRmScheduleList)
+                                .concat(deviceScheduleList)
+                                .concat(deviceSetCurrent);
+            console.log('====SEND CMDS====');
+            console.log(sendCmds);
+            sendCmds = sendCmds.concat(sendCmds);  // DOUBLE CMDS
+            //this.ScheduleProv.saveSyncSchedule(sendCmds);  // 暫時不會用到
+            this.bleCtrl.write_many(sendCmds,sendCmds.length*0.4).subscribe(
+              (isOk)=>{
+                this.appStateProv.action({type:'sche',payload:true});
+                observer.next(isOk);observer.complete();
+              }
+            );
+
+          }
+        );
       }
     );
   }
@@ -205,8 +212,6 @@ export class BleCommandProvider {
           ssList=>{
             ssList.map(
               ss=>{
-                console.log('ss');
-                console.log(ss);
                 this.collectionsToDeviceGid(ss.checks).subscribe(
                   allDevices => {
                     allDevices.map(
@@ -217,17 +222,17 @@ export class BleCommandProvider {
                           deNormalization[v] = deNormalization[v].concat(ss.sectionsList);
                         }
                       }
-                    )
+                    );
+                    observer.next(deNormalization);
+                    observer.complete();
                   }
                 );
-                
               }
             );
           }
         );
         
-        observer.next(deNormalization);
-        observer.complete();
+
       }
     );
   }
@@ -272,47 +277,43 @@ export class BleCommandProvider {
         alert('成功連接但傳送時失敗，但仍會在APP顯示方才所更改的"編號"值');
       },true
     );
-
-    /*this.bleCtrl.write(data).subscribe(
-      (id)=>{
-        this.devicesData.modify(id,null,gid);
-        alert('修改"編號"成功！');
-      },
-      (id)=>{ //失敗仍然修改 devicesData"的"編號"值
-        this.devicesData.modify(id,null,gid);
-        alert('修改該裝置"編號"失敗，但仍會在APP顯示方才所更改的"編號"值');
-      }
-    );*/
   }
+  /** MANAUL MODE */
   disableManaul(){
     this.ScheduleProv.getSyncSchedule().subscribe(
       cmds => {
-        this.bleCtrl.write_many(cmds).subscribe(
-          (isOkList)=>{
-            if(isOkList.find( val=>val==false )){
-              alert('傳送排程過程中發生問題，請重新傳送QQ');
-            }else{}
-          }
-        );
+        this.bleCtrl.write_many(cmds).subscribe();
       }
     );
   }
   goManualModeMulti(multi,type,gids){
-    let rm_cmds = 
-      gids.map( gid => new Uint8Array([_START,_CMD_SCHEDULE_MODE,0,0,gid,0,0,0xaa,_END]) );
-    let ma_cmds = 
-      gids.map( gid => new Uint8Array([_START,_CMD_MANUAL_MODE,multi,type,gid,_END]) );
-    
-    let sendCmds = [].concat(rm_cmds).concat(ma_cmds);
-    sendCmds = sendCmds.concat(sendCmds);
-
-    this.bleCtrl.write_many(sendCmds,sendCmds.length*0.2).subscribe(
-      (isOkList)=>{
-        if(isOkList.find( val=>val==false )){
-          alert('傳送排程過程中發生問題，請重新傳送QQ');
-        }else{}
+    return Observable.create(
+      observer => {
+        if(gids.length>0){
+          let rm_cmds = 
+          gids.map( gid => new Uint8Array([_START,_CMD_SCHEDULE_MODE,0,0,gid,0,0,0xaa,_END]) );
+          let ma_cmds = 
+            gids.map( gid => new Uint8Array([_START,_CMD_MANUAL_MODE,multi,type,gid,_END]) );
+          
+          let sendCmds = [].concat(rm_cmds).concat(ma_cmds);
+          sendCmds = sendCmds.concat(sendCmds);  //DOUBLE CMDS
+      
+          this.bleCtrl.write_many(sendCmds,sendCmds.length*0.2).subscribe(
+            (isOk)=>{
+              this.appStateProv.action({type:'manual',payload:true});
+              observer.next(isOk);
+              observer.complete();
+            }
+          );
+        }else{
+          this.toastCtrl.showToast('無裝置！');
+          observer.next(false);
+          observer.complete();
+        }
       }
     );
+
+
   }
   goManualMode(multi,type,gid){
     let cmds = 
@@ -320,79 +321,13 @@ export class BleCommandProvider {
         new Uint8Array([_START,_CMD_SCHEDULE_MODE,0,0,gid,0,0,0xaa,_END]),
         new Uint8Array([_START,_CMD_MANUAL_MODE,multi,type,gid,_END])
       ];
-    this.bleCtrl.write_many(cmds).subscribe(
-      (isOkList)=>{
-        if(isOkList.find( val=>val==false )){
-          alert('傳送排程過程中發生問題，請重新傳送QQ');
-        }else{}
-      }
-    );
+    this.bleCtrl.write_many(cmds).subscribe();
 
   }
+  /** */
   goManual(multi,type,gid){
     let data = new Uint8Array([_START,_CMD_MANUAL_MODE,multi,type,gid,_END]);
     this.bleCtrl.write(data);
-  }
-  goSchedule(sectionsList:SectionDataType[],gid){
-    //let time = new Date();
-    //let timeArr = new Uint8Array([_START,_CMD_TIME,time.getHours(),time.getMinutes(),time.getSeconds(),_END]);
-    //let data = new Uint8Array([_START,_CMD_SCHEDULE_MODE,0,0,gid,0,0,0xAA,_END]);
-    //data = this._appendBuffer(timeArr,data);
-    let cmds =[];
-    let data = new Uint8Array([]);
-    let cursor = 1;
-    let lastVal = {
-      multiple:0,
-      mode:0,
-      time_num:[]
-    }
-    sectionsList.forEach(val => {
-      lastVal = val;
-      cmds.push(
-        new Uint8Array([
-          _START,
-          _CMD_SCHEDULE_MODE,
-          val.multiple,
-          val.mode,
-          gid,
-          val.time_num[0],
-          val.time_num[1],
-          cursor++,
-          _END])
-      );
-    });
-    for(let i=cursor;i<=30;i++){
-      cmds.push(
-        new Uint8Array([
-          _START,
-          _CMD_SCHEDULE_MODE,
-          lastVal.multiple,
-          lastVal.mode,
-          gid,
-          lastVal.time_num[0],
-          lastVal.time_num[1],
-          i,
-          _END])
-      );
-    }
-
-    /*sectionsList.forEach(val => {
-      data = this._appendBuffer(data,new Uint8Array([
-        _START,
-        _CMD_SCHEDULE_MODE,
-        val.multiple,
-        val.mode,
-        gid,
-        val.time_num[0],
-        val.time_num[1],
-        cursor++,
-        _END])
-      );
-    });*/
-
-    return this.bleCtrl.write_many(cmds);
-     
-    //this.bleCtrl.write(data);
   }
   private _appendBuffer (buffer1, buffer2) {
     let tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
@@ -400,33 +335,46 @@ export class BleCommandProvider {
     tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
     return tmp;
   };
-  goDev(multi,gid,arr){
-    let data = new Uint8Array([_START,_CMD_DEV_MODE,multi,gid, ...arr ,_END]);
-    this.bleCtrl.write(data);;
-  }
-  goFan(speed){
-    let data = new Uint8Array([_START,_CMD_FAN_SPEED,speed ,_END]);
-    this.bleCtrl.write(data);;
+  goDevMultiple(multi,gids,arr){
+    return Observable.create(
+      observer => {
+        if (gids.length>0) {
+          let cmds = gids.map(gid=>new Uint8Array([_START,_CMD_DEV_MODE,multi,gid, ...arr ,_END]));
+          this.bleCtrl.write_many(cmds).subscribe(
+            (isOk)=>{
+              observer.next(isOk);
+              observer.complete();
+            }
+          );
+        }else{
+          observer.next(true);
+          observer.complete();
+        }
+
+      }
+    );
   }
   goFanMultiple(gids:Array<number>,speed){
     return Observable.create(
       observer => {
-        let cmds = gids.map(gid=>new Uint8Array([_START,_CMD_FAN_SPEED,speed,gid,_END]));
-        this.bleCtrl.write_many(cmds).subscribe(
-          (isOkList)=>{
-            if(isOkList.find( val=>val==false )){
-              observer.next(false);
-            }else{
-              observer.next(true);
+        if (gids.length>0) {
+          let cmds = gids.map(gid=>new Uint8Array([_START,_CMD_FAN_SPEED,speed,gid,_END]));
+          this.bleCtrl.write_many(cmds).subscribe(
+            (isOk)=>{
+              observer.next(isOk);
+              observer.complete();
             }
-            observer.complete();
-          }
-        );
+          );
+        }else{
+          this.toastCtrl.showToast('無裝置！');
+          observer.next(false);
+          observer.complete();
+        }
+
       }
     );
-
   }
 
 
-
+  /** */
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable,PipeTransform,Pipe } from '@angular/core';
 
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/take';
@@ -231,26 +231,30 @@ export class DevicesDataProvider {
     
     //return sub;
   }
-  modifyFanSpeed(fanSpeed:number,gids:Array<number>){
+  modifyFanSpeed(fanSpeed:number,idxs:Array<number>){
     return Observable.create(
       observer => {
-        gids.map(
-          gid => {
-            this.dataStore.deviceList[gid].fanSpeed = fanSpeed;
+        this.list.take(1).subscribe(
+          list => {
+            idxs.map(
+              idx => {
+                list[idx].fanSpeed = fanSpeed;
+              });
             Observable
-            .fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,this.dataStore.deviceList))
-            .subscribe(
-              (obj)=>{
-                this.dataStore.deviceList = obj;
-                this._list.next(Object.assign({}, this.dataStore).deviceList);
-                console.log('>>> modifyFanSpeed成功!!');
-                observer.next(true);
-                observer.complete();
-              },
-              ()=>{observer.error(false,'NO ITEM!');observer.complete();}
-            );
+              .fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,list))
+              .subscribe(
+                (obj)=>{
+                  //this.dataStore.deviceList = obj;
+                  //this._list.next(Object.assign({}, this.dataStore).deviceList);
+                  console.log('>>> modifyFanSpeed成功!!');
+                  observer.next(true);
+                  observer.complete();
+                },
+                ()=>{observer.error(false);observer.complete();}
+              );
           }
         );
+        
       }
     )
   }
@@ -262,7 +266,6 @@ export class DevicesDataProvider {
         this.dataStore.deviceList.forEach(
           (ele,idx) =>{
             if(ele.id == d_id){
-
               if(collection){
                 this.dataStore.deviceList[idx].collection = collection;}
               if(d_name){this.dataStore.deviceList[idx].name = d_name;}
@@ -305,3 +308,34 @@ export class DevicesDataProvider {
     return tmpOb;
   }
 }
+@Pipe({
+  name: 'devicesString',
+  pure: false
+})
+export class devicesToStringPipe implements PipeTransform {
+  constructor(private dProv:DevicesDataProvider){
+  }
+  transform(value:Array<number>, args) {
+    return Observable.create(
+      observer => {
+        this.dProv.list.subscribe(
+          dList => {
+            let resualt = dList
+              .filter(h=>value.indexOf(h.group)>=0)
+              .map(v=>(v.name+'-'+v.group));
+            observer.next(
+              (resualt.length<1)?['空']:resualt
+            );
+            //dListFindSameInGids(dList,value).map(v=>(v.name+'-'+v.group))
+          }
+        );
+      }
+    );
+  }
+}
+/*
+function dListFindSameInGids(haystack:Array<lightDeviceType>, arr:Array<any>) {
+  return haystack.filter(
+    h=> arr.indexOf(h.group)>=0
+  )
+};*/

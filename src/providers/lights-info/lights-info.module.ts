@@ -1,6 +1,4 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { IonicPageModule } from 'ionic-angular';
 import { LightsInfoProvider,lightsTypesPipe } from './lights-info';
 
 @NgModule({
@@ -10,7 +8,7 @@ import { LightsInfoProvider,lightsTypesPipe } from './lights-info';
   exports: [
     lightsTypesPipe,
   ],
-    imports: [CommonModule],
+  imports: [],
   providers: [
     LightsInfoProvider
   ],

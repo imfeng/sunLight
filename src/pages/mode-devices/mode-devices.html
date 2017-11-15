@@ -24,7 +24,7 @@
     </button>
   </ion-fab>
   <ion-item *ngIf="fanCtrl.isFanCheckbox">
-      <ion-range min="40" max="100" [(ngModel)]="fanCtrl.currentFanSpeed" (ionBlur)="triggerFan($event)">
+      <ion-range min="0" max="100" [(ngModel)]="fanCtrl.currentFanSpeed" (ionBlur)="triggerFan($event)">
         <ion-label range-left>風速</ion-label>
         <ion-badge color="primary" range-right>{{fanCtrl.currentFanSpeed}}%</ion-badge>
       </ion-range>

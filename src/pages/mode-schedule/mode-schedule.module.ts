@@ -3,7 +3,6 @@ import { IonicPageModule } from 'ionic-angular';
 import { ModeSchedulePage } from './mode-schedule';
 import { ChartsModule } from 'ng2-charts';
 import { editSchedulePage,modalSectionEdit } from './edit-schedule';
-import { NavMainModule} from './nav-main.module'
 import { LightsChartComponent } from '../../components/lights-chart/lights-chart';
 import { LightsInfoModule } from '../../providers/lights-info/lights-info.module';
 import { CollectionsModule } from '../../providers/collections-data/collections-data.module';
@@ -18,7 +17,6 @@ import { CollectionsModule } from '../../providers/collections-data/collections-
     CollectionsModule,
     LightsInfoModule.forRoot(),
     IonicPageModule.forChild(ModeSchedulePage),
-    NavMainModule,
     ChartsModule,
 
   ],

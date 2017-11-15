@@ -1,17 +1,21 @@
 import { ElementRef,ViewChild,Component } from '@angular/core';
 import { Select, AlertController ,ViewController, ModalController, NavController, NavParams } from 'ionic-angular';
-import {  ScheduleDataProvider,scheduleType,sectionDataType } from '../../providers/schedule-data/schedule-data'
-import { ToastCtrlProvider } from  '../../providers/toast-ctrl/toast-ctrl'
-import { LightsInfoProvider,lightsTypesPipe } from  '../../providers/lights-info/lights-info'
-import { collectsChecksToSting,CollectionsDataProvider,collectionType } from '../../providers/collections-data/collections-data';
 import { Observable } from 'rxjs/Observable';
 import { ChartsModule,BaseChartDirective } from 'ng2-charts';
+
+import {  ScheduleDataProvider,scheduleType,sectionDataType } from '../../providers/schedule-data/schedule-data';
+import { ToastCtrlProvider } from  '../../providers/toast-ctrl/toast-ctrl';
+import { LightsInfoProvider,lightsTypesPipe } from  '../../providers/lights-info/lights-info';
+import { collectsChecksToSting,CollectionsDataProvider,collectionType } from '../../providers/collections-data/collections-data';
+
+import { AppStateProvider } from  '../../providers/app-state/app-state';
 @Component({
   templateUrl: './edit-schedule.html',
 })
 export class editSchedulePage {
   @ViewChild(BaseChartDirective) chartDi;
   touchStatus = {
+    "isSaved":true,
     "curItem":null,
     "curIndex":null,
     "onTouched":false,
@@ -87,6 +91,8 @@ export class editSchedulePage {
   }
   thisIdx: number;
   constructor(
+    private appStateProv: AppStateProvider,
+    private alertCtrl: AlertController,
     private lightsType: LightsInfoProvider,
     private clProv : CollectionsDataProvider,
     private scheduleProv: ScheduleDataProvider,
@@ -128,6 +134,9 @@ export class editSchedulePage {
   }
   ionViewDidEnter() {
   }
+  ionViewWillLeave(){
+    this.showConfirm();
+  }
   onTouchStart($e){
     
     console.log('touchstart');
@@ -161,7 +170,7 @@ export class editSchedulePage {
       this.touchStatus.curItem._chart.update();
       this.data.sections[this.touchStatus.curIndex].multiple = tmp;
 
-      this.touchStatus.pos.y = $e.touches[0].pageY;
+      //this.touchStatus.pos.y = $e.touches[0].pageY;
     }
       
   }
@@ -169,10 +178,9 @@ export class editSchedulePage {
     
     console.log('touchend');
     if(this.touchStatus.onTouched){
+      this.touchStatus.isSaved = false;
       this.touchStatus.onTouched = false;
-      
-      console.log('this.typeselect');
-      console.log(this.typeselect);
+
       this.touchStatus.tmpLightType = this.data.sections[this.touchStatus.curIndex].mode;
       this.typeselect.open();
       //this.typeselect._overlay.instance
@@ -212,6 +220,7 @@ export class editSchedulePage {
     }
   }
   detectRepeatChecks(idx:number){
+    this.touchStatus.isSaved = false;
     this.scheduleProv.detectDateRange(this.datePicker.range,this.thisIdx,this.data.checks).subscribe(
       isRepeat => {
         if(!isRepeat){
@@ -235,7 +244,7 @@ export class editSchedulePage {
   }
   dateChange(event){
     //console.log(this.datePicker);
-    
+    this.touchStatus.isSaved = false;
     if(this.datePicker.end === null){
       this.datePicker.end = '';
     }else if(this.datePicker.start === null){
@@ -300,29 +309,38 @@ export class editSchedulePage {
       {},
       {"backgroundColor": chart.backgroundColor}];
     this.chartDatas.labels = chart.labels;
-    //this.temp.backgroundColor.splice(0,this.temp.backgroundColor.length).push.apply(this.temp.backgroundColor,chart.backgroundColor);
+  }
 
-    //console.log('chart');
-    //console.log(this.chartDatas);
-    //console.log(this.temp);
+  showConfirm() {
+    if(!this.touchStatus.isSaved){
+      let confirm = this.alertCtrl.create({
+        title: '尚未儲存',
+        message: '您忘記儲存了，請問需要儲存方才的設定嗎？',
+        buttons: [
+          {
+            text: '捨棄',
+            handler: () => {}
+          },
+          {
+            text: '儲存',
+            handler: () => {
+              this.saveSections();
+            }
+          }
+        ]
+      });
+      confirm.present();
+    }
 
-    /*this.chartDatas.datasets =
-      [
-        {data:chart.data},
-        {data:chart.data,type:'line',borderColor: 'rgba(72,138,255,0.8)',},
-      ];
-      
-    this.chartDatas.colors = [
-      { "backgroundColor":chart.backgroundColor }
-    ]*/
-    
   }
   saveSections(isSended=false){
 
     
     this.scheduleProv.modifySchedule(this.thisIdx,this.data.sections,this.data.checks,this.datePicker.range).subscribe(
         res => {
-            this.toastCtrl.showToast('儲存成功！');
+          this.touchStatus.isSaved = true;
+          this.toastCtrl.showToast('儲存成功！');
+          this.appStateProv.action({type:'sync',payload:false});
         }
     );
     //this.infos['lastModified'] = new Date().getTime();
@@ -345,6 +363,7 @@ export class editSchedulePage {
       /** DEPRECATED END*/
       
       if (data && !repeated) {
+        this.touchStatus.isSaved = false;
         //this.data.sections.push(data);
         this.data.sections[idx].mode = data.mode;
         this.data.sections[idx].time = data.time;

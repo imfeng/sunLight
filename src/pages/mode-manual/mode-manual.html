@@ -58,7 +58,7 @@
       </ion-range>
     </ion-item>
     
-    <button ion-button block color="dark" (click)="disableManual(true)">取消手動</button>
+    <button *ngIf="showDisableBtn" ion-button block color="primary" (click)="disableManual(true)">取消手動</button>
     <button ion-button block color="dark" (click)="sendManual(false)">關燈</button>
 
   </ion-list>

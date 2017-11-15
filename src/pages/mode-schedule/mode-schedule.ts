@@ -1,88 +1,76 @@
-import { OnInit, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
 import { LightsInfoProvider } from '../../providers/lights-info/lights-info'
-import { LightsGoupsProvider,lightsGroupsData } from '../../providers/lights-goups/lights-goups'
 import { ScheduleDataProvider,scheduleType } from '../../providers/schedule-data/schedule-data'
 import { BleCommandProvider } from '../../providers/ble-command/ble-command';
 import { editSchedulePage } from './edit-schedule';
 
-import * as subMain from './nav-main'
-
 import { Observable } from 'rxjs/Observable';
-/**
- * Generated class for the ModeSchedulePage page.
- *
- * See http://ionicframework.com/docs/components/#navigation for more info
- * on Ionic pages and navigation.
- */
+import { appStateType,AppStateProvider } from  '../../providers/app-state/app-state';
+
 
 @IonicPage()
 @Component({
   selector: 'page-mode-schedule',
   templateUrl: 'mode-schedule.html',
 })
-export class ModeSchedulePage implements OnInit{
+export class ModeSchedulePage{
   lightsColor : any = this.lightsInfo.getTypes('color');
 
   /** IONIC lifeCycle*/
-  testGroups:Observable<lightsGroupsData[]>;
 
+  appState:Observable<appStateType>;
+  btnSetting:{
+    color:string,
+    message:string
+  }={
+    color:'primary',
+    message:'傳送指令(未同步)'
+  };
   scheduleList:Observable<scheduleType[]>;
 
   constructor(
+    private appStateProv: AppStateProvider,
     private bleCmd: BleCommandProvider,
     private scheduleProv:ScheduleDataProvider,
-    private lightsGroups:LightsGoupsProvider,
+
     private lightsInfo:LightsInfoProvider,
     public navCtrl: NavController,
     public navParams: NavParams) {
-      this.testGroups = this.lightsGroups.infos;
+      this.appStateProv.info.subscribe(
+        state => {
+          console.log(state);
+          this.btnSetting.color = (state.now_mode_slug=='sche'&&state.isSync)?'dark':'primary';
+          this.btnSetting.message 
+            = state.btnMessage;
+            //(state.now_mode_slug=='sche')?((state.isSync)?'傳送指令(已同步)':'傳送指令(未同步)'):'取消手動';
+        }
+      );
       this.scheduleList = this.scheduleProv.list;
       //this.lightsGroups.loadAll();
-  }
-  ngOnInit(){
-    //this.lightsGroups.loadAll();
-    //this.lightsGroups.set(this.groupsInfo,(isScc)=>{if(isScc)console.log('lightsGroups.set OK!!!!!!!!!!!!!!')});
-    
-    
   }
   onChartClick(event) {
     console.log(event);
   }
-  ionViewDidLoad() {
-    
-  }
-  ionViewDidEnter(){
-    console.log('ionViewDidEnter "Schedule tab"');
-  }
+
   getDateRangeTitle(dateRange:[number,number]){
     return this.scheduleProv.dateRangeToString(dateRange);
   }
+  goSchedule(idx){
+    this.navCtrl.push(editSchedulePage,{"idx":idx});
+  }
   /** */
   syncSchedule(){
-    this.bleCmd.goSyncSchedule();
+    this.bleCmd.goSyncSchedule().subscribe();
   }
-  goSchedule(idx:number){
-    this.navCtrl.push(editSchedulePage, { "idx": idx});
-  }
+
+ 
   addSchedule(){
     this.scheduleProv.addNew();
   }
   rmSchedule(idx){
     this.scheduleProv.remove(idx);
   }
-  /** */
-  goPatterns(goGid:number,goName:string){   // lightsGroupsData .getGid(gid)
-    this.navCtrl.push(subMain.pr1patternsNav, { "gid": goGid,"name": goName});
-  }
-  goDevices(goGid:number){  //TODO
-    this.navCtrl.push(subMain.pr1patternsNav, { "gid": goGid });
-  }
-  rmLightsGroup(gid:number){
-    this.lightsGroups.remove(gid);
-  }
-
-  /** */
 
   getRandomDatasetArr(){
     return {

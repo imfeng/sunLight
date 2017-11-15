@@ -9,7 +9,7 @@ import { CollectionsDataProvider,collectionType } from '../../providers/collecti
 @IonicPage()
 @Component({
   selector: 'page-collections',
-  templateUrl: 'collections.html',
+  templateUrl: 'collections.html'
 })
 export class CollectionsPage {
   
@@ -69,7 +69,7 @@ export class cListPage{
         this.devices_list.data = arr.map(
           (v,idx)=>{
             return {
-              "name":v.o_name,
+              "name":v.name,
               "collection": v.collection,
               "group":v.group,
               "id":v.id,

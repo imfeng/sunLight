@@ -7,6 +7,8 @@ import 'rxjs/add/observable/fromPromise';
 import { Observable } from 'rxjs/Observable';
 import { NativeStorage } from '@ionic-native/native-storage';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+
+import { AppStateProvider } from  '../../providers/app-state/app-state';
 const _STORAGE_COLLECTIONS_NAME = "collectionsList";
 const clName = [
   '無群組',"群組A","群組B","群組C","群組D","群組E","群組F",
@@ -28,6 +30,7 @@ export class CollectionsDataProvider {
   }
 
   constructor(
+    private appStateProv: AppStateProvider,
     private storage:NativeStorage
   ) {
     this._list = <BehaviorSubject<collectionType[]>>new BehaviorSubject([]);
@@ -98,6 +101,7 @@ export class CollectionsDataProvider {
               .fromPromise(this.storage.setItem(_STORAGE_COLLECTIONS_NAME,arr))
               .subscribe(
                 (res)=>{
+                  this.appStateProv.action({type:'sync',payload:false});
                   this._list.next(Object.assign({}, this.dataStore).collectionList);
                   console.log('>>>> _STORAGE_COLLECTIONS_NAME SAVE!');
                   observer.next(true);

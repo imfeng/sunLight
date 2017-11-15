@@ -4,12 +4,12 @@ import { ToastController } from 'ionic-angular';
 import { IonicPage } from 'ionic-angular';  // LazyLoading
 import { BleOperatorPage } from '../ble-operator/ble-operator';
 import { BleCommandProvider } from  '../../providers/ble-command/ble-command'
-import { LightsGoupsProvider } from '../../providers/lights-goups/lights-goups'
 import { Observable } from 'rxjs/Observable';
 
 import { ScheduleDataProvider,scheduleType } from '../../providers/schedule-data/schedule-data'
 import { LightsInfoProvider,lightsTypesPipe } from  '../../providers/lights-info/lights-info'
 import { CollectionsDataProvider,collectionType } from '../../providers/collections-data/collections-data';
+import { appStateType,AppStateProvider } from  '../../providers/app-state/app-state';
 
 
 @IonicPage()
@@ -19,6 +19,7 @@ import { CollectionsDataProvider,collectionType } from '../../providers/collecti
   providers:[lightsTypesPipe]
 })
 export class ModeManual {
+  appState:Observable<appStateType>;
   curType:number = -1;
   collectionsList:Observable<collectionType[]>;
   collectionsChecks:Array<boolean> = [false,false,false,false,false,false];
@@ -32,11 +33,13 @@ export class ModeManual {
   };
   lightsType : Array<object>;
   lightsGroupsList : Array<object>;
+  showDisableBtn: boolean;
   constructor(
+    private appStateProv: AppStateProvider,
     private ScheduleProv: ScheduleDataProvider,
     private clProv : CollectionsDataProvider,
     //private blePage: BleOperatorPage,
-    private lightsGroups:LightsGoupsProvider,
+
     private bleCmd: BleCommandProvider,
     public modalCtrl: ModalController,
     private lightsInfo: LightsInfoProvider,
@@ -44,6 +47,11 @@ export class ModeManual {
     public navParams: NavParams,
     public toastCtrl:ToastController) {
       this.collectionsList = this.clProv.list;
+      this.appStateProv.info.subscribe(
+        state => {
+          this.showDisableBtn = (state.now_mode_slug=='manual');
+        }
+      );
       
       this.deviceMeta = {
         "groups" : [0],
@@ -59,23 +67,11 @@ export class ModeManual {
     
   // 
   }
-  ionViewDidEnter(){
-    this.lightsGroups.getGroups().subscribe(
-      list => {
-        this.deviceMeta.groupsList = list;
-      }
-    );
-  }
   ngOnInit() {
     this.lightsType = this.lightsInfo.getTypes();
   }
   disableManual(){
-    /*this.ScheduleProv.getSyncSchedule().subscribe(
-      syncSche => {
-
-      }
-    );*/
-    this.bleCmd.goSyncSchedule();
+    this.bleCmd.goSyncSchedule().subscribe();
     this.curType = 0;
   }
   trigger(event,type:number){
@@ -98,7 +94,7 @@ export class ModeManual {
  
   }
   sendManual(power:boolean,type=0,multi=0){
-    console.log(this.collectionsChecks);
+    //console.log(this.collectionsChecks);
     //let type=this.deviceMeta.curType;
     //let multi=this.deviceMeta.curMultiple;
     let sendList = [];
@@ -109,7 +105,11 @@ export class ModeManual {
       this.bleCmd.collectionsToDeviceGid(this.collectionsChecks).subscribe(
         allDevices => {
 
-          this.bleCmd.goManualModeMulti(multi,type,allDevices);
+          this.bleCmd.goManualModeMulti(multi,type,allDevices).subscribe(
+            isOk=>{
+              if(!isOk) this.curType = 0;
+            }
+          );
           /*allDevices.forEach((group,idx) => {
             setTimeout(()=>{
               this.bleCmd.goManualMode(
@@ -125,7 +125,12 @@ export class ModeManual {
     }else{
       this.bleCmd.collectionsToDeviceGid(this.collectionsChecks).subscribe(
         allDevices => {
-          this.bleCmd.goManualModeMulti(0,0,allDevices);
+          this.curType = 0;
+          this.bleCmd.goManualModeMulti(0,0,allDevices).subscribe(
+            isOk=>{
+              if(!isOk) this.curType = 0;
+            }
+          );;
           /*allDevices.forEach((group,idx) => {
             setTimeout(()=>{
               this.bleCmd.goManualMode(

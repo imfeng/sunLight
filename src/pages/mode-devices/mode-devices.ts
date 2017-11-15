@@ -51,22 +51,27 @@ export class ModeDevicesPage {
               "fanSpeed":null,
               })
           );
-          console.log(tmp);
+          //console.log(tmp);
           this.wtfDevices.list = tmp;
         }
       );
 
   }
   triggerFan(){
-    console.log('triggerFan');
-    console.log(this.fanCtrl.checks);
+    //console.log('triggerFan');
+    //console.log(this.fanCtrl.checks);
     this.devices_list.take(1).subscribe(
       list => {
-        let gids = list.filter( (v,idx)=>this.fanCtrl.checks[idx] ).map( (v)=>v.group );
+        let idxs = [];
+        let gids = list.filter(
+          (v,idx) => { 
+            if(this.fanCtrl.checks[idx]) {idxs.push(idx); return true; }
+            else return false}
+        ).map( (v)=>v.group );
         this.bleCmd.goFanMultiple(gids,this.fanCtrl.currentFanSpeed).subscribe(
           isOk => {
             if(!isOk) alert('傳送排程過程中發生問題，請重新傳送QQ');
-            else this.devicesProv.modifyFanSpeed(this.fanCtrl.currentFanSpeed,gids).subscribe();
+            else this.devicesProv.modifyFanSpeed(this.fanCtrl.currentFanSpeed,idxs).subscribe();
           }
         );
       }

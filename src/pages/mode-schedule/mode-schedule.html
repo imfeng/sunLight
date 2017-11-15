@@ -72,7 +72,7 @@
 </ion-content>
 <ion-footer>
     <ion-toolbar>
-        <button (click)="syncSchedule()" ion-button full>同步</button>
+        <button (click)="syncSchedule()" ion-button full [color]="this.btnSetting.color">{{ this.btnSetting.message }}</button>
         
     </ion-toolbar>
   </ion-footer>

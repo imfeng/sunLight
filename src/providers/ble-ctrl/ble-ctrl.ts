@@ -13,6 +13,8 @@ import { DevicesDataProvider,lightDeviceType } from '../devices-data/devices-dat
 //import { BleCommandProvider } from '../ble-command/ble-command';
 
 const _WRITEMANY_INTERVAL = 200;
+const _SHOW_TOAST_DURATION = 1600;
+
 const _LIGHTS_SERVICE_UUID = '0000fff0-0000-1000-8000-00805f9b34fb';
 const _LIGHTS_CHAR_UUID = '0000fff3-0000-1000-8000-00805f9b34fb';
 //7bb104bf-abf8-4a91-9385-9c3e07cf7c30
@@ -144,7 +146,7 @@ export class BleCtrlProvider {
               observer.complete();
             },
             err=>{
-              alert('無法開啟藍芽...');
+              this.showToast('無法開啟藍芽...');
               this.ngZone.run(() => {
                 //this.dataStore.isEnabled = false;
                 this._change("isEnabled",false);
@@ -160,7 +162,7 @@ export class BleCtrlProvider {
 
   }
   disableBle(){
-    alert('請使用手機系統的設定自行關閉唷');
+    this.showToast('請使用手機系統的設定自行關閉唷');
   }
   speciWrtie(deviceId,data){
     return Observable.create(
@@ -439,16 +441,17 @@ export class BleCtrlProvider {
 
                 setTimeout(()=>{
                   let time = new Date();
-                  let data = new Uint8Array([0xfa,0xa0,time.getHours(),time.getMinutes(),time.getSeconds(),0xff]);
-                  let data2 = new Uint8Array([0xfa,0xa1,tmpGid,0xff]);
-                  let cmds = [data,data2];
+                  let cmds = [
+                    new Uint8Array([0xfa,0xa0,time.getHours(),time.getMinutes(),time.getSeconds(),0xff]),
+                    new Uint8Array([0xfa,0xa1,tmpGid,0xff])
+                  ];
                   /*this.write(data,()=>{
                     this.showToast('已將裝置時間同步！');
                   },()=>{},true);*/
                   this.write_many(cmds).subscribe(
-                    (isOkList)=>{
-                      if(!isOkList.find( val=>val==false )){
-                        alert('同步裝置發生錯誤，請斷開並再次連結！')
+                    (isOk)=>{
+                      if(!isOk){
+                        this.showToast('同步裝置發生錯誤，請斷開並再次連結！')
                         
                       }else{
                         this.showToast('已將裝置時間、編號同步！');
@@ -541,7 +544,7 @@ export class BleCtrlProvider {
   }
   private _onConnected(peripheral): void {
     this.ngZone.run(() => {
-      alert('連線成功！');
+      this.showToast('連線成功！');
       this._change("isConnected",true);
       this._change("peripheral",peripheral);
       this._setStatus('連線成功！');
@@ -551,12 +554,8 @@ export class BleCtrlProvider {
   private _onDeviceDisconnected(): void {
     this._change("isConnected",false);
     this._change("isConnected",false);
-    let toast = this.toastCtrl.create({
-      message: '連線中斷！',
-      duration: 1500,
-      position: 'bottom'
-    });
-    toast.present();
+    this.showToast('連線中斷！');
+
   }
   /** */
   checkConnectOnce(id){
@@ -607,12 +606,12 @@ export class BleCtrlProvider {
                       console.log('重新連線成功！！');
                       observer.next(true);observer.complete();
                     },
-                    peripheral => {this._onDeviceDisconnected();alert('無法重新連結到剛才的裝置，請確認裝置是否在附近');observer.error(peripheral);}
+                    peripheral => {this._onDeviceDisconnected();this.showToast('無法重新連結到剛才的裝置，請確認裝置是否在附近');observer.error(peripheral);}
                   );
                 }
               );
             }else{
-              alert('請先與裝置連線！');
+              this.showToast('請先與裝置連線！');
               observer.error(true);observer.complete();
             }
             
@@ -637,7 +636,12 @@ export class BleCtrlProvider {
           isOk.push(true);
           if(idx>cmds.length-1){  //傳送結束
             this._dismissLoading(loadObj);
-            observer.next(isOk);
+            if(isOk.find(val=>val==false)==false){
+              this.showToast('傳送指令過程中發生問題，請重新傳送QQ');
+              observer.next(false);
+            }else{
+              observer.next(true);
+            }
             observer.complete();
           }else{
             setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj);},_WRITEMANY_INTERVAL);
@@ -651,7 +655,11 @@ export class BleCtrlProvider {
           isOk.push(false);
           if(idx>cmds.length-1){  //傳送結束
             this._dismissLoading(loadObj);
-            observer.next(isOk);
+            if(isOk.some(val=>val==false)){
+              observer.next(false);
+            }else{
+              observer.next(true);
+            }
             observer.complete();
           }else{
             setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj);},_WRITEMANY_INTERVAL);
@@ -741,7 +749,7 @@ export class BleCtrlProvider {
     
     if(isTimeout){
       loadingObj.time = setTimeout(()=>{
-        alert('逾時');
+        this.showToast('逾時');
         loadingObj.loading.dismiss();
       }, 1000*12);
     }else{
@@ -750,12 +758,12 @@ export class BleCtrlProvider {
           content: 'Please wait...</br>(about '+messageSec+' sec)'
         });
         loadingObj.time = setTimeout(()=>{
-          alert('逾時');
+          this.showToast('逾時');
           loadingObj.loading.dismiss();
         }, 1000*messageSec);
       }else{
         loadingObj.time = setTimeout(()=>{
-          alert('逾時');
+          this.showToast('逾時');
           loadingObj.loading.dismiss();
         }, 10000);
       }
@@ -775,11 +783,12 @@ export class BleCtrlProvider {
     }
   }
   
-  private showToast(message){
+  private showToast(message,time=_SHOW_TOAST_DURATION){
     let toast = this.toastCtrl.create({
       message: message ,
       position: 'bottom',
-      duration: 1000
+      duration: time,
+      showCloseButton:true
     });
     toast.present();
   }

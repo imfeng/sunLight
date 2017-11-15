@@ -21,7 +21,8 @@ export class ToastCtrlProvider {
     let toast = this.toastCtrl.create({
       message: message,
       duration: ms,
-      position: pos
+      position: pos,
+      showCloseButton:true
     });
     toast.onDidDismiss(() => {
       //console.log('Dismissed toast');

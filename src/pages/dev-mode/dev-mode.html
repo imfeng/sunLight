@@ -17,9 +17,7 @@
         <button ion-button icon-only color="royal" (click)="showEdit()">
             <ion-icon name="settings" ></ion-icon>
         </button>
-      <button ion-button icon-only color="royal" (click)="openFanModal()">
-          <ion-icon name="speedometer" ></ion-icon>
-        </button>
+
       <button ion-button icon-only color="royal" (click)="openBleModal()">
         <ion-icon name="bluetooth" ></ion-icon>
       </button>
@@ -40,9 +38,9 @@
 
     <ion-item>
         <ion-icon name="ios-pricetags-outline" item-start></ion-icon>
-        <ion-label>群組</ion-label>
+        <ion-label>裝置</ion-label>
         <ion-select interface="alert" multiple="true" cancelText="取消" [(ngModel)]="deviceMeta.groups">
-          <ion-option *ngFor="let type of lightsGroups; let i = index" value="{{type.id}}">{{type.name}} (#{{type.id}})</ion-option>
+          <ion-option *ngFor="let dd of devicesList|async; let i = index" value="{{dd.group}}">{{dd.name}} (#{{dd.group}})</ion-option>
         </ion-select>
     </ion-item>
     <ion-grid class="dev-btns-cont">
