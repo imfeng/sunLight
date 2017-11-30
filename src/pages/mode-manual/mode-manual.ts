@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, ViewChildren, QueryList } from '@angular/core';
 import { ModalController, NavController,NavParams } from 'ionic-angular';
 import { ToastController } from 'ionic-angular';
-import { IonicPage } from 'ionic-angular';  // LazyLoading
+import { IonicPage, Checkbox } from 'ionic-angular';  // LazyLoading
 import { BleOperatorPage } from '../ble-operator/ble-operator';
 import { BleCommandProvider } from  '../../providers/ble-command/ble-command'
 import { Observable } from 'rxjs/Observable';
@@ -19,10 +19,29 @@ import { appStateType,AppStateProvider } from  '../../providers/app-state/app-st
   providers:[lightsTypesPipe]
 })
 export class ModeManual {
+  @ViewChildren(Checkbox) ionCheckbox :QueryList<Checkbox>;
+  ionViewDidEnter(){
+    console.log('===========');
+    console.log(this.ionCheckbox);
+
+    this.ionCheckbox.forEach((e,i) => {
+      //console.log(   );
+      e._elementRef.nativeElement.lastChild.firstChild.innerHTML = String.fromCharCode(65+i);
+    });
+  }
+  collectionsListTest = Array.from({length: 12}, 
+    (v, i) => ({
+        "name":(i+1),
+        "cid": (i+1),
+        "devices":[]
+      })
+  );
+  collectionsChecks:Array<boolean> = Array.from({length:12},v=>false);
+
   appState:Observable<appStateType>;
   curType:number = -1;
   collectionsList:Observable<collectionType[]>;
-  collectionsChecks:Array<boolean> = [false,false,false,false,false,false];
+  
   deviceMeta :  {
     "groups" : Array<number>,
     "curType" : number,
@@ -70,6 +89,7 @@ export class ModeManual {
   ngOnInit() {
     this.lightsType = this.lightsInfo.getTypes();
   }
+
   disableManual(){
     this.bleCmd.goSyncSchedule().subscribe();
     this.curType = 0;

@@ -23,17 +23,27 @@
 </ion-header>
 
 
-<ion-content padding>
-  <ion-grid>
-    <ion-row class="collections" align-items-center justify-content-center>
+<ion-content>
 
-      <ion-col *ngFor="let item of collectionsList|async;let idx = index;" text-center>
-        <ion-checkbox [(ngModel)]="collectionsChecks[idx]"></ion-checkbox>
-        <p>{{item.name}}</p>
-      </ion-col>
+  <ion-row class="collections" align-items-center justify-content-center>
 
-    </ion-row>
-  </ion-grid>
+    <ion-col col-2 class="collections-col" *ngFor="let item of collectionsListTest;let idx = index;" text-center>
+      <ion-checkbox [(ngModel)]="collectionsChecks[idx]"></ion-checkbox>
+
+    </ion-col>
+
+  </ion-row>
+
+
+  <ion-row class="collections" align-items-center justify-content-center>
+
+    <ion-col col-2 *ngFor="let item of collectionsList|async;let idx = index;" text-center>
+      <ion-checkbox [(ngModel)]="collectionsChecks[idx]"></ion-checkbox>
+
+    </ion-col>
+
+  </ion-row>
+
   <hr>
   <ion-list>
     <!--

@@ -5,7 +5,7 @@ import { AppModule } from './app.module';
 
 //import { Storage } from '@ionic/storage';
 import {enableProdMode} from '@angular/core';
-enableProdMode();
+//enableProdMode();
 
 
 platformBrowserDynamic().bootstrapModule(AppModule);

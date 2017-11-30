@@ -4,16 +4,41 @@ page-mode-manual {
             margin-top: 1.5rem; 
         }
     }
-    .checkbox-icon.checkbox-checked{
-        border-radius: 50%;
-        width: 26px;
-        height: 26px;
-        .checkbox-inner {
-            left: 8px;
-            top: 4px;
+    /*.collections-col.col:nth-of-type(1)>.checkbox>.checkbox-icon.checkbox-checked>.checkbox-inner:before{
+        content: "A";
+    }*/
+    
+    .checkbox{
+        button>.button-inner{
+            font-size: 2.5rem;
+            color: gray;
+        }
+        button[aria-checked="true"]>.button-inner{
+            color: white;
         }
     }
-    .collections .col>p{
-        margin: 5px auto;
+    .checkbox-icon.checkbox-checked{
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        .checkbox-inner {
+            border: none;
+            /*left: 11px;
+            top: 3px;*/
+            transform: initial;
+        }
     }
+    .checkbox-ios .checkbox-icon{
+        width: 40px;
+        height: 40px;
+    }
+    .collections {
+        .col>p{
+            margin: 5px auto;
+        }
+        .collections-col{
+            padding: 0;
+        }
+    }
+
 }
