@@ -262,7 +262,7 @@ export class ScheduleDataProvider {
           },
           "lastModified":new Date().getTime(),
           "sectionsList":[],
-          "checks":[false,false,false,false,false,false],
+          "checks": Array.from({length:12},v=>false),
 
           "dateRange":[-1,-1]
         });

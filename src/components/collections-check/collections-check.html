@@ -1,4 +1,8 @@
-<!-- Generated template for the CollectionsCheckComponent component -->
-<div>
-  {{text}}
-</div>
+<ion-row align-items-center justify-content-center>
+
+  <ion-col col-2 class="collections-col" *ngFor="let item of collectionsListTest;let idx = index;" text-center>
+    <ion-checkbox #imageSrc [(ngModel)]="collectionsChecks[idx]"></ion-checkbox>
+
+  </ion-col>
+
+</ion-row>

@@ -1,22 +1,34 @@
-import { Component } from '@angular/core';
+import { Component, ViewChildren, QueryList } from '@angular/core';
+import { Checkbox } from 'ionic-angular';  // LazyLoading
 
-/**
- * Generated class for the CollectionsCheckComponent component.
- *
- * See https://angular.io/docs/ts/latest/api/core/index/ComponentMetadata-class.html
- * for more info on Angular Components.
- */
 @Component({
   selector: 'collections-check',
   templateUrl: 'collections-check.html'
 })
 export class CollectionsCheckComponent {
+  @ViewChildren('imageSrc') ionCheckbox :QueryList<Checkbox>;
+  collectionsListTest = Array.from({length: 12}, 
+    (v, i) => ({
+        "name":(i+1),
+        "cid": (i+1),
+        "devices":[]
+      })
+  );
+  collectionsChecks:Array<boolean> = Array.from({length:12},v=>false);
+  ionViewDidLoad(){
+    console.log('===========');
+    console.log(this.ionCheckbox);
 
-  text: string;
+    this.ionCheckbox.forEach((e,i) => {
+      //console.log(   );
+      e._elementRef.nativeElement.lastChild.firstChild.innerHTML = String.fromCharCode(65+i);
+    });
+  }
 
   constructor() {
-    console.log('Hello CollectionsCheckComponent Component');
-    this.text = 'Hello World';
+    console.log('CollectionsCheckComponent');
+    console.log('===========');
+    console.log(this.ionCheckbox);
   }
 
 }

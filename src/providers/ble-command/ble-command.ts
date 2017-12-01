@@ -359,6 +359,7 @@ export class BleCommandProvider {
       observer => {
         if (gids.length>0) {
           let cmds = gids.map(gid=>new Uint8Array([_START,_CMD_FAN_SPEED,speed,gid,_END]));
+          cmds.concat(cmds);
           this.bleCtrl.write_many(cmds).subscribe(
             (isOk)=>{
               observer.next(isOk);

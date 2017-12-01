@@ -14,19 +14,15 @@
   </ion-fab>
 -->
   
-
-  <ion-grid>
+<!-- TODO-->
     <ion-row class="collections" align-items-center justify-content-center>
-
-        <ion-col *ngFor="let item of collectionsList|async;let idx = index;" text-center>
+        <ion-col col-2 *ngFor="let item of collectionsList|async;let idx = index;" text-center>
         <ion-checkbox [(ngModel)]="data.checks[idx]" (click)="detectRepeatChecks(idx)"></ion-checkbox>
-        <p>{{item.name}}</p>
         </ion-col>
-
     </ion-row>
-    </ion-grid>
-    <hr>
-    <ion-grid>
+<!-- -->
+
+<ion-grid>
         <ion-row>
             <ion-col col-5>
                 <ion-item>

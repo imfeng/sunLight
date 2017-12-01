@@ -83,7 +83,7 @@ export class BleCtrlProvider {
     this._nowStatus = <BehaviorSubject<nowStatus>>new BehaviorSubject({});
     this.nowStatus = this._nowStatus.asObservable();
     this.dataStore = {
-        "hadConnected":true,
+        "hadConnected":false,
         "useable": false,
         "statusMessage": "initialized...",
         "isEnabled": false,
@@ -338,7 +338,7 @@ export class BleCtrlProvider {
         );
       },
       error => {this.bleStatus.onScanning =false;this._showError(error,'掃描藍芽裝置時發生錯誤。');}
-    )
+    );
   }
   stopScan(){
     if(this.bleStatus.onScanning){
@@ -391,8 +391,8 @@ export class BleCtrlProvider {
                   Observable.fromPromise(this.ble.disconnect(obj.peripheral.id))
                   .subscribe( 
                     () => {
-                      this._change("hadConnected",false);
-                      this._onDeviceDisconnected();
+
+                      this.disConnectDevice(obj.peripheral.id);
                       observer.next(true);observer.complete();
                     },
                     err => {
@@ -539,7 +539,7 @@ export class BleCtrlProvider {
       () => {
         this._onDeviceDisconnected();
       },
-      err => {this._showError(err,'中斷連線時發生錯誤！');}
+      err => {console.log(err,'中斷連線時發生錯誤！');}
     );
   }
   private _onConnected(peripheral): void {
@@ -552,8 +552,14 @@ export class BleCtrlProvider {
   }
 
   private _onDeviceDisconnected(): void {
+    this._change("device",{
+      "name": null,
+      "slug": null,  //customize name
+      "address": null,
+      "peripheral": null
+    });
     this._change("isConnected",false);
-    this._change("isConnected",false);
+    this._change("hadConnected",false);
     this.showToast('連線中斷！');
 
   }
@@ -601,12 +607,36 @@ export class BleCtrlProvider {
                   observer.next(true);observer.complete();
                 },
                 ()=>{
-                  this.ble.connect(id).take(1).subscribe(
-                    peripheral => {
-                      console.log('重新連線成功！！');
-                      observer.next(true);observer.complete();
-                    },
-                    peripheral => {this._onDeviceDisconnected();this.showToast('無法重新連結到剛才的裝置，請確認裝置是否在附近');observer.error(peripheral);}
+                  // TODO
+                  console.log("checkConnect() => RECONNECT !!!");
+                  let loadObj = this._presentLoading(true,15);
+                  
+                  this.disconnectCurrent().subscribe(
+                    isScc =>{
+                      setTimeout( ()=>{
+                        this.ble.scan([], 10).subscribe(
+                          device => {
+                            if(device.id == id){
+                              this.ble.stopScan().then(()=>{
+                                this._dismissLoading(loadObj);
+                                this.ble.connect(id).take(1).subscribe(
+                                  peripheral => {
+                                    console.log('重新連線成功！！');
+                                    observer.next(true);observer.complete();
+                                  },
+                                  peripheral => {
+                                    this.disConnectDevice(id);
+                                    this.showToast('無法重新連結到剛才的裝置，請確認裝置是否在附近!!');
+                                    observer.error(peripheral);
+                                  }
+                                );
+                              });
+                            }
+                          },
+                          error => {this._showError(error,'掃描藍芽裝置時發生錯誤。');}
+                        );
+                      },500);
+                    }
                   );
                 }
               );
@@ -678,7 +708,9 @@ export class BleCtrlProvider {
         this.checkConnect(this.dataStore.device.id).subscribe(
           ()=>{
             this.write_many_go(observer,value,0,[],loadObj);
-          },()=>{this._dismissLoading(loadObj);}
+          },()=>{
+            this._dismissLoading(loadObj);
+          }
         );
       }
     );

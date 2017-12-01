@@ -24,16 +24,15 @@
 
 
 <ion-content>
-
+   <!--
   <ion-row class="collections" align-items-center justify-content-center>
 
-    <ion-col col-2 class="collections-col" *ngFor="let item of collectionsListTest;let idx = index;" text-center>
+    <ion-col col-2 *ngFor="let item of collectionsListTest;let idx = index;" text-center>
       <ion-checkbox [(ngModel)]="collectionsChecks[idx]"></ion-checkbox>
 
     </ion-col>
 
-  </ion-row>
-
+  </ion-row> -->
 
   <ion-row class="collections" align-items-center justify-content-center>
 
@@ -62,14 +61,21 @@
       </ion-select>
     </ion-item>-->
     <ion-item *ngFor="let item of lightsType;let idx=index;">
-      <ion-range [color]="(curType==(idx+1))?'primary':'dark'" debounce="0" min="0" max="30" [(ngModel)]="deviceMeta.multipleList[idx]" (ionBlur)="trigger($event,idx+1)">
+      <ion-range [color]="(curType==(idx+1))?'primary':'dark'" debounce="0" min="0" max="30" [(ngModel)]="deviceMeta.multipleList[idx]"
+        (ionBlur)="trigger($event,idx+1)">
         <ion-label range-left>{{(idx+1)|light:'slug'}}</ion-label>
         <ion-badge [color]="(curType==(idx+1))?'primary':'dark'" range-right>{{deviceMeta.multipleList[idx]}}</ion-badge>
       </ion-range>
     </ion-item>
-    
-    <button *ngIf="showDisableBtn" ion-button block color="primary" (click)="disableManual(true)">取消手動</button>
-    <button ion-button block color="dark" (click)="sendManual(false)">關燈</button>
+
 
   </ion-list>
 </ion-content>
+<ion-footer>
+
+    <ion-row>
+      <button col-6 ion-button block color="dark" (click)="sendManual(false)">關燈</button>
+      <button col-6 ion-button block (color)="(showDisableBtn)?'primary':'dark'" (click)="disableManual(true)">取消手動</button>
+    </ion-row>
+
+</ion-footer>

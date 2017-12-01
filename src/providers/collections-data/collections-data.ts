@@ -9,13 +9,15 @@ import { NativeStorage } from '@ionic-native/native-storage';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 import { AppStateProvider } from  '../../providers/app-state/app-state';
+
+const COLLECTION_TOTAL = 12;
 const _STORAGE_COLLECTIONS_NAME = "collectionsList";
 const clName = [
   '無群組',"群組A","群組B","群組C","群組D","群組E","群組F",
+  "群組G","群組H","群組I","群組J","群組K","群組L",
 ]
-const slug = [
-  '',"A","B","C","D","E","F",
-]
+const slug = Array.from({length:COLLECTION_TOTAL},(v,i)=>(String.fromCharCode(65+i)));
+                      //['',"A","B","C","D","E","F","G","H","I","J"]
 export interface collectionType {
   "name":string,
   "cid": number,
@@ -50,7 +52,7 @@ export class CollectionsDataProvider {
       },
       (err)=>{
         if(err.code==2 || err.code.code==2){
-          let temp = Array.from({length: 6}, 
+          let temp = Array.from({length: COLLECTION_TOTAL}, 
             (v, i) => ({
                 "name":colllectsIdxToString(i+1),
                 "cid": (i+1),

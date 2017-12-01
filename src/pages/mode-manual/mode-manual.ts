@@ -20,15 +20,6 @@ import { appStateType,AppStateProvider } from  '../../providers/app-state/app-st
 })
 export class ModeManual {
   @ViewChildren(Checkbox) ionCheckbox :QueryList<Checkbox>;
-  ionViewDidEnter(){
-    console.log('===========');
-    console.log(this.ionCheckbox);
-
-    this.ionCheckbox.forEach((e,i) => {
-      //console.log(   );
-      e._elementRef.nativeElement.lastChild.firstChild.innerHTML = String.fromCharCode(65+i);
-    });
-  }
   collectionsListTest = Array.from({length: 12}, 
     (v, i) => ({
         "name":(i+1),
@@ -37,6 +28,16 @@ export class ModeManual {
       })
   );
   collectionsChecks:Array<boolean> = Array.from({length:12},v=>false);
+  ionViewDidLoad(){
+    console.log('===========');
+    console.log(this.ionCheckbox);
+
+    this.ionCheckbox.forEach((e,i) => {
+      //console.log(   );
+      e._elementRef.nativeElement.lastChild.firstChild.innerHTML = String.fromCharCode(65+i);
+    });
+  }
+
 
   appState:Observable<appStateType>;
   curType:number = -1;
@@ -170,9 +171,7 @@ export class ModeManual {
     /*let modal = this.modalCtrl.create(BleOperatorPage);
     modal.present();*/
   }
-  ionViewDidLoad() {
-    console.log('ionViewDidLoad ModeManual');
-  }
+
   test(){
     console.log(this.deviceMeta);
   }

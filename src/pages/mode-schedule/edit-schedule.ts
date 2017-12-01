@@ -1,5 +1,5 @@
-import { ElementRef,ViewChild,Component } from '@angular/core';
-import { Select, AlertController ,ViewController, ModalController, NavController, NavParams } from 'ionic-angular';
+import { ElementRef,ViewChild,Component, ViewChildren, QueryList } from '@angular/core';
+import { Select, AlertController ,ViewController, ModalController, NavController, NavParams,Checkbox } from 'ionic-angular';
 import { Observable } from 'rxjs/Observable';
 import { ChartsModule,BaseChartDirective } from 'ng2-charts';
 
@@ -13,6 +13,15 @@ import { AppStateProvider } from  '../../providers/app-state/app-state';
   templateUrl: './edit-schedule.html',
 })
 export class editSchedulePage {
+  /** TODO */
+  @ViewChildren(Checkbox) ionCheckbox :QueryList<Checkbox>;
+  ionViewDidLoad(){
+    this.ionCheckbox.forEach((e,i) => {
+      //console.log(   );
+      e._elementRef.nativeElement.lastChild.firstChild.innerHTML = String.fromCharCode(65+i);
+    });
+  }
+  /** */
   @ViewChild(BaseChartDirective) chartDi;
   touchStatus = {
     "isSaved":true,

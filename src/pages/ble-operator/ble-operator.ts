@@ -94,7 +94,7 @@ export class BleOperatorPage implements OnInit{
   }
   ionViewDidEnter(){
     console.log('>>>>>>>>>>>>>>>>>>>>>>BleOperatorPage ionViewDidEnter');
-    this.blueInfo.details.take(1).subscribe(
+    this.blueInfo.details.subscribe(
       obj=>{
         this.blueInfo.nowDevice.hadConnected = obj.hadConnected;
         this.blueInfo.nowDevice.id = obj.device.id;
