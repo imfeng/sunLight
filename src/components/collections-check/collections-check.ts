@@ -15,7 +15,7 @@ export class CollectionsCheckComponent {
       })
   );
   collectionsChecks:Array<boolean> = Array.from({length:12},v=>false);
-  ionViewDidLoad(){
+  /*ionViewDidLoad(){
     console.log('===========');
     console.log(this.ionCheckbox);
 
@@ -23,12 +23,13 @@ export class CollectionsCheckComponent {
       //console.log(   );
       e._elementRef.nativeElement.lastChild.firstChild.innerHTML = String.fromCharCode(65+i);
     });
-  }
+  }*/
 
   constructor() {
-    console.log('CollectionsCheckComponent');
+    /*console.log('CollectionsCheckComponent');
     console.log('===========');
     console.log(this.ionCheckbox);
+    */
   }
 
 }

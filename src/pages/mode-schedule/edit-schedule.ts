@@ -21,6 +21,13 @@ export class editSchedulePage {
       e._elementRef.nativeElement.lastChild.firstChild.innerHTML = String.fromCharCode(65+i);
     });
   }
+  collectionsListTest = Array.from({length: 12}, 
+    (v, i) => ({
+        "name":(i+1),
+        "cid": (i+1),
+        "devices":[]
+      })
+  );
   /** */
   @ViewChild(BaseChartDirective) chartDi;
   touchStatus = {

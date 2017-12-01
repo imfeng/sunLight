@@ -16,7 +16,7 @@
   
 <!-- TODO-->
     <ion-row class="collections" align-items-center justify-content-center>
-        <ion-col col-2 *ngFor="let item of collectionsList|async;let idx = index;" text-center>
+        <ion-col col-2 *ngFor="let item of collectionsListTest;let idx = index;" text-center>
         <ion-checkbox [(ngModel)]="data.checks[idx]" (click)="detectRepeatChecks(idx)"></ion-checkbox>
         </ion-col>
     </ion-row>
