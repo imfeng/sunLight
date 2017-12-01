@@ -11,6 +11,7 @@ import { HttpModule } from '@angular/http';
 
 /* COMPONENT */
 import { MyApp } from './app.component';
+//import { ComponentsModule } from '../components/components.module';
 
 //import { TabsPage } from '../pages/tabs/tabs';
 import { TabsPageModule } from '../pages/tabs/tabs.module';
@@ -39,9 +40,6 @@ import { AppStateProvider } from '../providers/app-state/app-state';
     DevMode,editDevSettingPage,
     TabsPage,*/
     MyApp,
-    
-    
-
   ],
   exports:[
   //NumberPickerComponent,
