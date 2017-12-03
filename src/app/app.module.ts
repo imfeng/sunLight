@@ -31,6 +31,8 @@ import { DevicesDataProvider } from '../providers/devices-data/devices-data';
 import { ScheduleDataProvider } from '../providers/schedule-data/schedule-data';
 import { AppStateProvider } from '../providers/app-state/app-state';
 
+import { ScreenOrientation } from '@ionic-native/screen-orientation';
+
 @NgModule({
   declarations: [
     //NumberPickerComponent,
@@ -70,6 +72,7 @@ import { AppStateProvider } from '../providers/app-state/app-state';
     
   ],
   providers: [
+    ScreenOrientation,
     AndroidPermissions,
     BLE,
     NativeStorage,

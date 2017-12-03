@@ -76,6 +76,18 @@ export class editSchedulePage {
       
     ],
     "options":{
+      pan: {
+        enabled: true,
+        mode: 'x'
+      },
+      zoom: {
+        enabled: true,
+        mode: 'x',
+        limits: {
+          max: 5,
+          min: 0.5
+        }
+      },
       tooltips:false,
       onHover:function($e){
         $e.preventDefault();
@@ -440,6 +452,19 @@ export class editSchedulePage {
     }*/
     
   }
+
+  openChartEdit(){
+    let modal = this.modalCtrl.create(chartEditModal, {
+
+    }, {
+      cssClass: 'modal-chart'
+    });
+    modal.onDidDismiss(data => {
+      console.log('chartEditModal DISMISS!');
+    });
+    modal.present();
+  }
+  
 }
 @Component({
     templateUrl:'./nav-main/modal-section-edit.html',
@@ -471,4 +496,18 @@ export class modalSectionEdit{
     dismiss() {
       this.viewCtrl.dismiss(false);
     }
+}
+@Component({
+  templateUrl:'./nav-main/chart-edit.html'
+})
+export class chartEditModal{
+
+  constructor(
+    public viewCtrl: ViewController,
+  ){
+    
+  }
+  dismiss(){
+    this.viewCtrl.dismiss(false);
+  }
 }

@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
 import { TabsPage } from '../tabs/tabs';
+import { ScreenOrientation } from '@ionic-native/screen-orientation';
 
 /**
  * Generated class for the StartPage page.
@@ -16,7 +17,28 @@ import { TabsPage } from '../tabs/tabs';
 })
 export class StartPage {
 
-  constructor(public navCtrl: NavController, public navParams: NavParams) {
+  constructor(
+    private screenOrientation: ScreenOrientation,
+    public navCtrl: NavController,
+    public navParams: NavParams) {
+
+      // get current
+      console.log('===== screenOrientation TYPE ====='); // logs the current orientation, example: 'landscape'
+      console.log(this.screenOrientation.type); // logs the current orientation, example: 'landscape'
+
+      // set to landscape
+      //this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.LANDSCAPE);
+
+      // allow user rotate
+      this.screenOrientation.unlock();
+
+      // detect orientation changes
+      this.screenOrientation.onChange().subscribe(
+        () => {
+            console.log(">>> Orientation Changed");
+        }
+      );
+
   }
 
   ionViewDidLoad() {

@@ -89,20 +89,20 @@ export class BleCommandProvider {
                 );
               }
             );
-            console.log('deNormalization:');
-            console.log(deNor);
-            Object.keys(deNor).map( 
-              (key,idx) => {
-                deNor[key].map(
-                  (ss,sid) => {
+            console.log('>>> DeNormalization : ');
+            console.log(JSON.stringify(deNor));
+            for(let key in deNor){
+              console.log('======= Object.keys(deNor).map ========');
+              console.log('key: ' + key);
+              deviceScheduleList = deviceScheduleList.concat(
+                deNor[key].map((ss,sid) => {
                     if(nowHour>=ss.time_num[0]){
                       detectNow.multiple = ss.multiple;
                       detectNow.mode = ss.mode;
                       detectNow.time_num = ss.time_num;
                       console.log('nowHour');
                     }
-                    deviceScheduleList.push(
-                      new Uint8Array([
+                    return (new Uint8Array([
                         _START,
                         _CMD_SCHEDULE_MODE,
                         ss.multiple,
@@ -111,20 +111,23 @@ export class BleCommandProvider {
                         ss.time_num[0],
                         ss.time_num[1],
                         sid+1,
-                        _END])
-                    );
-                  }
-                );
-                //[_START,_CMD_MANUAL_MODE,multi,type,gid,_END
-                deviceSetCurrent.push(
-                  new Uint8Array([
-                    _START,
-                    _CMD_MANUAL_MODE,
-                    detectNow.multiple,
-                    detectNow.mode,
-                    parseInt(key),
-                    _END])
-                );
+                        _END]) );
+                  })
+              );
+              //[_START,_CMD_MANUAL_MODE,multi,type,gid,_END
+              deviceSetCurrent.push(
+                new Uint8Array([
+                  _START,
+                  _CMD_MANUAL_MODE,
+                  detectNow.multiple,
+                  detectNow.mode,
+                  parseInt(key),
+                  _END])
+              );
+            }
+            Object.keys(deNor).map( 
+              (key,idx) => {
+                
       
               }
             );/*
@@ -214,15 +217,15 @@ export class BleCommandProvider {
               ss=>{
                 this.collectionsToDeviceGid(ss.checks).subscribe(
                   allDevices => {
-                    allDevices.map(
-                      v => {
-                        if(deNormalization[v]) deNormalization[v] = deNormalization[v].concat(ss.sectionsList);
-                        else {
-                          deNormalization[v] = [];
-                          deNormalization[v] = deNormalization[v].concat(ss.sectionsList);
-                        }
+                    allDevices.forEach(element => {
+                      if(deNormalization[element]) deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
+                      else {
+                        deNormalization[element] = [];
+                        deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
                       }
-                    );
+                    });
+                    
+
                     observer.next(deNormalization);
                     observer.complete();
                   }
