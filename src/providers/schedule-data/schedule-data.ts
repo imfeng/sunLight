@@ -249,7 +249,7 @@ export class ScheduleDataProvider {
     this.list.take(1).subscribe(
       arr => {
         //let rdnDataset = Array.from( new Array(24), ()=>(this.getRandomInt(0,30)) );
-        let rdnDataset = Array.from( new Array(24), ()=>(-2) );
+        let rdnDataset = Array.from( new Array(24), ()=>(0) );
         let rdnColor = Array.from( new Array(24), ()=>('rgb(200,200,200)') );
         arr.push({
           "name":'排程',
@@ -261,10 +261,17 @@ export class ScheduleDataProvider {
               {data:rdnDataset} ]
           },
           "lastModified":new Date().getTime(),
-          "sectionsList":[],
+          /*"sectionsList":[
+            
+          ],*/
+          "sectionsList":Array.from({length:24},(v,i)=>({"mode":1,
+            "time":'',
+            "time_num":[i,0],  // [ HOUR , MIN ]
+            "multiple":0})
+          ),
           "checks": Array.from({length:12},v=>false),
 
-          "dateRange":[-1,-1]
+          "dateRange":[0,23]
         });
         console.log(arr);
         let tempSetOb = Observable.fromPromise(this.storage.setItem(_STORAGE_SCHEDULE_NAME,arr));

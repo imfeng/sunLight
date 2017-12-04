@@ -1,3 +1,4 @@
+
 page-mode-schedule {
     
     div.lightsChart-cont{
@@ -65,7 +66,13 @@ page-mode-schedule {
 }
 /* pr1-patterns */
 #schedule-nav-sctions{
-    
+    .row.no-padding>.col{
+        padding: 0;
+    }
+    #chart-container>.chartjs-hidden-iframe{
+        margin: 0 auto;
+        max-height: 150px;
+    }
     ion-item.item p{
         font-size: 1.1rem;
     }

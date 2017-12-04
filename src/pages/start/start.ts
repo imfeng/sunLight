@@ -27,17 +27,17 @@ export class StartPage {
       console.log(this.screenOrientation.type); // logs the current orientation, example: 'landscape'
 
       // set to landscape
-      //this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.LANDSCAPE);
+      this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.PORTRAIT);
 
       // allow user rotate
-      this.screenOrientation.unlock();
+      //this.screenOrientation.unlock();
 
       // detect orientation changes
-      this.screenOrientation.onChange().subscribe(
+      /*this.screenOrientation.onChange().subscribe(
         () => {
             console.log(">>> Orientation Changed");
         }
-      );
+      );*/
 
   }
 

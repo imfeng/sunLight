@@ -1,10 +1,17 @@
-<ion-header>
+<ion-header #head>
   <ion-navbar>
     <ion-title>
       編輯排程
     </ion-title>
+    <ion-buttons end>
+        <button ion-button icon-only (click)="toggleFullScreen()">
+          <ion-icon name="expand"></ion-icon>
+        </button>
+
+      </ion-buttons>
   </ion-navbar>
-</ion-header>>
+  
+</ion-header>
 <ion-content id="schedule-nav-sctions">
   <!--
   <ion-fab bottom right>
@@ -13,46 +20,89 @@
     </button>
   </ion-fab>
 -->
-  
-<!-- TODO-->
-    <ion-row class="collections" align-items-center justify-content-center>
-        <ion-col col-2 *ngFor="let item of collectionsListTest;let idx = index;" text-center>
-        <ion-checkbox [(ngModel)]="data.checks[idx]" (click)="detectRepeatChecks(idx)"></ion-checkbox>
-        </ion-col>
-    </ion-row>
-<!-- -->
 
-<ion-grid>
-        <ion-row>
-            <ion-col col-5>
-                <ion-item>
-                        <ion-datetime (ionChange)="dateChange()" [(ngModel)]="datePicker.start" displayFormat="HH:mm" minuteValues="00"></ion-datetime>
-                </ion-item>
-            </ion-col>
-            <ion-col col-2>
-                    <ion-item no-lines>
-                            <ion-label>～</ion-label>
-                    </ion-item>
-            </ion-col>
-            <ion-col col-5>
-                <ion-item>
-                        
-                        <ion-datetime (ionChange)="dateChange()" [(ngModel)]="datePicker.end" displayFormat="HH:mm" minuteValues="00"></ion-datetime>
-                </ion-item>
-            </ion-col>
-        </ion-row>
-    </ion-grid>
-    <!-- (click)= "chartClick($event)"
+  <!-- TODO-->
+  <ion-row *ngIf="!touchStatus.isFullScreen" class="collections" align-items-center justify-content-center>
+    <ion-col col-2 *ngFor="let item of collectionsListTest;let idx = index;" text-center>
+      <ion-checkbox [(ngModel)]="data.checks[idx]" (click)="detectRepeatChecks(idx)"></ion-checkbox>
+    </ion-col>
+  </ion-row>
+  <!-- 
+
+  <ion-grid *ngIf="!touchStatus.isFullScreen">
+    <ion-row>
+      <ion-col col-5>
+        <ion-item>
+          <ion-datetime [(ngModel)]="datePicker.start" displayFormat="HH:mm" minuteValues="00"></ion-datetime>
+        </ion-item>
+      </ion-col>
+      <ion-col col-2>
+        <ion-item no-lines>
+          <ion-label>～</ion-label>
+        </ion-item>
+      </ion-col>
+      <ion-col col-5>
+        <ion-item>
+
+          <ion-datetime [(ngModel)]="datePicker.end" hourValues="23" displayFormat="HH:mm" minuteValues="00"></ion-datetime>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+  </ion-grid>-->
+  <!-- (click)= "chartClick($event)"
     (pan)="panEvent($event)" -->
-    <canvas height="170px" 
-    (touchstart)="onTouchStart($event)" (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd($event)"
-    
-     baseChart [chartType]="chartDatas.type" [datasets]="chartDatas.datasets" [labels]="chartDatas.labels" [options]="chartDatas.options"
-    [legend]="false" [colors]="chartDatas.colors" >
-  </canvas>
+
+    <ion-fab *ngIf="touchStatus.isFullScreen" top right edge style="top: -48px;right: -4px;">
+        <button ion-fab color="dark" outline mini icon-only (click)="toggleFullScreen()">
+          <ion-icon name="close"></ion-icon>
+        </button>
+      </ion-fab>
   
-  <ion-list inset>
-    <button ion-button block color="primary" (click)="openChartEdit()">編輯</button>
+  <p style="margin:0" *ngIf="touchStatus.curIndex>=0">{{touchStatus.curIndex}}:00 -> </p>
+  <ion-row *ngIf="touchStatus.curIndex>=0" class="no-padding">
+    <ion-col col-sm-2 col-2>
+      <button ion-button (click)="lightTypeChangeBtn(1)" [color]="(touchStatus.tmpLightType===1)?'primary':'light'">
+        5 m
+      </button>
+    </ion-col>
+    <ion-col col-sm-2 col-2>
+      <button ion-button (click)="lightTypeChangeBtn(2)" [color]="(touchStatus.tmpLightType===2)?'primary':'light'">
+        10m
+      </button>
+    </ion-col>
+    <ion-col col-sm-2 col-2>
+      <button ion-button (click)="lightTypeChangeBtn(3)" [color]="(touchStatus.tmpLightType===3)?'primary':'light'">
+        15m
+      </button>
+    </ion-col>
+    <ion-col col-sm-2 col-2>
+      <button ion-button (click)="lightTypeChangeBtn(4)" [color]="(touchStatus.tmpLightType===4)?'primary':'light'">
+        20m
+      </button>
+    </ion-col>
+    <ion-col col-sm-2 col-2>
+      <button ion-button (click)="lightTypeChangeBtn(5)" [color]="(touchStatus.tmpLightType===5)?'primary':'light'">
+        color
+      </button>
+    </ion-col>
+    <ion-col col-sm-2 col-2>
+      <button ion-button (click)="lightTypeChangeBtn(6)" [color]="(touchStatus.tmpLightType===6)?'primary':'light'">
+        blue
+      </button>
+    </ion-col>
+  </ion-row>
+
+  
+
+  <div #chartcont id="chart-container" style="position: relative;">
+    <canvas (touchstart)="onTouchStart($event)" (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd($event)" baseChart [chartType]="chartDatas.type"
+      [datasets]="chartDatas.datasets" [labels]="chartDatas.labels" [options]="chartDatas.options" [legend]="false" [colors]="chartDatas.colors">
+    </canvas>
+  </div>
+
+
+  <ion-list *ngIf="!touchStatus.isFullScreen" inset>
+
     <button ion-button block color="primary" (click)="saveSections()">儲存</button>
     <ion-list-header>
       <ion-row text-center>
@@ -68,10 +118,11 @@
       </ion-row>
       <ion-icon item-end></ion-icon>
     </ion-list-header>
-    <button ion-item *ngFor="let item of data.sections;let idx =index" (click)="editSection(idx)" >
+    <button ion-item *ngFor="let item of data.sections;let idx =index" (click)="editSection(idx)">
       <ion-row text-center>
         <ion-col col-5>
-          {{item.mode | light:'name'}}</ion-col> <!--   -->
+          {{item.mode | light:'name'}}</ion-col>
+        <!--   -->
         <ion-col col-4>
           <span>{{item.time}}</span>
         </ion-col>
@@ -80,7 +131,7 @@
         </ion-col>
       </ion-row>
     </button>
-<!--
+    <!--
     <ion-item-sliding *ngFor="let item of data.sections;let idx =index">
       <ion-item>
         <ion-row text-center>
@@ -108,7 +159,7 @@
       </ion-item-options>
     </ion-item-sliding>-->
 
-    
+
 
   </ion-list>
 

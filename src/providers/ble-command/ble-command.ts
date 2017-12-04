@@ -58,11 +58,7 @@ export class BleCommandProvider {
     
         /*scheduleCheckNow*/
         let nowHour = new Date().getHours();
-        let detectNow = {
-          "multiple":0,
-          "mode":0,
-          "time_num":[0,0]
-        }
+        
         /** */
         this.ScheduleProcess1().subscribe(
           deNor => {
@@ -89,11 +85,14 @@ export class BleCommandProvider {
                 );
               }
             );
-            console.log('>>> DeNormalization : ');
-            console.log(JSON.stringify(deNor));
+
             for(let key in deNor){
-              console.log('======= Object.keys(deNor).map ========');
-              console.log('key: ' + key);
+              let detectNow = {
+                "multiple":0,
+                "mode":0,
+                "time_num":[0,0]
+              }
+
               deviceScheduleList = deviceScheduleList.concat(
                 deNor[key].map((ss,sid) => {
                     if(nowHour>=ss.time_num[0]){
@@ -124,13 +123,12 @@ export class BleCommandProvider {
                   parseInt(key),
                   _END])
               );
-            }
+            }/*
             Object.keys(deNor).map( 
               (key,idx) => {
-                
-      
               }
-            );/*
+            );*/ 
+            /*
             console.log('deviceScheduleList');
             console.log(deviceScheduleList);
             console.log('deviceSetCurrent');
@@ -198,6 +196,8 @@ export class BleCommandProvider {
                 return idx == self.indexOf(ele);
               }
             );
+            console.log('>>> collectionsToDeviceGid');
+            console.log(allDevices);
             observer.next(allDevices);
             observer.complete();
           }
@@ -213,25 +213,23 @@ export class BleCommandProvider {
         this.ScheduleProv.list
         .take(1).subscribe(
           ssList=>{
-            ssList.map(
-              ss=>{
-                this.collectionsToDeviceGid(ss.checks).subscribe(
-                  allDevices => {
-                    allDevices.forEach(element => {
-                      if(deNormalization[element]) deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
-                      else {
-                        deNormalization[element] = [];
-                        deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
-                      }
-                    });
-                    
+            ssList.map(ss=>{
+              this.collectionsToDeviceGid(ss.checks).take(1).subscribe(allDevices => {
+                  allDevices.forEach(element => {
+                    if(deNormalization[element]) 
+                      deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
+                    else {
+                      deNormalization[element] = [];
+                      deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
+                    }
+                  });
+              });
+            });
+            console.log('>>> ScheduleProcess1 > deNormalization');
+            console.log(deNormalization);
 
-                    observer.next(deNormalization);
-                    observer.complete();
-                  }
-                );
-              }
-            );
+            observer.next(deNormalization);
+            observer.complete();
           }
         );
         

@@ -1,7 +1,8 @@
-import { ElementRef,ViewChild,Component, ViewChildren, QueryList } from '@angular/core';
-import { Select, AlertController ,ViewController, ModalController, NavController, NavParams,Checkbox } from 'ionic-angular';
+import { Renderer, ElementRef,ViewChild,Component, ViewChildren, QueryList } from '@angular/core';
+import { Platform, Tabs, Select, AlertController ,ViewController, ModalController, NavController, NavParams,Checkbox } from 'ionic-angular';
 import { Observable } from 'rxjs/Observable';
 import { ChartsModule,BaseChartDirective } from 'ng2-charts';
+import { ScreenOrientation } from '@ionic-native/screen-orientation';
 
 import {  ScheduleDataProvider,scheduleType,sectionDataType } from '../../providers/schedule-data/schedule-data';
 import { ToastCtrlProvider } from  '../../providers/toast-ctrl/toast-ctrl';
@@ -14,12 +15,41 @@ import { AppStateProvider } from  '../../providers/app-state/app-state';
 })
 export class editSchedulePage {
   /** TODO */
+  @ViewChild('chartele') chartEle: ElementRef;
+  @ViewChild('head') head: ElementRef;
+  toggleFullScreen(){
+    let body = this.ELE.nativeElement.getElementsByClassName('scroll-content')[0];
+    let tabs = document.querySelector('.ion-page>.tabs>.tabbar');
+    this.touchStatus.isFullScreen = !this.touchStatus.isFullScreen;
+    if(this.touchStatus.isFullScreen){
+      //this.RENDER.setElementStyle(this.chartEle.nativeElement, 'max-height', '250px');
+      this.RENDER.setElementStyle(this.head.nativeElement, 'top', '-56px');
+      this.RENDER.setElementStyle(body, 'margin-top', '0');
+      this.RENDER.setElementStyle(body, 'margin-bottom', '0');
+      this.RENDER.setElementStyle(tabs, 'bottom', '-70px');
+      //this.RENDER.setElementStyle(tabs, 'bottom', '-51px');
+      this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.LANDSCAPE);
+    }else{
+      //this.RENDER.setElementStyle(this.chartEle.nativeElement, 'max-height', '180px');
+      this.RENDER.setElementStyle(this.head.nativeElement, 'top', '0px');
+      this.RENDER.setElementStyle(body, 'margin-top', '44px');
+      this.RENDER.setElementStyle(body, 'margin-bottom', '50px');
+      this.RENDER.setElementStyle(tabs, 'bottom', '0px');
+      this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.PORTRAIT);
+      /*this.ionCheckbox.forEach((e,i) => {
+        console.log('GG');
+        console.log(e);
+        e._elementRef.nativeElement.lastChild.firstChild.innerHTML = String.fromCharCode(65+i);
+      });*/
+    }
+  }
+
+  /** */
   @ViewChildren(Checkbox) ionCheckbox :QueryList<Checkbox>;
   ionViewDidLoad(){
-    this.ionCheckbox.forEach((e,i) => {
-      //console.log(   );
+    /*this.ionCheckbox.forEach((e,i) => {
       e._elementRef.nativeElement.lastChild.firstChild.innerHTML = String.fromCharCode(65+i);
-    });
+    });*/
   }
   collectionsListTest = Array.from({length: 12}, 
     (v, i) => ({
@@ -31,9 +61,12 @@ export class editSchedulePage {
   /** */
   @ViewChild(BaseChartDirective) chartDi;
   touchStatus = {
+    "isFullScreen":false,
+    "window_h":0,
+    "window_w":0,
     "isSaved":true,
     "curItem":null,
-    "curIndex":null,
+    "curIndex":-1,
     "onTouched":false,
     "pos":{
       "x":0,
@@ -49,7 +82,6 @@ export class editSchedulePage {
   
   @ViewChild('typeselect') typeselect:any;
   lightsTypes:Array<string>;
-
   collectionsList:Observable<collectionType[]>;
   temp = {
     "data":Array.from( new Array(0), ()=>(0) ),
@@ -63,19 +95,16 @@ export class editSchedulePage {
     "colors":{}
   } = {
     "type":'bar',
-  
     "datasets": [
       this.gChartLineSet(this.temp.data),
       {"data":this.temp.data}
-      //{"data":this.temp.data,"type":'line',"borderColor": 'rgba(72,138,255,0.8)',}
     ],
     "colors":[{"backgroundColor":'transparent'},{"backgroundColor":[]}],
-  
-    "labels": [
-      //"00:00","","02:00","","04:00","",
-      
-    ],
+    "labels": [],
     "options":{
+      animation:{
+        easing: 'easeOutExpo'
+      },
       pan: {
         enabled: true,
         mode: 'x'
@@ -97,18 +126,45 @@ export class editSchedulePage {
         padding: {
             left: 5,
             right: 5,
-            top: 40,
+            top: 20,
             bottom: 10
         }
       },
-      caleShowLabels:!1,scales:{xAxes:[{gridLines:{offsetGridLines:!0},
-      barPercentage:0.4,categoryPercentage:0.9,ticks:{padding:10,backdropPaddingX:20}}],yAxes:[{ticks:{max:30,min:0,display:true,beginAtZero:!0,padding:0}}]},responsive:!0
+      caleShowLabels:!1,
+      scales:{xAxes:
+        [{gridLines:{offsetGridLines:!0},
+          barPercentage:0.4,
+          categoryPercentage:0.9,
+          ticks:{padding:10,backdropPaddingX:20}
+        }],
+        yAxes:[{ticks:{max:30,min:0,display:true,beginAtZero:!0,padding:0}}]
+      },
+      responsive:!0,
+      onResize: (function(plat,fullSreen){
+        console.log(fullSreen);
+        if(fullSreen){
+          return function(a,b){
+            setTimeout(function(){
+              console.log('HIGHT: ' + plat.height());
+              a.height =  plat.height() - 70;
+            },300);
+          
+          }
+        }else{
+          return function(){}
+        }
+        
+      })(this.platform,this.touchStatus.isFullScreen),
     },
   }
   datePicker :{
     start:string,
     end:string,
     range:Array<number>
+  }={
+    start:'00:00',
+    end:'23:00',
+    range:[0,23]
   }
   data:{
     sections:Array < sectionDataType >,
@@ -119,6 +175,10 @@ export class editSchedulePage {
   }
   thisIdx: number;
   constructor(
+    private platform: Platform,
+    private screenOrientation: ScreenOrientation,
+    private ELE: ElementRef,
+    private RENDER: Renderer,
     private appStateProv: AppStateProvider,
     private alertCtrl: AlertController,
     private lightsType: LightsInfoProvider,
@@ -129,18 +189,20 @@ export class editSchedulePage {
     public navCtrl: NavController,
     public navParams: NavParams
   ) {
-    
+    this.platform.ready().then((readySource) => {
+      console.log('Width: ' + this.platform.width());
+      console.log('Height: ' + this.platform.height() );
+      this.touchStatus.window_h = this.platform.height();
+      this.touchStatus.window_w = this.platform.width();
+    });
     this.lightsTypes = this.lightsType.getTypes();
     
-    this.datePicker = {
-      start:'',
-      end:'',
-      range:[null,null]
-    }
+    
     this.collectionsList = this.clProv.list;
 
     this.thisIdx = this.navParams.get("idx");
-    
+    //this.dateChange();
+
     console.log('editSchedulePage (schedule List Idx): ' + this.thisIdx);
     this.scheduleProv.getSchedule(this.navParams.get("idx")).subscribe(
       arr => {
@@ -158,15 +220,16 @@ export class editSchedulePage {
           this.changeSectionsEvent();
           
       }
-  );
+    );
   }
+
   ionViewDidEnter() {
   }
   ionViewWillLeave(){
     this.showConfirm();
   }
+  /** CHARTJS */
   onTouchStart($e){
-    
     console.log('touchstart');
     var item = this.chartDi.chart.getElementAtEvent($e)[0];
     if((item||false)?((item._model.pointStyle||false)?true:false):false){
@@ -197,29 +260,28 @@ export class editSchedulePage {
        = tmp;
       this.touchStatus.curItem._chart.update();
       this.data.sections[this.touchStatus.curIndex].multiple = tmp;
-
-      //this.touchStatus.pos.y = $e.touches[0].pageY;
     }
-      
   }
   onTouchEnd($e){
-    
     console.log('touchend');
     if(this.touchStatus.onTouched){
       this.touchStatus.isSaved = false;
       this.touchStatus.onTouched = false;
-
       this.touchStatus.tmpLightType = this.data.sections[this.touchStatus.curIndex].mode;
-      this.typeselect.open();
-      //this.typeselect._overlay.instance
+      //this.typeselect.open();
     }
-
+  }
+  lightTypeChangeBtn(type:number){
+    this.touchStatus.tmpLightType = type;
+    this.data.sections[this.touchStatus.curIndex].mode = type;
+    this.changeSectionsEvent();
   }
   typeselectChanged(){
     this.data.sections[this.touchStatus.curIndex].mode = this.touchStatus.tmpLightType;
     this.changeSectionsEvent();
   }
   chartClick($e){
+    // DEBUG
     let crt = this.chartDi;
     console.log(crt);
     console.log();
@@ -229,9 +291,8 @@ export class editSchedulePage {
         var value = crt.data.datasets[item._datasetIndex].data[item._index];
     }
     console.log($e);
-    
   }
-
+  /** CHARTJS END */
   gChartLineSet(data){
     return {
       "type":'line',
@@ -270,8 +331,8 @@ export class editSchedulePage {
       }
     );
   }
-  dateChange(event){
-    //console.log(this.datePicker);
+  dateChange(){
+    console.log(this.datePicker);
     this.touchStatus.isSaved = false;
     if(this.datePicker.end === null){
       this.datePicker.end = '';

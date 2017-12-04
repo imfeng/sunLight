@@ -28,14 +28,14 @@ export class ModeManual {
       })
   );
   collectionsChecks:Array<boolean> = Array.from({length:12},v=>false);
-  ionViewDidLoad(){
+  ionViewDidLoad(){/*
     console.log('===========');
     console.log(this.ionCheckbox);
 
     this.ionCheckbox.forEach((e,i) => {
       //console.log(   );
       e._elementRef.nativeElement.lastChild.firstChild.innerHTML = String.fromCharCode(65+i);
-    });
+    });*/
   }
 
 

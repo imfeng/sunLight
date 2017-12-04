@@ -13,11 +13,48 @@
 // for the .md, .ios, or .wp mode classes. The mode class is
 // automatically applied to the <body> element in the app.
 .collections.row{
-    margin-top:10px; 
+    margin-top:15px; 
     .col{
         padding: 0px!important;
     }
-    .checkbox{
+    .col:nth-of-type(1)>.checkbox>button>.button-inner:before{
+        content: "A";
+    }
+    .col:nth-of-type(2)>.checkbox>button>.button-inner:before{
+        content: "B";
+    }
+    .col:nth-of-type(3)>.checkbox>button>.button-inner:before{
+        content: "C";
+    }
+    .col:nth-of-type(4)>.checkbox>button>.button-inner:before{
+        content: "D";
+    }
+    .col:nth-of-type(5)>.checkbox>button>.button-inner:before{
+        content: "E";
+    }
+    .col:nth-of-type(6)>.checkbox>button>.button-inner:before{
+        content: "F";
+    }
+    .col:nth-of-type(7)>.checkbox>button>.button-inner:before{
+        content: "G";
+    }
+    .col:nth-of-type(8)>.checkbox>button>.button-inner:before{
+        content: "H";
+    }
+    .col:nth-of-type(9)>.checkbox>button>.button-inner:before{
+        content: "I";
+    }
+    .col:nth-of-type(10)>.checkbox>button>.button-inner:before{
+        content: "J";
+    }
+    .col:nth-of-type(11)>.checkbox>button>.button-inner:before{
+        content: "K";
+    }
+    .col:nth-of-type(12)>.checkbox>button>.button-inner:before{
+        content: "L";
+    }
+
+    .col>.checkbox{
         .checkbox-icon.checkbox-checked{
     
             .checkbox-inner {
@@ -26,16 +63,17 @@
                 top: 3px;*/
                 transform: initial;
             }
+            
         }
         .checkbox-icon{
             width: 40px;
             height: 40px;
         }
-        button>.button-inner{
+        button>.button-inner:before{
             font-size: 2.5rem;
             color: gray;
         }
-        button[aria-checked="true"]>.button-inner{
+        button[aria-checked="true"]>.button-inner:before{
             color: white;
         }
     }

@@ -8,8 +8,8 @@ import { LightsInfoModule } from '../../providers/lights-info/lights-info.module
 import { CollectionsModule } from '../../providers/collections-data/collections-data.module';
 
 import { ChartsModule } from 'ng2-charts';
-import 'hammerjs';
-import 'chartjs-plugin-zoom';
+//import 'hammerjs';
+//import 'chartjs-plugin-zoom';
 
 @NgModule({
   declarations: [
