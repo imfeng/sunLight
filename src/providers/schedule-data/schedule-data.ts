@@ -268,7 +268,21 @@ export class ScheduleDataProvider {
             "time":'',
             "time_num":[i,0],  // [ HOUR , MIN ]
             "multiple":0})
-          ),
+          ),/*
+          "sectionsList":[
+            {
+              "mode":1,
+              "time":'',
+              "time_num":[0,0],  // [ HOUR , MIN ]
+              "multiple":0
+            }, {
+              "mode":1,
+              "time":'',
+              "time_num":[23,0],  // [ HOUR , MIN ]
+              "multiple":0
+            },
+            
+          ],*/
           "checks": Array.from({length:12},v=>false),
 
           "dateRange":[0,23]

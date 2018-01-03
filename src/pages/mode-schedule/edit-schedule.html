@@ -99,6 +99,18 @@
       [datasets]="chartDatas.datasets" [labels]="chartDatas.labels" [options]="chartDatas.options" [legend]="false" [colors]="chartDatas.colors">
     </canvas>
   </div>
+  <ion-row>
+    <ion-col col-6>
+      <button ion-button block color="light" (click)="lightTypeChangeBtn(6)">
+        刪除時間
+      </button>
+    </ion-col>
+    <ion-col col-6>
+      <button ion-button block (click)="addSection()">
+        新增時間
+      </button>
+    </ion-col>
+  </ion-row>
 
 
   <ion-list *ngIf="!touchStatus.isFullScreen" inset>

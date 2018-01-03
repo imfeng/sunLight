@@ -132,7 +132,7 @@ export class editSchedulePage {
       },
       caleShowLabels:!1,
       scales:{xAxes:
-        [{gridLines:{offsetGridLines:!0},
+        [{gridLines:{offsetGridLines:0},
           barPercentage:0.4,
           categoryPercentage:0.9,
           ticks:{padding:10,backdropPaddingX:20}
@@ -298,13 +298,21 @@ export class editSchedulePage {
       "type":'line',
       "data":data,
       borderWidth: 3,
-      borderColor: 'rgba(0,0,255,0.2)',
-      pointRadius:10 ,
+      borderColor: 'rgba(1,0,255,0.2)',
+      pointRadius:5 ,
       pointHoverRadius: 25,
-      pointHoverBorderColor: 'rgba(0, 0, 255,0.8)',
-      pointDotWidth: 5,
-      pointBorderColor: 'rgba(0, 0, 255,0.5)',
-      pointBackgroundColor: 'rgba(0,0,255,.1)',
+      pointHoverBorderColor: '#f5202ec9',
+      pointDotWidth: 3,
+      pointBorderColor: [
+        'rgba(0, 0, 0,0.5)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0)',
+
+        '#f5202ec9', '#f5202ec9', '#f5202ec9', '#f5202ec9', '#f5202ec9', '#f5202ec9',
+
+        '#f5202ec9', '#f5202ec9', '#f5202ec9', '#f5202ec9', '#f5202ec9', '#f5202ec9',
+
+        '#f5202ec9', '#f5202ec9', 'rgba(0,0,0,0)', 'rgba(0,0,0,0)', 'rgba(0, 0, 0,0.0)', 'rgba(0, 0, 255,0)',
+      ],
+      pointBackgroundColor: 'rgba(0,0,255,0)',
       backgroundColor: 'rgba(0,0,0,0)',
     }
   }
