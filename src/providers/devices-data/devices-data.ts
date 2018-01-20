@@ -1,4 +1,7 @@
 import { Injectable,PipeTransform,Pipe } from '@angular/core';
+import {
+  Platform,
+ } from 'ionic-angular';
 
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/take';
@@ -9,6 +12,7 @@ import { NativeStorage } from '@ionic-native/native-storage';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 //import { BleCommandProvider } from '../ble-command/ble-command';
 
+const _STORAGE_DEVICES_COUNTER = 'devicesListCounter'
 const _STORAGE_DEVICES_NAME = "devicesList";
 export interface lightDeviceType {
   "name":string,
@@ -30,7 +34,9 @@ export class DevicesDataProvider {
     "device": lightDeviceType,
     "deviceList": Array<lightDeviceType>
   }
+  _ALL_DEVICES_COUNTER: number;
   constructor(
+    private platrom: Platform,
     //private bleCmd: BleCommandProvider,
     private storage:NativeStorage) {
       this._list = <BehaviorSubject<lightDeviceType[]>>new BehaviorSubject([]);
@@ -41,7 +47,21 @@ export class DevicesDataProvider {
       }
       console.log('>>>> DevicesDataProvider');
       this.loadAll();
-    
+
+      this.platrom.ready().then(() => {
+        this.storage.getItem(_STORAGE_DEVICES_COUNTER).then(counter => {
+          this._ALL_DEVICES_COUNTER = counter
+        }).catch(err => {
+          if(err.code == 2 || err.code.code==2) {
+            this._ALL_DEVICES_COUNTER = 0;
+            this.addCounter(this._ALL_DEVICES_COUNTER);
+          }
+        });
+
+      });
+  }
+  addCounter(number) {
+    this.storage.setItem(_STORAGE_DEVICES_COUNTER, number).then();
   }
   loadAll(){
     Observable.fromPromise(this.storage.getItem(_STORAGE_DEVICES_NAME)).subscribe(
@@ -138,12 +158,12 @@ export class DevicesDataProvider {
                 }
               );
               if(!finded && toAdd){
-                
+                this.addCounter(this._ALL_DEVICES_COUNTER++);
                 let newDevice = {
                   "name": device.name,
                   "o_name" :device.name,
                   "id": device.id,
-                  "group":this.dataStore.deviceList.length+1,
+                  "group":this._ALL_DEVICES_COUNTER,
                   "hadGroupSync":false,
                   "last_sended": 0,
                   "collection": [],
@@ -172,11 +192,11 @@ export class DevicesDataProvider {
                 observer.next({"device":finded , "isNew":false});
                 observer.complete();
               }
-              
+
             }
-          );                                                                  
+          );
         }
-        
+
       }
     );
 
@@ -192,7 +212,7 @@ export class DevicesDataProvider {
         sub.subscribe(
           (obj)=>{
             alert('裝置刪除成功！');
-            
+
             this.dataStore.deviceList=obj;
             this._list.next(Object.assign({}, this.dataStore).deviceList);
             //this.bleCmd.goSetGroup( this.dataStore.deviceList.length );
@@ -217,7 +237,7 @@ export class DevicesDataProvider {
         sub.subscribe(
           (obj)=>{
             alert('裝置新增成功！');
-            
+
             this.dataStore.deviceList=obj;
             this._list.next(Object.assign({}, this.dataStore).deviceList);
             //this.bleCmd.goSetGroup( this.dataStore.deviceList.length );
@@ -228,7 +248,7 @@ export class DevicesDataProvider {
         );
       }
     );
-    
+
     //return sub;
   }
   modifyFanSpeed(fanSpeed:number,idxs:Array<number>){
@@ -254,7 +274,7 @@ export class DevicesDataProvider {
               );
           }
         );
-        
+
       }
     )
   }
@@ -272,7 +292,7 @@ export class DevicesDataProvider {
               if(d_gid){
                 this.dataStore.deviceList[idx].group = d_gid;
                 this.dataStore.deviceList[idx].hadGroupSync = hadGroupSync;
-              }      
+              }
               if(hadGroupSync)
               {
                 this.dataStore.deviceList[idx].hadGroupSync = hadGroupSync;

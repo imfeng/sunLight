@@ -1,0 +1,13 @@
+/* You’ll first be prompted to create a password for the keystore. Then, answer the rest of the nice tools’s questions and when it’s all done, you should have a file called my-release-key.keystore created in the current directory.
+
+Note: Make sure to save this file somewhere safe, if you lose it you won’t be able to submit updates to your app!
+
+To sign the unsigned APK, run the jarsigner tool which is also included in the JDK:
+*/
+
+# jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore my-release-key.keystore platforms\android\build\outputs\apk\android-release-unsigned.apk alias_name
+
+/* This signs the apk in place. Finally, we need to run the zip align tool to optimize the APK. The zipalign tool can be found in /path/to/Android/sdk/build-tools/VERSION/zipalign. For example, on OS X with Android Studio installed, zipalign is in ~/Library/Android/sdk/build-tools/VERSION/zipalign:
+*/
+# rm release.apk
+# "c:\Users\HermitF\AppData\Local\Android\sdk\build-tools\25.0.3\zipalign.exe" -v 4 platforms\android\build\outputs\apk\android-release-unsigned.apk release.apk

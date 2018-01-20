@@ -4,6 +4,7 @@
   See http://ionicframework.com/docs/components/#navigation for more info on
   Ionic pages and navigation.
 -->
+<!--
 <ion-header>
 
   <ion-navbar>
@@ -11,12 +12,26 @@
   </ion-navbar>
 
 </ion-header>
-
+-->
 
 <ion-content padding>
-  <button (click)="go(2)" ion-button round>Devices</button>
-  <button (click)="go(3)" ion-button round>Groups</button>
-  <button (click)="go(0)" ion-button round>Schedule</button>
-  <button (click)="go(1)" ion-button round>Manual</button>
-  <button (click)="go(4)" ion-button round color="dark">dev-mode</button>
+  <ng-container *ngIf="!start">
+    <div class="first">
+        <div class="title">
+            <h1 >Sunlight</h1>
+            <h5 class="sub">歡迎使用Sunlight</h5>
+        </div>
+        <button (click)="startBtn()" ion-button round class="entry-btn">進入</button>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="start">
+      <button class="mode-btn" (click)="go(2)" ion-button round block>Devices</button>
+      <button class="mode-btn" (click)="go(3)" ion-button round block>Groups</button>
+      <button class="mode-btn" (click)="go(0)" ion-button round block>Schedule</button>
+      <button class="mode-btn" (click)="go(1)" ion-button round block>Manual</button>
+      <button class="mode-btn" (click)="check()" ion-button round block>TIME CORRECTION</button>
+      <button class="mode-btn" (click)="go(4)" ion-button round block color="dark">dev-mode</button>
+  </ng-container>
+
 </ion-content>

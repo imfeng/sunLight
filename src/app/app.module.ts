@@ -33,6 +33,8 @@ import { AppStateProvider } from '../providers/app-state/app-state';
 
 import { ScreenOrientation } from '@ionic-native/screen-orientation';
 
+import { EyeCheckPageModule } from '../pages/eye-check/eye-check.module'
+
 @NgModule({
   declarations: [
     //NumberPickerComponent,
@@ -48,6 +50,7 @@ import { ScreenOrientation } from '@ionic-native/screen-orientation';
    //LightsChartComponent
   ],
   imports: [
+    EyeCheckPageModule,
     //ComponentsModule,
     HttpModule,
     TabsPageModule,
@@ -57,7 +60,7 @@ import { ScreenOrientation } from '@ionic-native/screen-orientation';
     BrowserModule,
     IonicModule.forRoot(MyApp),
     CollectionsModule
-    
+
 
     //BleOperatorPageModule
 
@@ -69,7 +72,7 @@ import { ScreenOrientation } from '@ionic-native/screen-orientation';
     ModeDevicesPage,
     DevMode,editDevSettingPage,*/
     MyApp,
-    
+
   ],
   providers: [
     ScreenOrientation,
@@ -86,7 +89,7 @@ import { ScreenOrientation } from '@ionic-native/screen-orientation';
     DevicesDataProvider,
     ScheduleDataProvider,
     AppStateProvider
-    
+
   ]
 })
 export class AppModule {}

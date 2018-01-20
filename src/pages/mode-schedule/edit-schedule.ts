@@ -67,6 +67,7 @@ export class editSchedulePage {
     "isSaved":true,
     "curItem":null,
     "curIndex":-1,
+    "curIndexNowStep":{},
     "onTouched":false,
     "pos":{
       "x":0,
@@ -132,10 +133,10 @@ export class editSchedulePage {
       },
       caleShowLabels:!1,
       scales:{xAxes:
-        [{gridLines:{offsetGridLines:!0},
+        [{gridLines:{offsetGridLines:false},
           barPercentage:0.4,
           categoryPercentage:0.9,
-          ticks:{padding:10,backdropPaddingX:20}
+          ticks:{padding:5,backdropPaddingX:15}
         }],
         yAxes:[{ticks:{max:30,min:0,display:true,beginAtZero:!0,padding:0}}]
       },
@@ -236,6 +237,8 @@ export class editSchedulePage {
       this.touchStatus.onTouched = true;
       this.touchStatus.curItem = item;
       this.touchStatus.curIndex = item._index;
+      this.touchStatus.curIndexNowStep = this.data.sections[item._index];
+  
       this.touchStatus.canvas_h = item._chart.height-70;
       this.touchStatus.curCtrl_y = $e.touches[0].pageY;
       this.touchStatus.curStep = this.data.sections[item._index].multiple;
@@ -299,12 +302,12 @@ export class editSchedulePage {
       "data":data,
       borderWidth: 3,
       borderColor: 'rgba(0,0,255,0.2)',
-      pointRadius:10 ,
-      pointHoverRadius: 25,
+      pointRadius:5 ,
+      pointHoverRadius: 10,
       pointHoverBorderColor: 'rgba(0, 0, 255,0.8)',
-      pointDotWidth: 5,
-      pointBorderColor: 'rgba(0, 0, 255,0.5)',
-      pointBackgroundColor: 'rgba(0,0,255,.1)',
+      pointDotWidth: 3,
+      pointBorderColor: 'rgba(255, 30, 30,0.5)',
+      pointBackgroundColor: 'rgba(255,255,255,.2)',
       backgroundColor: 'rgba(0,0,0,0)',
     }
   }

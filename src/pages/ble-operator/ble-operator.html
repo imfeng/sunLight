@@ -20,7 +20,12 @@
 
 
 <ion-content class="outer-content">
+  <ion-refresher>
+    <ion-refresher-content pullingIcon="arrow-dropdown" pullingText="Pull to refresh" refreshingSpinner="circles" refreshingText="Refreshing...">
+    </ion-refresher-content>
+  </ion-refresher>
   <ion-list no-lines>
+
 
     <ion-item>
       <ion-icon name="bluetooth" item-start></ion-icon>
@@ -29,30 +34,35 @@
     </ion-item>
     <ion-list-header>
       正在連接中的裝置
-      <button *ngIf="blueInfo.nowDevice.hadConnected" (click)="disconnectDevice()" ion-button outline item-end><ion-icon name="close"></ion-icon></button>
-      <button *ngIf="blueInfo.nowDevice.hadConnected" (click)="modifyDeviceGroup()" ion-button outline item-end><ion-icon name="pricetags"></ion-icon></button>
+      <button *ngIf="blueInfo.nowStatus.hadConnected" (click)="disconnectDevice()" ion-button outline item-end><ion-icon name="close"></ion-icon></button>
+      <!--<button *ngIf="blueInfo.nowStatus.hadConnected" (click)="modifyDeviceGroup()" ion-button outline item-end><ion-icon name="pricetags"></ion-icon></button>-->
     </ion-list-header>
     <button ion-item (click)="openBleListNav()">
         <ion-icon name="bluetooth" item-start color="primary"></ion-icon>
-        <h2>{{blueInfo.nowDevice.name||'無裝置'}}</h2>
-        <p>{{blueInfo.nowDevice.id||' - '}}</p>
-        <ion-badge outline item-end>{{blueInfo.nowDevice.group||'?'}}</ion-badge>
-        
-        <button ion-button outline item-end><ion-icon name="search"></ion-icon></button>
+        <h2>{{blueInfo.nowStatus.device.name||'無裝置'}}{{ ' - ' + (blueInfo.nowStatus.device.group||'')}}</h2>
+        <p>{{blueInfo.nowStatus.device.id||' - '}}</p>
+        <ion-badge outline item-end>{{blueInfo.nowStatus.device.collection | collection_name}}</ion-badge>
+
+        <button  ion-button outline item-end>搜尋<ion-icon name="search"></ion-icon></button>
     </button>
     <!-- TODO -->
-    <ion-list-header>
+    <ion-list-header *ngIf="bleToggle.checked">
       發現的裝置
       <button (click)="doRefresh()" ion-button outline item-end><ion-icon name="refresh"></ion-icon></button>
     </ion-list-header>
+
+
+
+  <ng-container *ngIf="bleToggle.checked">
     <ion-item *ngFor="let device of blueInfo.devices.list">
       <ion-icon item-start name="sunny"></ion-icon>
-      <h2>{{ device.name || '無名稱' }}</h2>
-      <p>{{ device.id }} ( Rx: {{ device.rssi }} )</p>
-      <ion-badge item-end>{{ device.group || '?' }}</ion-badge>
-      <ion-badge item-end>{{ device.collection || 'x' }}</ion-badge>
+      <h2>{{ device.name || '無名稱' }} - {{ device.group || '?' }}</h2>
+      <p>{{ device.id }}</p>
+      <ion-badge item-end>#{{ device.collection | collection_name }}</ion-badge>
       <button (click)="connectDevice(device.id)" ion-button outline item-end>connect</button>
     </ion-item>
+  </ng-container>
+
 
 <!--
     <ion-list-header>

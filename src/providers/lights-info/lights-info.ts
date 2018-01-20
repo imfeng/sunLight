@@ -12,32 +12,32 @@ import 'rxjs/add/operator/map';
 const li_types : Array<lightsType> =[{
   "value": 1,
   "name": "太陽光5m",
-  "slug": "5m",
+  "slug": "５　M",
   "color": "rgb(54, 235, 186)",
 },{
   "value": 2,
   "name": "太陽光10m",
-  "slug": "10m",
+  "slug": "１０M",
   "color": "rgb(9, 230, 232)",
 },{
   "value": 3,
   "name": "太陽光15m",
-  "slug": "15m",
+  "slug": "１５M",
   "color": "rgb(9, 148, 232)",
 },{
   "value": 4,
   "name": "太陽光20m",
-  "slug": "20m",
+  "slug": "２０M",
   "color": "rgb(54, 92, 235)",
 },{
   "value": 5,
   "name": "高演色性太陽光",
-  "slug": "color",
+  "slug": "COLOR",
   "color": "rgb(86, 9, 232)",
 },{
   "value": 6,
   "name": "藍光",
-  "slug": "blue",
+  "slug": "BLUE",
   "color": "rgb(9, 25, 232)",
 }]
 export interface lightsType {

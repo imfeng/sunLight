@@ -35,14 +35,19 @@
         <button (click)="addDevSetting()" ion-fab color="primary"><ion-icon name="add"></ion-icon></button>
     
     </ion-fab>
-
+    <ion-row class="collections" align-items-center justify-content-center>
+        <ion-col col-2 *ngFor="let item of collectionsList|async;let idx = index;" text-center>
+            <ion-checkbox [(ngModel)]="collectionsChecks[idx]"></ion-checkbox>
+        </ion-col>
+    </ion-row>
+<!--
     <ion-item>
         <ion-icon name="ios-pricetags-outline" item-start></ion-icon>
         <ion-label>裝置</ion-label>
         <ion-select interface="alert" multiple="true" cancelText="取消" [(ngModel)]="deviceMeta.groups">
           <ion-option *ngFor="let dd of devicesList|async; let i = index" value="{{dd.group}}">{{dd.name}} (#{{dd.group}})</ion-option>
         </ion-select>
-    </ion-item>
+    </ion-item> -->
     <ion-grid class="dev-btns-cont">
         <ion-row text-center align-items-center justify-content-center>
             <ion-col *ngFor="let item of devDataStore.list;let idx=index;" col-4 align-self-center>

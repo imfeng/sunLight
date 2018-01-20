@@ -26,12 +26,9 @@
 <ion-content>
 
   <ion-row class="collections" align-items-center justify-content-center>
-
-    <ion-col col-2 *ngFor="let item of collectionsListTest;let idx = index;" text-center>
+    <ion-col col-2 *ngFor="let item of collectionsList|async;let idx = index;" text-center>
       <ion-checkbox [(ngModel)]="collectionsChecks[idx]"></ion-checkbox>
-
     </ion-col>
-
   </ion-row>
    <!--
   <ion-row class="collections" align-items-center justify-content-center>
@@ -42,7 +39,8 @@
     </ion-col>
 
   </ion-row> -->
-  <ion-list>
+  <ion-list class="range-bar-cont">
+    <button *ngIf="!isEnableRangeBar" class="enable-btn" ion-button color="secondary" (click)="enableRangeBar()">執行手動</button>
     <!--
     <ion-item>
       <ion-icon name="ios-pricetags-outline" item-start></ion-icon>
@@ -59,7 +57,7 @@
       </ion-select>
     </ion-item>-->
     <ion-item *ngFor="let item of lightsType;let idx=index;">
-      <ion-range [color]="(curType==(idx+1))?'primary':'dark'" debounce="0" min="0" max="30" [(ngModel)]="deviceMeta.multipleList[idx]"
+      <ion-range [disabled]="!isEnableRangeBar" [color]="(curType==(idx+1))?'primary':'dark'" debounce="0" min="0" max="30" [(ngModel)]="deviceMeta.multipleList[idx]"
         (ionBlur)="trigger($event,idx+1)">
         <ion-label range-left>{{(idx+1)|light:'slug'}}</ion-label>
         <ion-badge [color]="(curType==(idx+1))?'primary':'dark'" range-right>{{deviceMeta.multipleList[idx]}}</ion-badge>
@@ -70,10 +68,12 @@
   </ion-list>
 </ion-content>
 <ion-footer>
-
+    <p class="tips" [ngStyle]="{'color': (isRedTips)?'red':'black'}">如拉Bbar無反應請重複拉<br>接近整點，而該燈又有排程，<br>此模式會被切回排程原設定狀態</p>
     <ion-row>
       <button col-6 ion-button block color="dark" (click)="sendManual(false)">關燈</button>
-      <button col-6 ion-button block (color)="(showDisableBtn)?'primary':'dark'" (click)="disableManual(true)">取消手動</button>
+      <!--<button *ngIf="!isManual" (click)="toggleMode()" col-6 ion-button block (color)="(showDisableBtn)?'primary':'dark'" >執行排程</button><!-- (click)="disableManual(true)" -->
+      <!--<button *ngIf="isManual" (click)="toggleMode()" col-6 color="secondary" ion-button block >執行手動</button> -->
+      <button  (click)="s()" col-6 ion-button block >執行手動</button>
     </ion-row>
 
 </ion-footer>

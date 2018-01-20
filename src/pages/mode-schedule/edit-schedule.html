@@ -10,7 +10,7 @@
 
       </ion-buttons>
   </ion-navbar>
-  
+
 </ion-header>
 <ion-content id="schedule-nav-sctions">
   <!--
@@ -27,7 +27,7 @@
       <ion-checkbox [(ngModel)]="data.checks[idx]" (click)="detectRepeatChecks(idx)"></ion-checkbox>
     </ion-col>
   </ion-row>
-  <!-- 
+  <!--
 
   <ion-grid *ngIf="!touchStatus.isFullScreen">
     <ion-row>
@@ -57,42 +57,42 @@
           <ion-icon name="close"></ion-icon>
         </button>
       </ion-fab>
-  
-  <p style="margin:0" *ngIf="touchStatus.curIndex>=0">{{touchStatus.curIndex}}:00 -> </p>
-  <ion-row *ngIf="touchStatus.curIndex>=0" class="no-padding">
+
+  <p style="margin:0;text-align: center;font-weight: bold;" *ngIf="touchStatus.curIndex>=0">Time: {{touchStatus.curIndex}}:00, Step: {{touchStatus.curIndexNowStep.multiple}}/30</p>
+  <ion-row *ngIf="touchStatus.curIndex>=0" class="no-padding" text-center>
     <ion-col col-sm-2 col-2>
-      <button ion-button (click)="lightTypeChangeBtn(1)" [color]="(touchStatus.tmpLightType===1)?'primary':'light'">
-        5 m
+      <button class="light-btn" ion-button (click)="lightTypeChangeBtn(1)" [color]="(touchStatus.tmpLightType===1)?'primary':'light'">
+        5  m
       </button>
     </ion-col>
     <ion-col col-sm-2 col-2>
-      <button ion-button (click)="lightTypeChangeBtn(2)" [color]="(touchStatus.tmpLightType===2)?'primary':'light'">
-        10m
+      <button class="light-btn" ion-button (click)="lightTypeChangeBtn(2)" [color]="(touchStatus.tmpLightType===2)?'primary':'light'">
+        10 M
       </button>
     </ion-col>
     <ion-col col-sm-2 col-2>
-      <button ion-button (click)="lightTypeChangeBtn(3)" [color]="(touchStatus.tmpLightType===3)?'primary':'light'">
-        15m
+      <button class="light-btn" ion-button (click)="lightTypeChangeBtn(3)" [color]="(touchStatus.tmpLightType===3)?'primary':'light'">
+        15 M
       </button>
     </ion-col>
     <ion-col col-sm-2 col-2>
-      <button ion-button (click)="lightTypeChangeBtn(4)" [color]="(touchStatus.tmpLightType===4)?'primary':'light'">
-        20m
+      <button class="light-btn" ion-button (click)="lightTypeChangeBtn(4)" [color]="(touchStatus.tmpLightType===4)?'primary':'light'">
+        20 M
       </button>
     </ion-col>
     <ion-col col-sm-2 col-2>
-      <button ion-button (click)="lightTypeChangeBtn(5)" [color]="(touchStatus.tmpLightType===5)?'primary':'light'">
-        color
+      <button class="light-btn light-btn-b" ion-button (click)="lightTypeChangeBtn(5)" [color]="(touchStatus.tmpLightType===5)?'primary':'light'">
+        Color
       </button>
     </ion-col>
     <ion-col col-sm-2 col-2>
-      <button ion-button (click)="lightTypeChangeBtn(6)" [color]="(touchStatus.tmpLightType===6)?'primary':'light'">
-        blue
+      <button class="light-btn light-btn-b" ion-button (click)="lightTypeChangeBtn(6)" [color]="(touchStatus.tmpLightType===6)?'primary':'light'">
+        Blue
       </button>
     </ion-col>
   </ion-row>
 
-  
+
 
   <div #chartcont id="chart-container" style="position: relative;">
     <canvas (touchstart)="onTouchStart($event)" (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd($event)" baseChart [chartType]="chartDatas.type"
@@ -106,12 +106,12 @@
     <button ion-button block color="primary" (click)="saveSections()">儲存</button>
     <ion-list-header>
       <ion-row text-center>
-        <ion-col col-5>
-          <ion-icon name="sunny"></ion-icon>
-          模式</ion-col>
         <ion-col col-4>
           <ion-icon name="time"></ion-icon>
           起始時間</ion-col>
+        <ion-col col-5>
+          <ion-icon name="sunny"></ion-icon>
+          模式</ion-col>
         <ion-col col-3>
           <ion-icon name="bonfire"></ion-icon>
           亮度</ion-col>
@@ -120,11 +120,12 @@
     </ion-list-header>
     <button ion-item *ngFor="let item of data.sections;let idx =index" (click)="editSection(idx)">
       <ion-row text-center>
-        <ion-col col-5>
-          {{item.mode | light:'name'}}</ion-col>
         <!--   -->
         <ion-col col-4>
-          <span>{{item.time}}</span>
+          <span>{{(idx<10)?'0'+idx:idx}}:00</span>
+        </ion-col>
+        <ion-col col-5>
+          {{item.mode | light:'name'}}
         </ion-col>
         <ion-col col-3>
           <span>{{item.multiple}}</span>
@@ -150,12 +151,12 @@
           <ion-icon name="settings"></ion-icon>
           EDIT
         </button>
-        
+
         <button (click)="delSection(idx)" ion-button color="danger">
           <ion-icon name="close"></ion-icon>
           DEL
         </button>
-      
+
       </ion-item-options>
     </ion-item-sliding>-->
 

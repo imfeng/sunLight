@@ -45,7 +45,7 @@ export class AppStateProvider {
     this._info = <BehaviorSubject<appStateType>>new BehaviorSubject({});
     this.info = this._info.asObservable();
     this.dataStore = {
-      "appState": {
+      appState: {
         "now_mode_name":'init...',
         "now_mode_slug":'init',
         "isSync":false,
@@ -85,7 +85,7 @@ export class AppStateProvider {
         Observable
         .fromPromise(this.storage.setItem(_STORAGE_APPSTATE_NAME,state))
         .subscribe(
-          (res)=>{}  
+          (res)=>{}
         );
       }
     );
@@ -126,7 +126,7 @@ export class AppStateProvider {
     this.dataStore.appState.now_mode_name = meta[mode].name;
     this.dataStore.appState.now_mode_slug = meta[mode].slug;
     this.dataStore.appState.isSync = true;
-    
+
   }
 
 

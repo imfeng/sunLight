@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { AlertController,ModalController,IonicPage, NavController, NavParams } from 'ionic-angular';
+import { Component, ViewChild } from '@angular/core';
+import { Platform, AlertController,ModalController,IonicPage, NavController, NavParams, Toggle } from 'ionic-angular';
 import { BleOperatorPage } from '../ble-operator/ble-operator';
 import { DevicesDataProvider,lightDeviceType } from '../../providers/devices-data/devices-data';
 import 'rxjs/add/operator/map';
@@ -7,6 +7,9 @@ import 'rxjs/add/operator/take';
 import { Observable } from 'rxjs/Observable';
 import { BleCtrlProvider } from '../../providers/ble-ctrl/ble-ctrl';
 import { BleCommandProvider } from '../../providers/ble-command/ble-command';
+import { ToastCtrlProvider } from  '../../providers/toast-ctrl/toast-ctrl';
+
+import { EyeCheckControl } from '../eye-check/eye-check.control';
 
 @IonicPage()
 @Component({
@@ -14,23 +17,38 @@ import { BleCommandProvider } from '../../providers/ble-command/ble-command';
   templateUrl: 'mode-devices.html',
 })
 export class ModeDevicesPage {
+
+  nowDeviceId: string = '';
+  timeCtrl = {
+    isTimeCheckbox: false,
+    time: '',
+  }
   fanCtrl = {
     isFanCheckbox: false,
-    currentFanSpeed: 60,
+    currentFanSpeed: 40,
     checks:[]
   }
-  
+
 
   devices_list:Observable<lightDeviceType[]>;
   wtfDevices:{
     "list":Array<lightDeviceType>
   }
   constructor(
+    public eyeCheckCtrl: EyeCheckControl,
+    public platform: Platform,
+    private bleCtrl:BleCtrlProvider,
+    private toastCtrl:ToastCtrlProvider,
+    private alertCtrl: AlertController,
     private bleCmd: BleCommandProvider,
-    private devicesProv:DevicesDataProvider,    
+    private devicesProv:DevicesDataProvider,
     public modalCtrl: ModalController,
     public navCtrl: NavController,
-    public navParams: NavParams) {
+    public navParams: NavParams
+  ) {
+      this.bleCtrl.nowStatus.subscribe(state => {
+        this.nowDeviceId = state.device.id;
+      });
       this.devices_list = this.devicesProv.list;
       this.wtfDevices = {
         "list":[]
@@ -38,7 +56,7 @@ export class ModeDevicesPage {
       this.devices_list.subscribe(
         list => {
           this.fanCtrl.checks = Array.from(new Array(list.length), ()=>false);
-          let tmp:Array<lightDeviceType> = Array.from({length: (list.length<=6)?(6-list.length):0}, 
+          let tmp:Array<lightDeviceType> = Array.from({length: (list.length<=6)?(6-list.length):0},
             (v, i) => ({
               "name":'bulb'+(list.length+i+1),
               "o_name" :'bulb'+(list.length+i+1),
@@ -57,6 +75,87 @@ export class ModeDevicesPage {
       );
 
   }
+  _dateFormat(num:number){
+    if(num<10){
+      return `0${num}`
+    }else{
+      return `${num}`
+    }
+  }
+  toggleTimeCheckbox(){
+    this.fanCtrl.checks.map((v,idx) => {
+      this.fanCtrl.checks[idx] = false;
+    })
+    let dd = new Date();
+
+    this.timeCtrl.time =
+    `${this._dateFormat(dd.getHours())}:${this._dateFormat(dd.getMinutes())}:${this._dateFormat(dd.getSeconds())}`;
+    console.log(this.timeCtrl.time);
+    this.timeCtrl.isTimeCheckbox = !this.timeCtrl.isTimeCheckbox;
+    this.fanCtrl.isFanCheckbox = false;
+  }
+  timeTrigger(){
+    console.log(this.timeCtrl.time);
+    // this.bleCmd.goTimeChange(this.timeCtrl.time).subscribe();
+
+    this.devices_list.take(1).subscribe(
+      list => {
+        let idxs = [];
+        let gids = list.filter(
+          (v,idx) => {
+            if(this.fanCtrl.checks[idx]) {idxs.push(idx); return true; }
+            else return false}
+        ).map( (v)=>v.group );
+        this.eyeCheckCtrl.pSetMultipleTime(gids, this.timeCtrl.time);
+        /*this.bleCmd.goTimeChangeMulti(gids, this.timeCtrl.time).subscribe(isOk => {
+          if(!isOk) alert('傳送時間校正過程中發生問題，請重新傳送。');
+        });*/
+      }
+    );
+  }
+  timeChange(){
+    //this.timeCtrl.time =new Date().toISOString();
+    console.log( this.timeCtrl.time);
+  }
+  opneFanPrompt(){
+      let prompt = this.alertCtrl.create({
+        title: '風速',
+        message: "輸入所需要的風速數值",
+        inputs: [
+          {
+            name: 'fanSpeed',
+            placeholder: '40~100'
+          },
+        ],
+        buttons: [
+          {
+            text: 'Cancel',
+            handler: data => {
+              console.log('Cancel clicked');
+            }
+          },
+          {
+            text: 'Save',
+            handler: data => {
+              let speed = parseInt(data['fanSpeed']) || 1;
+              console.log(speed);
+              if(speed<40 || speed>100){
+                this.toastCtrl.showToast('錯誤！請輸入40~100數值！');
+              }else{
+                this.fanCtrl.currentFanSpeed = speed;
+                this.triggerFan();
+                console.log('Saved clicked');
+              }
+
+            }
+          }
+        ]
+      });
+      prompt.present();
+  }
+  timeModify(){
+
+  }
   triggerFan(){
     //console.log('triggerFan');
     //console.log(this.fanCtrl.checks);
@@ -64,23 +163,32 @@ export class ModeDevicesPage {
       list => {
         let idxs = [];
         let gids = list.filter(
-          (v,idx) => { 
+          (v,idx) => {
             if(this.fanCtrl.checks[idx]) {idxs.push(idx); return true; }
             else return false}
         ).map( (v)=>v.group );
-        this.bleCmd.goFanMultiple(gids,this.fanCtrl.currentFanSpeed).subscribe(
+        this.eyeCheckCtrl.pSetMultipleFan(gids, this.fanCtrl.currentFanSpeed);
+        /*this.bleCmd
+        .goFanMultipleEye(gids,this.fanCtrl.currentFanSpeed)
+        .subscribe();*/
+        /*this.bleCmd.goFanMultiple(gids,this.fanCtrl.currentFanSpeed).subscribe(
           isOk => {
             if(!isOk) alert('傳送排程過程中發生問題，請重新傳送QQ');
             else this.devicesProv.modifyFanSpeed(this.fanCtrl.currentFanSpeed,idxs).subscribe();
           }
-        );
+        );*/
       }
     );
   }
   toggleFanCheckbox(){
+    this.fanCtrl.checks.map((v,idx) => {
+      this.fanCtrl.checks[idx] = false;
+    })
     this.fanCtrl.isFanCheckbox = !this.fanCtrl.isFanCheckbox;
+    this.timeCtrl.isTimeCheckbox = false;
   }
   editDevice(id:string){
+    this.fanCtrl.isFanCheckbox = false;
     this.navCtrl.push(editDevicePage, { "id":id });
   }
   openBleModal(){
@@ -88,9 +196,40 @@ export class ModeDevicesPage {
    /* let modal = this.modalCtrl.create(BleOperatorPage);
     modal.present();*/
   }
+  fastConnect(item) {  // TODO 要先搜尋才能連
+    console.log(item);
+    this.bleCtrl.fastConnect(item.id).subscribe(()=>{});
+  }
 
+  nowBluetoothEnable = false;
+  @ViewChild('toggleble') ionToggle: Toggle;
   ionViewDidLoad() {
     console.log('ionViewDidLoad ModeDevicesPage');
+    this.platform.ready().then(ready=>{
+      this.bleCtrl.nowStatus.take(1).subscribe(state => {
+        if(state["isEnabled"]){
+          this.nowBluetoothEnable = true;
+          this.ionToggle.checked = true;
+        }else{
+          alert('請開啟藍芽才能正常運作唷～');
+          this.nowBluetoothEnable = false;
+          this.ionToggle.checked = false;
+        }
+      });
+    });
+  }
+  enableBle() {
+    this.bleCtrl.enableBle().subscribe(
+      ()=>{
+        this.nowBluetoothEnable = true;
+        this.ionToggle.checked = true;
+      },
+      ()=>{
+        alert('請開啟權限');
+        this.nowBluetoothEnable = false;
+        this.ionToggle.checked = false;
+      }
+    );
   }
 }
 
@@ -113,7 +252,7 @@ export class editDevicePage {
   };
   constructor(
     private bleCmd: BleCommandProvider,
-    private devicesProv:DevicesDataProvider,  
+    private devicesProv:DevicesDataProvider,
     private alertCtrl: AlertController,
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -127,8 +266,9 @@ export class editDevicePage {
         alert('無此Device ID！');
       }
     );
-    
+
   }
+
   delDevice(){
     this.devicesProv.del(this.deviceInfo.data.id).subscribe(
       isOk => {
@@ -136,7 +276,7 @@ export class editDevicePage {
       }
     );
   }
-  
+
   editName(){
     let alert = this.alertCtrl.create({
       title: '更改名稱',
@@ -200,8 +340,18 @@ export class editDevicePage {
   changeName(){
     console.log('changeName');
     this.devicesProv.modify(this.deviceInfo.data.id,this.deviceInfo.data.name,null).subscribe(
-      ()=>alert('成功！'),
-      (err,message)=>alert('錯誤 : '+message)
+      ()=>{
+        let alert = this.alertCtrl.create({
+          title: '成功',
+          message: '儲存成功！',
+        });
+      },
+      (err,message)=>{
+        let alert = this.alertCtrl.create({
+          title: '錯誤！',
+          message: JSON.stringify(err) +', ' +JSON.stringify(message),
+        });
+      }
     );
   }
 

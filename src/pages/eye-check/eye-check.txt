@@ -1,0 +1,102 @@
+import { Component, Injectable } from '@angular/core';
+import { IonicPage, NavController, NavParams, ViewController, ModalController } from 'ionic-angular';
+import { BleCtrlProvider } from './../../providers/ble-ctrl/ble-ctrl';
+import { Action } from 'rxjs/scheduler/Action';
+
+export interface ActionType {
+  // type: ActionName;
+  type: '' | 'ADD_DEVICE'| 'CLTNS_FAN'| 'CLTNS_TIME'| 'SCHEDULE',
+  cmds: Array<Uint8Array>;
+}
+/*export enum ActionName {
+   NONE = '',
+   ADD_DEVICE = 'ADD_DEVICE',
+   CLTNS_FAN = 'CLTNS_FAN',
+   CLTNS_TIME = 'CLTNS_TIME',
+   SCHEDULE = 'SCHEDULE',
+}*/
+@IonicPage()
+@Component({
+  selector: 'page-eye-check',
+  templateUrl: 'eye-check.html',
+})
+export class EyeCheckPage {
+  isSending: boolean = false;
+  _state = {
+    currentIdx: 0,
+    cmdLength: 0,
+
+    nowDeviceId: -1,
+    nowFanSpeed: -1,
+    nowTime: [],
+    nowScheduleMultiple: null,
+    nowScheduleType: null,
+    nowScheduleTime: null,
+  }
+  action: ActionType = {
+    type: '',
+    cmds: []
+  }
+  constructor(
+    public bleCtrl: BleCtrlProvider,
+    public viewCtrl: ViewController,
+    public navCtrl: NavController,
+    public navParams: NavParams
+  ) {
+    console.log('>>> constructor EyeCheckPage');
+  }
+  dismiss() {
+    this.viewCtrl.dismiss();
+  }
+  ionViewDidLoad() {
+    console.log('>>> ionViewDidLoad EyeCheckPage');
+    if(!this.navParams.get('action')) {
+      alert('錯誤！');
+    }else {
+      Object.assign(this.action, this.navParams.get('action'));
+      this._state.cmdLength = this.action.cmds.length;
+      switch(this.action.type) {
+        case 'ADD_DEVICE':
+
+        break;
+        case 'CLTNS_FAN':
+        this.proccess();
+        break;
+        case 'CLTNS_TIME':
+        break;
+        case 'SCHEDULE':
+        break;
+
+      }
+
+    }
+  }
+  proccess() {
+    this._state.nowDeviceId = this.action.cmds[this._state.currentIdx][0];
+    this._state.nowFanSpeed = this.action.cmds[this._state.currentIdx][1];
+  }
+  /** DOING */
+  last() {
+    if(this._state.currentIdx === 0) {
+
+    }else{
+      this._state.currentIdx--;
+      this.proccess();
+    }
+  }
+  trigger() {
+    this.bleCtrl.write(this.action.cmds[this._state.currentIdx]);
+  }
+  next() {
+    if(this._state.currentIdx === this._state.cmdLength) {
+
+    }else{
+      this._state.currentIdx++;
+      this.proccess();
+    }
+
+  }
+
+
+}
+

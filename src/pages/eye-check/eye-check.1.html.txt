@@ -1,0 +1,48 @@
+<ion-header>
+    <ion-navbar>
+      <ion-buttons start>
+        <button ion-button (click)="dismiss()">Close</button>
+      </ion-buttons>
+      <ion-title>目檢確認</ion-title>
+
+    </ion-navbar>
+
+  </ion-header>
+
+
+  <ion-content>
+    <div class="status-cont">
+        <div class="status-div">Sunlight - {{this._state.nowDeviceId}}</div>
+        <div *ngIf="this.action.type==='fan'" class="status-div">風速 {{this._state.nowFanSpeed}}%</div>
+        <div *ngIf="this.action.type==='time'" class="status-div">時間 {{this._state.nowTime[0]}}:{{this._state.nowTime[1]}}:{{this._state.nowTime[2]}}</div>
+        <div *ngIf="this.action.type==='schedule'" class="status-div">01:00</div>
+        <div *ngIf="this.action.type==='schedule'" class="status-div">5 M</div>
+        <div *ngIf="this.action.type==='schedule'" class="status-div">15 step</div>
+
+    </div>
+  <hr>
+  <div class="message-cont">
+
+      <p>1. 亮綠燈表這顆燈有接收到正確的指令</p>
+      <p>2. 若沒亮綠燈重複請按開啟綠燈按鈕，<span style="color:green;">直到綠燈亮起</span></p>
+      <p>3. 綠燈亮後<span style="color:red;"> 3 秒</span>會自動關閉</p>
+  </div>
+
+
+
+  </ion-content>
+
+  <ion-footer>
+      <ion-row class="ctrl-btns-cont">
+          <ion-col>
+            <button *ngIf="!(this._state.currentIdx < 1)" (click)="last()" [color]="(_state.currentIdx===0)?'dark':'primary'" class="mode-btn" ion-button>上一步</button>
+          </ion-col>
+          <ion-col>
+            <button (click)="trigger()" class="mode-btn" color="secondary" ion-button>執行指令</button>
+          </ion-col>
+          <ion-col>
+            <button *ngIf="this._state.currentIdx===this._state.cmdLength-1" (click)="dismiss()" class="mode-btn" color="secondary" ion-button>完畢</button>
+            <button *ngIf="this._state.currentIdx<this._state.cmdLength-1" (click)="next()" class="mode-btn" ion-button>下一步</button>
+          </ion-col>
+        </ion-row>
+  </ion-footer>

@@ -35,18 +35,20 @@
     "angular2-number-picker": "^0.8.8",
     "chart.js": "^2.6.0",
     "chartjs-plugin-zoom": "^0.5.0",
+    "cordova-android": "~6.1.2",
+    "cordova-browser": "4.1.0",
     "cordova-wheel-selector-plugin": "^1.0.9",
     "hammerjs": "^2.0.8",
     "ionic-angular": "^3.6.0",
     "ionicons": "3.0.0",
     "ng2-charts": "^1.6.0",
-    "rxjs": "5.4.0",
+    "rxjs": "^5.5.6",
     "sw-toolbox": "3.6.0",
     "zone.js": "0.8.12"
   },
   "devDependencies": {
-    "@ionic/app-scripts": "^2.1.4",
-    "typescript": "2.3.4"
+    "@ionic/app-scripts": "^3.1.7",
+    "typescript": "^2.6.2"
   },
   "cordovaPlugins": [
     "cordova-plugin-bluetoothle",
@@ -58,5 +60,10 @@
     "ionic-plugin-keyboard"
   ],
   "cordovaPlatforms": [],
-  "description": "SunLight: An Ionic project"
+  "description": "SunLight: An Ionic project",
+  "cordova": {
+    "platforms": [
+      "android"
+    ]
+  }
 }

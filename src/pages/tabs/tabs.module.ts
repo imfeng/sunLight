@@ -9,18 +9,22 @@ import { ModeDevicesPageModule } from '../mode-devices/mode-devices.module';
 import { StartPageModule } from '../start/start.module';
 import { CollectionsPageModule } from '../collections/collections.module';
 
+import { EyeCheckPageModule } from '../eye-check/eye-check.module';
+
+
 @NgModule({
   declarations: [
     TabsPage,
   ],
   imports: [
+    EyeCheckPageModule,
     StartPageModule,
     DevModeModule,
     ModeSchedulePageModule,
     ModeManualModule,
     ModeDevicesPageModule,
     CollectionsPageModule,
-    
+
     IonicPageModule.forChild(TabsPage),
   ],
 })

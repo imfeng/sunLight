@@ -4,9 +4,16 @@
 
     <ion-title>裝置設定</ion-title>
     <ion-buttons end>
+      <!-- <button ion-button icon-only color="light" (click)="timeModify()">
+        <ion-icon name="clock"></ion-icon>
+      </button> -->
+      <button ion-button icon-only color="dark" (click)="toggleTimeCheckbox()">
+          <ion-icon name="clock"></ion-icon>
+        </button>
       <button ion-button icon-only color="dark" (click)="toggleFanCheckbox()">
         <ion-icon name="speedometer"></ion-icon>
       </button>
+
     </ion-buttons>
     <!-- <ion-buttons end>
       <button ion-button icon-only color="royal" (click)="openBleModal()">
@@ -23,19 +30,40 @@
       <ion-icon name="add"></ion-icon>
     </button>
   </ion-fab>
+  <ion-item *ngIf="timeCtrl.isTimeCheckbox">
+      <ion-label>校正時間</ion-label>
+      <ion-datetime displayFormat="HH:mm:ss" [(ngModel)]="timeCtrl.time" (ionChange)="timeChange($event)"></ion-datetime>
+      <button ion-button mini item-end (click)="timeTrigger()" color="primary">
+          傳送
+      </button>
+  </ion-item>
   <ion-item *ngIf="fanCtrl.isFanCheckbox">
-      <ion-range min="0" max="100" [(ngModel)]="fanCtrl.currentFanSpeed" (ionBlur)="triggerFan($event)">
+      <ion-range min="40" max="100" [(ngModel)]="fanCtrl.currentFanSpeed"> <!--  (ionBlur)="triggerFan($event)" -->
         <ion-label range-left>風速</ion-label>
-        <ion-badge color="primary" range-right>{{fanCtrl.currentFanSpeed}}%</ion-badge>
+        <ion-badge (click)="opneFanPrompt()" color="primary" range-right>{{fanCtrl.currentFanSpeed}}%</ion-badge>
+        <button class="max-height: 30px;max-width: 44px; margin: 5px;" ion-button mini item-end range-right (click)="triggerFan()" color="primary">
+            傳送
+        </button>
       </ion-range>
   </ion-item>
+  <ion-item *ngIf="!nowBluetoothEnable">
+      <ion-icon name="bluetooth" item-start></ion-icon>
+      <ion-label>開啟藍芽</ion-label>
+      <ion-toggle #toggleble [(ngModel)]="nowBluetoothEnable" (ionChange)="enableBle()"></ion-toggle>
+  </ion-item>
+  <ion-item text-wrap>
+    請於已加入的裝置中擇一點選其藍芽符號做連結當 Host ，其餘已被加入的裝置為 Slave，不須藍芽連結亦可被 Host 廣播控制。
+  </ion-item>
+
+
+
   <ion-list>
     <ion-list-header>
       已加入的裝置
     </ion-list-header>
     <ion-item *ngFor="let item of devices_list|async;let idx =index;">
-      <ion-checkbox *ngIf="fanCtrl.isFanCheckbox" [(ngModel)]="fanCtrl.checks[idx]"></ion-checkbox>
-      <ion-icon *ngIf="!fanCtrl.isFanCheckbox" item-start name="sunny"></ion-icon>
+      <ion-checkbox *ngIf="fanCtrl.isFanCheckbox || timeCtrl.isTimeCheckbox" [(ngModel)]="fanCtrl.checks[idx]" item-start></ion-checkbox>
+      <ion-icon *ngIf="!fanCtrl.isFanCheckbox" [color]="(nowDeviceId === item.id)?'primary':'dark'" (click)="fastConnect(item)" item-start name="bluetooth"></ion-icon>
       <h2>{{item.name || item.o_name || "無名稱"}} - {{ item.group || "錯誤"}}</h2>
       <p>{{item.id}}</p>
       <!-- 1 Device to N Collections -->

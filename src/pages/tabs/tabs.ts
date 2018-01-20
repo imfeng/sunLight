@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { NavParams } from 'ionic-angular';
 import { DevMode } from '../dev-mode/dev-mode';
 import { ModeManual } from '../mode-manual/mode-manual';
 import { ModeDevicesPage } from '../mode-devices/mode-devices';
 import { ModeSchedulePage } from '../mode-schedule/mode-schedule';
 import { CollectionsPage } from '../collections/collections';
+import { EyeCheckControl } from '../eye-check/eye-check.control'
 
 @Component({
   templateUrl: 'tabs.html'
@@ -19,7 +20,12 @@ export class TabsPage {
 
   tab5Root = CollectionsPage;
 
-  constructor( private navParams: NavParams ) {
+  constructor(
+    private t: EyeCheckControl,
+    private navParams: NavParams ) {
     this.defaultIndex = navParams.get("index") || 0;
+  }
+  public correct() {
+    this.t.pSetAllTime();
   }
 }

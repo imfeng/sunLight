@@ -10,6 +10,8 @@ import 'rxjs/add/observable/fromPromise';
 import { Observable } from 'rxjs/Observable';
 
 import { lightDeviceType,DevicesDataProvider } from '../../providers/devices-data/devices-data'
+import { CollectionsDataProvider,collectionType } from '../../providers/collections-data/collections-data';
+
 
 const _DEV_SETTINGS_LIST = 'devValueList';
 interface devSetting {
@@ -23,6 +25,11 @@ interface devSetting {
   templateUrl: 'dev-mode.html',
 })
 export class DevMode {
+  /** collectionsList ionCheckbox*/
+  collectionsList:Observable<collectionType[]>;
+  collectionsChecks:Array<boolean> = Array.from({length:12},v=>false);
+  /** */
+
   devDataStore:{
     "list": Array<devSetting>
   };
@@ -45,6 +52,7 @@ export class DevMode {
     "curMultiple":0, 
   };
   constructor(
+    private clProv : CollectionsDataProvider,
     private devicesDataProv: DevicesDataProvider,
     private bleCmd: BleCommandProvider,
     private storage:NativeStorage,
@@ -52,6 +60,7 @@ export class DevMode {
     public modalCtrl: ModalController,
     public navCtrl: NavController,
     ) {
+    this.collectionsList = this.clProv.list;
     this.devicesList = this.devicesDataProv.list;
     //this.lightLinesArr =    
     this.saveSettings= {
@@ -106,12 +115,20 @@ export class DevMode {
   }
   sendDevSetting(idx:number){
     let tmp = this.devDataStore.list[idx];
+    this.bleCmd.goDevCollectionsMultiple(
+      tmp.multiple,
+      this.collectionsChecks,
+      tmp.value
+    ).subscribe();
+  }
+  /*sendDevSetting(idx:number){
+    let tmp = this.devDataStore.list[idx];
     this.bleCmd.goDevMultiple(
       tmp.multiple,
       this.deviceMeta.groups,
       tmp.value
     ).subscribe();
-  }
+  }*/
 /*
   sendDev(){
     let multi=this.deviceMeta.curMultiple;

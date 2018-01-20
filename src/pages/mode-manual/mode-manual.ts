@@ -10,6 +10,7 @@ import { ScheduleDataProvider,scheduleType } from '../../providers/schedule-data
 import { LightsInfoProvider,lightsTypesPipe } from  '../../providers/lights-info/lights-info'
 import { CollectionsDataProvider,collectionType } from '../../providers/collections-data/collections-data';
 import { appStateType,AppStateProvider } from  '../../providers/app-state/app-state';
+import { EyeCheckControl } from '../eye-check/eye-check.control';
 
 
 @IonicPage()
@@ -19,34 +20,23 @@ import { appStateType,AppStateProvider } from  '../../providers/app-state/app-st
   providers:[lightsTypesPipe]
 })
 export class ModeManual {
-  @ViewChildren(Checkbox) ionCheckbox :QueryList<Checkbox>;
-  collectionsListTest = Array.from({length: 12}, 
-    (v, i) => ({
-        "name":(i+1),
-        "cid": (i+1),
-        "devices":[]
-      })
-  );
+  isEnableRangeBar = false;
+  isRedTips: boolean = false;
+  isManual: boolean = false;
+  /** collectionsList ionCheckbox*/
+  collectionsList:Observable<collectionType[]>;
   collectionsChecks:Array<boolean> = Array.from({length:12},v=>false);
-  ionViewDidLoad(){/*
-    console.log('===========');
-    console.log(this.ionCheckbox);
-
-    this.ionCheckbox.forEach((e,i) => {
-      //console.log(   );
-      e._elementRef.nativeElement.lastChild.firstChild.innerHTML = String.fromCharCode(65+i);
-    });*/
-  }
+  /** */
 
 
   appState:Observable<appStateType>;
   curType:number = -1;
-  collectionsList:Observable<collectionType[]>;
-  
+
+
   deviceMeta :  {
     "groups" : Array<number>,
     "curType" : number,
-    "curMultiple": number, 
+    "curMultiple": number,
     "groupsList": Array<object>,
 
     "multipleList": Array<number>
@@ -55,6 +45,7 @@ export class ModeManual {
   lightsGroupsList : Array<object>;
   showDisableBtn: boolean;
   constructor(
+    public eyeCheckCtrl: EyeCheckControl,
     private appStateProv: AppStateProvider,
     private ScheduleProv: ScheduleDataProvider,
     private clProv : CollectionsDataProvider,
@@ -72,25 +63,43 @@ export class ModeManual {
           this.showDisableBtn = (state.now_mode_slug=='manual');
         }
       );
-      
+
       this.deviceMeta = {
         "groups" : [0],
         "curType" : 1,
-        "curMultiple":0, 
+        "curMultiple":0,
         "groupsList": [],
 
         "multipleList": [0,0,0,0,0,0]
       };
       //this.deviceMeta.groupsList.push({'id':0,'name':'廣播'});
       //this.deviceMeta.groupsList.push({'id':1,'name':'測試1'});
-      
-    
-  // 
+
+
+  //
   }
   ngOnInit() {
     this.lightsType = this.lightsInfo.getTypes();
   }
-
+  ionViewDidLoad() {
+    let minutes = new Date().getMinutes();
+    if(minutes>=50) {
+      this.isRedTips = true;
+    } else {
+      this.isRedTips = false;
+    }
+  }
+  enableRangeBar() {
+    this.isEnableRangeBar = true;
+  }
+  s() {
+    this.bleCmd.goSyncSchedule().subscribe( list => {
+      this.eyeCheckCtrl.pSchedule(list);
+    });
+  }
+  toggleMode() {
+    this.isManual = !this.isManual;
+  }
   disableManual(){
     this.bleCmd.goSyncSchedule().subscribe();
     this.curType = 0;
@@ -112,7 +121,7 @@ export class ModeManual {
         this.sendManual(true,idx,this.deviceMeta.multipleList[i]);
       }
     }*/
- 
+
   }
   sendManual(power:boolean,type=0,multi=0){
     //console.log(this.collectionsChecks);
@@ -120,7 +129,7 @@ export class ModeManual {
     //let multi=this.deviceMeta.curMultiple;
     let sendList = [];
 
-    
+
 
     if(power){
       this.bleCmd.collectionsToDeviceGid(this.collectionsChecks).subscribe(
@@ -163,7 +172,7 @@ export class ModeManual {
           });*/
         }
       );
-      
+
     }
   }
   openBleModal(){

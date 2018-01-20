@@ -1,0 +1,89 @@
+<ion-header>
+  <ion-navbar>
+    <ion-buttons start>
+      <button ion-button (click)="dismiss()">Close</button>
+    </ion-buttons>
+    <ion-title>目檢確認({{_state.currentIdx+1}}/{{_state.actionsLength+1}})</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content>
+  <ng-container *ngIf="_state.currentAction">
+      <div class="status-cont">
+        <div class="status-div" *ngIf="uiControl.name">Sunlight - {{_state.currentAction.payload.gid || '?'}}</div>
+
+        <ng-container *ngIf="uiControl.groupInfo">
+          <div class="status-div">{{_state.currentAction.payload.macAddress}}</div>
+          <div class="status-div">編號: {{_state.currentAction.payload.groupID}}</div>
+        </ng-container>
+        <ng-container *ngIf="uiControl.scheduleRmInfo">
+            <div class="status-div">清空排程</div>
+        </ng-container>
+        <ng-container *ngIf="uiControl.scheduleAllInfo">
+            <div class="status-div">時間: {{_dateFormat(_state.currentAction.payload.cmd[5])}}:{{_dateFormat(_state.currentAction.payload.cmd[6])}}</div>
+            <div class="status-div">亮度: {{_state.currentAction.payload.cmd[2]}} steps</div>
+            <div class="status-div">{{_state.currentAction.payload.cmd[3] | light:'name' }}</div>
+        </ng-container>
+        <ng-container *ngIf="uiControl.scheduleCurrentInfo">
+            <div class="status-div">目前排程狀態</div>
+            <div class="status-div">亮度: {{_state.currentAction.payload.cmd[2]}} steps</div>
+            <div class="status-div">{{_state.currentAction.payload.cmd[3] |light }}</div>
+        </ng-container>
+      </div>
+
+      <ng-container *ngIf="uiControl.timeWidget">
+          <ion-item>
+              <ion-label>校正時間</ion-label>
+              <ion-datetime displayFormat="HH:mm:ss" [(ngModel)]="timeWidgetValue"></ion-datetime>
+              <button ion-button mini item-end (click)="timeWidgetNow()" color="primary">
+                  現在
+              </button>
+          </ion-item>
+      </ng-container>
+      <ng-container *ngIf="uiControl.fanWidget">
+          <ion-item>
+              <ion-range min="40" max="100" [(ngModel)]="fanWidgettValue">
+                <ion-label range-left>風速</ion-label>
+                <ion-badge (click)="opneFanPrompt()" color="primary" range-right>{{fanWidgettValue}}%</ion-badge>
+              </ion-range>
+          </ion-item>
+      </ng-container>
+      <hr>
+
+      <div class="message-cont">
+        <p *ngFor="let message of _state.currentAction.payload.message;let idx = index;">{{idx+1}}. {{message}}</p>
+          <!-- <p>3. 綠燈亮後<span style="color:red;"> 3 秒</span>會自動關閉</p> -->
+      </div>
+  </ng-container>
+  <ng-container *ngIf="_state.currentIdx === _state.actionsLength">
+
+      <div class="message-cont final-messages">
+        <h4 class="title">傳送總覽</h4>
+        <p *ngFor="let message of _state.finalMessages;let idx = index;">({{idx+1}}) {{message}}</p>
+            <!-- <p>3. 綠燈亮後<span style="color:red;"> 3 秒</span>會自動關閉</p> -->
+            <h5>確認無誤請按「完畢」</h5>
+      </div>
+  </ng-container>
+
+
+
+
+
+</ion-content>
+
+<ion-footer>
+    <ion-row class="ctrl-btns-cont">
+        <ion-col>
+          <button *ngIf="this._state.currentIdx > 0" (click)="last()" color="dark" class="mode-btn" ion-button>上一步</button>
+        </ion-col>
+        <ion-col>
+          <button *ngIf="!(this._state.currentIdx===this._state.actionsLength)" [color]="(_state.hadSended)?'dark':'primary'" (click)="trigger()" class="mode-btn" ion-button>執行(綠燈)</button>
+        </ion-col>
+        <ion-col>
+          <button *ngIf="this._state.currentIdx===this._state.actionsLength" (click)="dismiss()" class="mode-btn" color="secondary" ion-button>完畢</button>
+          <button *ngIf="(_state.hadSended) && (this._state.currentIdx<this._state.actionsLength)" [color]="(_state.hadSended)?'primary':'dark'" (click)="next()" class="mode-btn" ion-button>下一步</button>
+        </ion-col>
+      </ion-row>
+</ion-footer>

@@ -1,14 +1,10 @@
-import { Component } from '@angular/core';
-import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { Component, Renderer } from '@angular/core';
+import { IonicPage,
+  Platform,
+  NavController, NavParams, ViewController, ModalController } from 'ionic-angular';
 import { TabsPage } from '../tabs/tabs';
 import { ScreenOrientation } from '@ionic-native/screen-orientation';
-
-/**
- * Generated class for the StartPage page.
- *
- * See http://ionicframework.com/docs/components/#navigation for more info
- * on Ionic pages and navigation.
- */
+import { EyeCheckControl } from '../eye-check/eye-check.control';
 
 @IonicPage()
 @Component({
@@ -16,8 +12,11 @@ import { ScreenOrientation } from '@ionic-native/screen-orientation';
   templateUrl: 'start.html',
 })
 export class StartPage {
-
+  start = false;
   constructor(
+    public platform: Platform,
+    private t: EyeCheckControl,
+    public modalCtrl: ModalController,
     private screenOrientation: ScreenOrientation,
     public navCtrl: NavController,
     public navParams: NavParams) {
@@ -26,8 +25,9 @@ export class StartPage {
       console.log('===== screenOrientation TYPE ====='); // logs the current orientation, example: 'landscape'
       console.log(this.screenOrientation.type); // logs the current orientation, example: 'landscape'
 
-      // set to landscape
-      this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.PORTRAIT);
+      if(this.platform.is('cordova')) {
+        this.screenOrientation.lock(this.screenOrientation.ORIENTATIONS.PORTRAIT);
+      }
 
       // allow user rotate
       //this.screenOrientation.unlock();
@@ -40,12 +40,22 @@ export class StartPage {
       );*/
 
   }
-
+  startBtn() {
+    this.start = true;
+  }
   ionViewDidLoad() {
     console.log('ionViewDidLoad StartPage');
   }
-
+  check () {
+//    this.t.pSetAllTime();
+    this.t.o();
+    //this.t.open('fan', [new Uint8Array([1,60]),new Uint8Array([2,60]),new Uint8Array([3,60])]);
+    // EyeCheckControl.open();
+    /*
+    this.navCtrl.push('EyeCheckPage');*/
+  }
   go(index){
     this.navCtrl.setRoot(TabsPage,{"index":index});
   }
 }
+

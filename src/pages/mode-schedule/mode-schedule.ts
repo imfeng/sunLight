@@ -8,6 +8,7 @@ import { editSchedulePage } from './edit-schedule';
 import { Observable } from 'rxjs/Observable';
 import { appStateType,AppStateProvider } from  '../../providers/app-state/app-state';
 
+import { EyeCheckControl } from '../eye-check/eye-check.control';
 
 @IonicPage()
 @Component({
@@ -30,6 +31,7 @@ export class ModeSchedulePage{
   scheduleList:Observable<scheduleType[]>;
 
   constructor(
+    public eyeCheckCtrl: EyeCheckControl,
     private appStateProv: AppStateProvider,
     private bleCmd: BleCommandProvider,
     private scheduleProv:ScheduleDataProvider,
@@ -41,7 +43,7 @@ export class ModeSchedulePage{
         state => {
           console.log(state);
           this.btnSetting.color = (state.now_mode_slug=='sche'&&state.isSync)?'dark':'primary';
-          this.btnSetting.message 
+          this.btnSetting.message
             = state.btnMessage;
             //(state.now_mode_slug=='sche')?((state.isSync)?'傳送指令(已同步)':'傳送指令(未同步)'):'取消手動';
         }
@@ -61,10 +63,14 @@ export class ModeSchedulePage{
   }
   /** */
   syncSchedule(){
-    this.bleCmd.goSyncSchedule().subscribe();
+    // 2018 eye
+    this.bleCmd.goSyncSchedule().subscribe( list => {
+      this.eyeCheckCtrl.pSchedule(list);
+    });
+
   }
 
- 
+
   addSchedule(){
     this.scheduleProv.addNew();
   }
@@ -88,7 +94,7 @@ export class ModeSchedulePage{
   }
 
 
- 
+
 
   /* CHART SETTINGS */
   chartLabels = [

@@ -20,6 +20,18 @@ page-mode-schedule {
 
 
 }
+@media (min-width: 640px) {
+    #chart-container {
+        margin: auto;
+        max-width: 88%;
+    }
+}
+.light-btn {
+    padding: 0 9px;
+}
+.light-btn.light-btn-b {
+    padding: 0 7px;
+}
 .modal-section{
     .ios ion-header > .toolbar.statusbar-padding:first-child{
         min-height: auto!important;

@@ -1,0 +1,84 @@
+$pd: 8px;
+page-eye-check {
+  .message-cont.final-messages {
+    p {
+      font-size: 13px;
+    }
+    h4.title {
+      font-weight: bold;
+      text-align: center;
+      margin-top: 0;
+    }
+  }
+  .status-cont {
+    text-align: center;
+    .status-div {
+      display: inline-block;
+      width: 45%;
+      height: 50px;
+      line-height: 50px;
+      background: #e1e1e1;
+      border-radius: 11px;
+      border: 2px solid rgba(222,222,222,.1)
+    }
+    .status-div:nth-child(1) {
+      margin: $pd 1px 2px $pd;
+    }
+    .status-div:nth-child(2) {
+      margin: $pd $pd 2px 1px;
+    }
+    .status-div:nth-child(3) {
+      margin: 2px 1px $pd $pd;
+    }
+    .status-div:nth-child(4) {
+      margin: 2px $pd $pd 1px;
+    }
+
+
+  }
+  .message-cont {
+    padding: 0 16px;
+    font-size: 1.8rem;
+
+  }
+
+  .row.ctrl-btns-cont {
+    .col {
+      width: 33%;
+      padding: 0;
+      text-align: center;
+      .button {
+        border-radius: 11px;
+      }
+    }
+  }
+
+
+
+
+}
+
+ion-modal.my-popup {
+  @media (min-width: 300px) and (min-height: 500px) {
+    ion-backdrop {
+      visibility: visible;
+    }
+  }
+
+  .modal-wrapper {
+    position: absolute;
+    overflow: hidden;
+    max-width: 85%;
+    border-radius: 11px;
+    width: 85%;
+    height: 73%;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    border: 0;
+    box-shadow: 0 16px 20px rgba(0,0,0,.4);
+    background-color: #fafafa;
+  }
+}

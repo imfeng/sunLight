@@ -1,3 +1,34 @@
 page-start {
+  .first {
+    margin-top: 170px;
+    text-align: center;
+    .title {
+      h1{
+        border-bottom: 4px solid rgba(0,0,0,.8);
+        font-size: 80px;
+        margin-bottom: 0;
+        line-height: 1.4;
+      }
+      .sub {
+        color: #5a5a5a;
+        font-size: 19px;
+        margin-top: 15px;
+      }
+    }
+    .entry-btn {
+      font-size: 23px;
+      letter-spacing: 3px;
+      margin-top: 30px;
+    }
+  }
+
+  .mode-btn {
+      max-width: 70%;
+      margin: 20px auto;
+      text-transform:uppercase;
+      font-size: 27px;
+      height: 60px;
+  }
+
 
 }

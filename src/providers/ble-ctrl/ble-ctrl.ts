@@ -1,5 +1,5 @@
 import { Injectable,NgZone,Inject, forwardRef } from '@angular/core';
-import { Platform,ToastController, LoadingController } from 'ionic-angular';
+import { Platform,ToastController, LoadingController, AlertController } from 'ionic-angular';
 import { BLE } from '@ionic-native/ble';
 import { AndroidPermissions } from '@ionic-native/android-permissions';
 
@@ -9,6 +9,8 @@ import 'rxjs/add/operator/withLatestFrom';
 import 'rxjs/add/observable/fromPromise';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { ISubscription } from 'rxjs/Subscription';
+
 import { DevicesDataProvider,lightDeviceType } from '../devices-data/devices-data'
 //import { BleCommandProvider } from '../ble-command/ble-command';
 
@@ -28,7 +30,7 @@ export interface lightsDevice {
   "slug": string,  //customize name
   "address": string,
   "peripheral": any
-  
+
 }
 export interface nowStatus {
   "hadConnected":boolean,
@@ -38,7 +40,7 @@ export interface nowStatus {
   "isConnected": boolean,
   "isDiscovered": boolean,
   "isSearching": boolean,
-  "peripheral": any,
+  // "peripheral": any,
   "device":lightDeviceType
 }
 @Injectable()
@@ -66,6 +68,7 @@ export class BleCtrlProvider {
   };
 
   constructor(
+    private alertCtrl: AlertController,
     //@Inject(forwardRef(() => BleCommandProvider)) public bleCmd: BleCommandProvider,
     //private bleCmd: BleCommandProvider,
     private devicesData:DevicesDataProvider,
@@ -79,7 +82,7 @@ export class BleCtrlProvider {
     this.scanedDevices = {
       "list":[]
     };
-    this.lightsDevicesList = []; 
+    this.lightsDevicesList = [];
     this._nowStatus = <BehaviorSubject<nowStatus>>new BehaviorSubject({});
     this.nowStatus = this._nowStatus.asObservable();
     this.dataStore = {
@@ -90,11 +93,7 @@ export class BleCtrlProvider {
         "isConnected": false,
         "isDiscovered": false,
         "isSearching": false,
-        "peripheral": {
-          "name": "無裝置",
-          "slug": "無裝置",
-          "id": null,
-        },
+
         "device":{
           "name":null,
           "o_name" :null,
@@ -117,7 +116,7 @@ export class BleCtrlProvider {
     });
   }
 
-  private _change(idx:string,value:any){
+  public _change(idx:string,value:any, broadcast = true){
     this.dataStore[idx]=value;
     //this._checkUseable();
     if(this.dataStore["isEnabled"]&&this.dataStore["isConnected"]){
@@ -125,6 +124,9 @@ export class BleCtrlProvider {
     }else{
       this.dataStore["useable"] = false;
     }
+    if(broadcast) {this._nowStatus.next(Object.assign({},this.dataStore));}
+  }
+  broadcast() {
     this._nowStatus.next(this.dataStore);
   }
   /** BLE TURN series */
@@ -182,7 +184,7 @@ export class BleCtrlProvider {
                 },
                 err => {
                   console.log('>>> ERR,speciWrtie ');
-                 
+
                   console.log(JSON.stringify(err));
                   observer.next(false);
                   observer.complete();
@@ -293,7 +295,7 @@ export class BleCtrlProvider {
                   );
                 }
               );
-              
+
             }else{
               this._setStatus(devices[idx].id+' CONNECT FAILED!');
               setTimeout(
@@ -311,7 +313,7 @@ export class BleCtrlProvider {
           }
         );
 
- 
+
   }
   syncSunlights(devices:lightDeviceType[],fan=null){
     return Observable.create(
@@ -355,19 +357,59 @@ export class BleCtrlProvider {
       this._setStatus('停止掃描....');
     }
   }
-  /** SCAN series */
-  scan(sec=8,showLoading=true){
-    let loadObj = this._presentLoading();
-    this.scanedDevices["list"] = [];
-    this._setStatus('掃描中');
-    this.ble.scan([], sec).subscribe(
-      device => {
-        this._onDeviceDiscovered(device);
-        this._dismissLoading(loadObj);
+  stopScanBack(){
+    this.ble.stopScan().then(
+      ()=>{
+        this.bleStatus.onScanning =false;
       },
-      error => {this._showError(error,'掃描藍芽裝置時發生錯誤。');this._dismissLoading(loadObj);}
+      () => {
+      }
     );
-    setTimeout(this._setStatus.bind(this), 1000*sec, '掃描完成......');
+  }
+  /** SCAN series */
+  scanState: {
+    sub: ISubscription
+  } = {
+    sub: {
+      closed: true,
+      unsubscribe: ()=>{}
+    }
+  }
+  scan(sec=8,showLoading=true){
+
+      let loadObj = {'obj':{}};
+      if(showLoading) loadObj.obj = this._presentLoading();
+      else this.showToast('掃描中....',sec*1000);
+      this.scanedDevices["list"] = [];
+      if(!this.scanState.sub.closed) {
+        this.stopScanBack();
+        this.scanState.sub.unsubscribe();
+      }
+      return Observable.create(observer => {
+        this._setStatus('掃描中');
+        this.scanState.sub = this.ble.scan([], sec).subscribe(
+          device => {
+            this._onDeviceDiscovered(device);
+            if(showLoading) this._dismissLoading(loadObj.obj);
+          },
+          error => {
+            this._showError(error,'掃描藍芽裝置時發生錯誤。');
+            if(showLoading) this._dismissLoading(loadObj.obj);
+          }
+        );
+        setTimeout(()=>{
+          this._setStatus('掃描完成......');
+          this._dismissLoading(loadObj.obj);
+          observer.next(true);
+          observer.complete();
+        },1000*sec);
+
+      });
+
+
+
+
+
   }
 
   private _onDeviceDiscovered(device) {
@@ -386,20 +428,20 @@ export class BleCtrlProvider {
         this.nowStatus.take(1).subscribe(
           obj => {
             if(obj.hadConnected){
-              Observable.fromPromise(this.ble.isConnected(obj.peripheral.id)).subscribe(
+              Observable.fromPromise(this.ble.isConnected(obj.device.id)).subscribe(
                 ()=>{
-                  Observable.fromPromise(this.ble.disconnect(obj.peripheral.id))
-                  .subscribe( 
+                  Observable.fromPromise(this.ble.disconnect(obj.device.id))
+                  .subscribe(
                     () => {
-
-                      this.disConnectDevice(obj.peripheral.id);
+                      this.showToast('中斷連線成功！');
+                      this.disConnectDevice(obj.device.id);
                       observer.next(true);observer.complete();
                     },
                     err => {
                       observer.next(false);observer.complete();
                       console.log('中斷連線時發生錯誤！');}
                   );
-                  
+
                 },
                 ()=>{
                   observer.next(true);observer.complete();
@@ -412,9 +454,37 @@ export class BleCtrlProvider {
         );
       }
     );
-    
+
   }
   /** CONNECT DEVICE series */
+  connectDeviceObs(deviceId:string) {
+    return Observable.create(observer => {
+      let loadObj = this._presentLoading();
+      this.disconnectCurrent().subscribe(
+        ()=>{
+          this.ble.connect(deviceId).subscribe(
+            peripheral => {
+              this._onConnected(peripheral);
+              this._change("hadConnected",true);
+              let tmpGid = 0;
+              setTimeout(()=>{
+                observer.next(peripheral);
+                this._dismissLoading(loadObj);
+                observer.complete();
+              },2500);
+
+            },
+            peripheral => {
+              this._onDeviceDisconnected();
+              this._dismissLoading(loadObj);
+              observer.error(false);
+              observer.complete();
+            }
+          );
+        }
+      );
+    });
+  }
   connectDevice(deviceId,todoFn = (p=null)=>{}){
     let loadObj = this._presentLoading();
     this.disconnectCurrent().subscribe(
@@ -426,54 +496,95 @@ export class BleCtrlProvider {
             let tmpGid = 0;
             this.devicesData.check(peripheral,true).subscribe(
               (checkData) => {
+                // TODO 背景同步 ,  v3 版本之後，增加目檢功能AE，所以不在背景執行
                 /*if(checkData.device.group){
                   //this.bleCmd.goSetGroup( isAddNew );
-                  
+
                   let data = new Uint8Array([0xfa,0xa1,checkData.device.group,0xff]);
                   this.write(data,()=>{
                     //this.devicesData.modify(checkData.device.id,null,checkData.isNew).subscribe();
                     this.showToast('已將裝置編號同步！');
                   },()=>{},true);
-                  
+
                 }*/
                 tmpGid=checkData.device.group;
                 this.dataStore.device = checkData.device;
 
                 setTimeout(()=>{
+
+                  if(checkData.isNew) {
+                    let data = new Uint8Array([0xfa,0xa1,checkData.device.group,0xff]);
+                    this.write(data,()=>{
+                      let alert = this.alertCtrl.create({
+                        title: '發現新裝置',
+                        message: '發現新裝置時，會同步裝置的編號，為了確認裝置正確接收，裝置接受指令後為轉為綠燈，請問現在連線之裝置是否為綠燈呢？',
+                        buttons: [
+                          {
+                            text: '否',
+                            role: 'cancel',
+                            handler: () => {
+                              this.showToast('同步裝置發生錯誤，請重新連線！');
+                              this.disconnectCurrent().subscribe();
+                              todoFn(peripheral);
+                              this._dismissLoading(loadObj);
+                            }
+                          },
+                          {
+                            text: '是',
+                            handler: () => {
+                              console.log('是');
+                              this.eyeCheckCmdWrite().subscribe(() => {
+                                this.showToast('已將裝置編號同步！');
+                                todoFn(peripheral);
+                                this._dismissLoading(loadObj);
+                              });
+                            }
+                          }
+                        ]
+                      });
+                      alert.present();
+                    },()=>{},true);
+
+                  } else {
+                    todoFn(peripheral);
+                    this._dismissLoading(loadObj);
+                  }
+/*
                   let time = new Date();
                   let cmds = [
                     new Uint8Array([0xfa,0xa0,time.getHours(),time.getMinutes(),time.getSeconds(),0xff]),
                     new Uint8Array([0xfa,0xa1,tmpGid,0xff])
-                  ];
+                  ];*/
+                  // TODO 背景同步 ,  v3 版本之後，增加目檢功能AE，所以不在背景執行
                   /*this.write(data,()=>{
                     this.showToast('已將裝置時間同步！');
                   },()=>{},true);*/
+                  /*
                   this.write_many(cmds).subscribe(
                     (isOk)=>{
                       if(!isOk){
                         this.showToast('同步裝置發生錯誤，請斷開並再次連結！')
-                        
+
                       }else{
                         this.showToast('已將裝置時間、編號同步！');
                       }
                     }
-                  );
-                
-                  todoFn(peripheral);
-                  this._dismissLoading(loadObj);
+                  );*/
+
+
                 },2500);
               }
             );
-            
-            
-        
-            
+
+
+
+
           },
           peripheral => {this._onDeviceDisconnected();this._dismissLoading(loadObj);}
         );
       }
     );
-    
+
   }
   scanAndConnect(id:string,sec=6){  // ble-operator.ts
     let loadObj = this._presentLoading();
@@ -529,7 +640,7 @@ export class BleCtrlProvider {
             observer.next(false);
           }
         );
-          
+
       }
     );
   }
@@ -545,8 +656,8 @@ export class BleCtrlProvider {
   private _onConnected(peripheral): void {
     this.ngZone.run(() => {
       this.showToast('連線成功！');
-      this._change("isConnected",true);
-      this._change("peripheral",peripheral);
+      this._change("isConnected",true,false);
+      this._change("device",peripheral,true);
       this._setStatus('連線成功！');
     });
   }
@@ -557,9 +668,9 @@ export class BleCtrlProvider {
       "slug": null,  //customize name
       "address": null,
       "peripheral": null
-    });
-    this._change("isConnected",false);
-    this._change("hadConnected",false);
+    },false);
+    this._change("isConnected",false,false);
+    this._change("hadConnected",false,true);
     this.showToast('連線中斷！');
 
   }
@@ -591,10 +702,41 @@ export class BleCtrlProvider {
             );
           }
         );
-            
-  
+
+
       }
     );
+  }
+  fastConnect(item) {
+    return Observable.create(observer => {
+      let loadObj = this._presentLoading(true,15);
+      this.ble.scan([], 8).subscribe(
+        device => {
+          if(device.id == item.id){
+            this.ble.stopScan().then(()=>{
+              this.ble.connect(item.id).take(1).subscribe(
+                peripheral => {
+                  this._onConnected(item);
+                  this._change("hadConnected",true);
+                  this._dismissLoading(loadObj);
+                  console.log('快速連線成功！！');
+                  this.showToast('連線成功！');
+                  observer.next(peripheral);observer.complete();
+                },
+                peripheral => {
+                  this._dismissLoading(loadObj);
+                  this.disConnectDevice(item.id);
+                  this.showToast('無法重新連結到剛才的裝置，請確認裝置是否在附近！');
+                  observer.error(peripheral);
+                }
+              );
+            });
+          }
+        },
+        error => {this._showError(error,'找尋藍芽裝置時發生錯誤。');}
+      );
+    });
+
   }
   checkConnect(id){
     return Observable.create(
@@ -610,7 +752,7 @@ export class BleCtrlProvider {
                   // TODO
                   console.log("checkConnect() => RECONNECT !!!");
                   let loadObj = this._presentLoading(true,15);
-                  
+
                   this.disconnectCurrent().subscribe(
                     isScc =>{
                       setTimeout( ()=>{
@@ -644,43 +786,143 @@ export class BleCtrlProvider {
               this.showToast('請先與裝置連線！');
               observer.error(true);observer.complete();
             }
-            
+
           }
         );
-        
+
 
       }
     );
 
   }
-  write_many_go(observer,cmds:Uint8Array[],idx,isOk:boolean[],loadObj){
+  write_many_go(observer,cmds:Uint8Array[],idx,isOk:boolean[],loadObj, _EYE_CHECK = false){
+    let CMD_ARR = [].slice.call(cmds[idx]);
+    let CMD_LENGTH = CMD_ARR.length;
     Observable.fromPromise(
       this.ble.writeWithoutResponse(
-        this.dataStore.peripheral.id,
+        this.dataStore.device.id,
         _LIGHTS_SERVICE_UUID,
         _LIGHTS_CHAR_UUID,
         cmds[idx].buffer
       )).subscribe(
         scc => {
-          idx++;
-          isOk.push(true);
+
+          let detail = '';
+          switch(CMD_LENGTH) {
+            case 9:  // 排程
+              if(CMD_ARR[7] == 0xaa) {
+                detail += '(清除排程︰Sunlight-）'+CMD_ARR[4];
+              }else {
+                detail += `(設定排程︰Sunlight-${CMD_ARR[4]}, ${CMD_ARR[5]}:0${CMD_ARR[6]}, 光譜${CMD_ARR[3]+1})`;
+              }
+              break;
+            case 5:  // 風速
+              detail += `(設定風速︰Sunlight-${CMD_ARR[3]}, 轉速${CMD_ARR[2]}%）`;
+              break;
+            case 6: // 時間校正
+              if(CMD_ARR[1] == 0xa0) {
+                detail += `(時間校正︰所有裝置, 時間${CMD_ARR[2]}:${CMD_ARR[3]}:${CMD_ARR[4]}）`;
+              }else if(CMD_ARR[1] == 0xaa) {
+                _EYE_CHECK = false;
+              }else {}
+              break;
+
+          }
+          /*
           if(idx>cmds.length-1){  //傳送結束
             this._dismissLoading(loadObj);
+
             if(isOk.find(val=>val==false)==false){
               this.showToast('傳送指令過程中發生問題，請重新傳送QQ');
               observer.next(false);
             }else{
               observer.next(true);
             }
-            observer.complete();
-          }else{
-            setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj);},_WRITEMANY_INTERVAL);
-            
+          }else{} */
+          if( _EYE_CHECK ){
+            detail += '當下達特定指令時，為了確認裝置正確地接收，裝置接收正確時會改為綠燈。請問目前指定的裝置是否改為綠燈？如否，則請按下「重新發送」，如都無動作，則裝置於20秒後自動關閉綠燈';
+            this.eyeCheck(detail).subscribe(check => {
+              switch(check) {
+                case -1:  // 取消(停止)
+                  this.showToast('停止指令發送');
+                  this._dismissLoading(loadObj);
+                  observer.next(false);
+                  break;
+                case 0:
+                  setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj, true);},_WRITEMANY_INTERVAL);
+                  break;
+                case 1:
+                  idx++;
+                  isOk.push(true);
+                  if(idx>cmds.length-1){ // 最後一個指令
+                    this.showToast('傳送指令完畢！');
+                    this._dismissLoading(loadObj);
+                    observer.next(true);
+                    observer.complete();
+                  } else {
+                    setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj, true);},_WRITEMANY_INTERVAL);
+                  }
+                  break;
+              }
+            });
+          } else {
+            idx++;
+            isOk.push(true);
+            if(idx>cmds.length-1){ // 最後一個指令
+              this.showToast('傳送指令完畢！');
+              this._dismissLoading(loadObj);
+              observer.next(true);
+              observer.complete();
+            } else {
+              setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj);},_WRITEMANY_INTERVAL);
+            }
           }
+
+
         },
         err => {
           console.log(' write ERROR!!!!!!!!!!!!!!!!!!!!!!!!!');
-          console.log(JSON.stringify(err));
+          this.showToast('發生錯誤：'+JSON.stringify(err));
+          if(_EYE_CHECK) {
+            let detail = '發生錯誤，請重新傳送';
+            this.eyeCheckFailed(detail).subscribe(check => {
+              switch(check) {
+                case -1:  // 取消(停止)
+                  this.showToast('停止指令發送');
+                  this._dismissLoading(loadObj);
+                  observer.next(false);
+                  break;
+                case 0:
+                  setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj, true);},_WRITEMANY_INTERVAL);
+                  break;
+                case 1:
+                  idx++;
+                  isOk.push(true);
+                  if(idx>cmds.length-1){ // 最後一個指令
+                    this.showToast('傳送指令完畢！');
+                    this._dismissLoading(loadObj);
+                    observer.next(true);
+                    observer.complete();
+                  } else {
+                    setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj, true);},_WRITEMANY_INTERVAL);
+                  }
+                  break;
+              }
+            });
+          } else { //無目檢
+            idx++;
+            isOk.push(true);
+            if(idx>cmds.length-1){ // 最後一個指令
+              this.showToast('傳送指令完畢！');
+              this._dismissLoading(loadObj);
+              observer.next(true);
+              observer.complete();
+            } else {
+              setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj);},_WRITEMANY_INTERVAL);
+            }
+          }
+
+          /*
           idx++;
           isOk.push(false);
           if(idx>cmds.length-1){  //傳送結束
@@ -693,27 +935,66 @@ export class BleCtrlProvider {
             observer.complete();
           }else{
             setTimeout(()=>{this.write_many_go(observer,cmds,idx,isOk,loadObj);},_WRITEMANY_INTERVAL);
-          }
+          }*/
+
         }
       );
   }
-  write_many(value:Uint8Array[],waitSec=null){
+  write_many(value:Uint8Array[],waitSec=null, _EYE_CHECK=false){
     console.log('=== CMD VALUE ===');
     console.log(JSON.stringify(value));
     console.log('======');
     return Observable.create(
       observer=>{
         let loadObj = this._presentLoading(!waitSec,waitSec);
-        
+
         this.checkConnect(this.dataStore.device.id).subscribe(
           ()=>{
-            this.write_many_go(observer,value,0,[],loadObj);
+            this.write_many_go(observer,value,0,[],loadObj, _EYE_CHECK);
           },()=>{
             this._dismissLoading(loadObj);
           }
         );
       }
     );
+  }
+  writeObs(value:Uint8Array) {
+    console.log('=== CMD VALUE ===');
+    console.log(JSON.stringify(value));
+    console.log('======');
+    return Observable.create(observer => {
+      let loadObj = this._presentLoading();
+      this.checkConnect(this.dataStore.device.id).subscribe(
+        (scc)=>{
+          Observable.fromPromise(
+            this.ble.writeWithoutResponse(
+              this.dataStore.device.id,
+              _LIGHTS_SERVICE_UUID,
+              _LIGHTS_CHAR_UUID,
+              value.buffer
+            )).subscribe(
+              scc => {
+                this.showToast('傳送成功！');
+                this._dismissLoading(loadObj);
+                observer.next(this.dataStore.device.id);
+                observer.complete();
+              },
+              err => {
+                this._showError(err,'傳送失敗');
+                this._dismissLoading(loadObj);
+                observer.error(err);
+                observer.complete();
+              }
+            );
+        },(err)=>{
+          console.log(err);
+          this._showError(err,'傳送失敗');
+          this._dismissLoading(loadObj);
+          observer.error(err);
+          observer.complete();
+        }
+      );
+    });
   }
   write(value:Uint8Array,sccFn=(id)=>{},errFn=(id)=>{},toBack=false,deviceId=this.dataStore.device.id){
     let loadObj = this._presentLoading();
@@ -725,17 +1006,17 @@ export class BleCtrlProvider {
       ()=>{
         Observable.fromPromise(
           this.ble.writeWithoutResponse(
-            this.dataStore.peripheral.id,
+            this.dataStore.device.id,
             _LIGHTS_SERVICE_UUID,
             _LIGHTS_CHAR_UUID,
             value.buffer
           )).subscribe(
             scc => {
-              if(toBack) sccFn(this.dataStore.peripheral.id);
+              if(toBack) sccFn(this.dataStore.device.id);
               else this.showToast('傳送成功！');
               this._dismissLoading(loadObj);},
             err => {
-              if(toBack) errFn(this.dataStore.peripheral.id);
+              if(toBack) errFn(this.dataStore.device.id);
               else this._showError(err,'傳送失敗');
               this._dismissLoading(loadObj);}
           );
@@ -777,8 +1058,8 @@ export class BleCtrlProvider {
         content: 'Please wait...'
       })
     }
-    loadingObj.loading 
-    
+    loadingObj.loading
+
     if(isTimeout){
       loadingObj.time = setTimeout(()=>{
         this.showToast('逾時');
@@ -789,6 +1070,7 @@ export class BleCtrlProvider {
         loadingObj.loading = this.loadingCtrl.create({
           content: 'Please wait...</br>(about '+messageSec+' sec)'
         });
+        if(messageSec<6) messageSec = 6;
         loadingObj.time = setTimeout(()=>{
           this.showToast('逾時');
           loadingObj.loading.dismiss();
@@ -799,7 +1081,7 @@ export class BleCtrlProvider {
           loadingObj.loading.dismiss();
         }, 10000);
       }
-      
+
     }
     loadingObj.loading.present();
     return loadingObj;
@@ -812,9 +1094,9 @@ export class BleCtrlProvider {
     if(loadObj.loading){
       clearTimeout(loadObj.time);
       loadObj.loading.dismiss();
-    }
+    }else{}
   }
-  
+
   private showToast(message,time=_SHOW_TOAST_DURATION){
     let toast = this.toastCtrl.create({
       message: message ,
@@ -841,5 +1123,95 @@ export class BleCtrlProvider {
       duration: 3000
     });
     toast.present();
+  }
+
+  // 目檢功能
+  /**
+時間校正A0
+定義群組 A1
+設定排程AB
+風扇轉速調整 AD
+以上指令下達後，裝置接收正確會改成綠燈
+使用者要在手動下達關閉指示燈AE指令
+   */
+  eyeCheck(detail: string = '') {
+    return Observable.create(observer => {
+      let alert = this.alertCtrl.create({
+        title: '目檢確認',
+        message: detail,
+        buttons: [
+          {
+            text: '中止所有動作',
+            role: 'cancel',
+            handler: () => {
+              console.log('取消(停止)');
+              observer.next(-1);
+              observer.complete();
+            }
+          },
+          {
+            text: '重新發送',
+            handler: () => {
+              console.log('重新發送');
+              observer.next(0);
+              observer.complete();
+            }
+          },
+          {
+            text: '是（下一步）',
+            handler: () => {
+              console.log('是');
+              this.eyeCheckCmdWrite().subscribe(() => {
+                observer.next(1);
+                observer.complete();
+              });
+            }
+          }
+        ]
+      });
+      alert.present();
+
+    });
+  }
+  eyeCheckFailed(detail: string = '') {
+    return Observable.create(observer => {
+      let alert = this.alertCtrl.create({
+        title: '目檢確認',
+        message: detail,
+        buttons: [
+          {
+            text: '中止所有動作',
+            role: 'cancel',
+            handler: () => {
+              console.log('取消(停止)');
+              observer.next(-1);
+              observer.complete();
+            }
+          },
+          {
+            text: '重新發送',
+            handler: () => {
+              console.log('重新發送');
+              observer.next(0);
+              observer.complete();
+            }
+          }
+        ]
+      });
+      alert.present();
+
+    });
+  }
+  eyeCheckCmdWrite() {
+    return Observable.create(observer => {
+      let data = new Uint8Array([0xfa,0xae,0x01,0xff]);
+      this.write(data,()=>{
+        observer.next(true);
+        observer.complete();
+      },()=>{
+        observer.next(false);
+        observer.complete();
+      },true);
+    });
   }
 }
