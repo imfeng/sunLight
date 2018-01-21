@@ -31,7 +31,7 @@ const li_types : Array<lightsType> =[{
   "color": "rgb(54, 92, 235)",
 },{
   "value": 5,
-  "name": "高演色性太陽光",
+  "name": "高演色性",
   "slug": "COLOR",
   "color": "rgb(86, 9, 232)",
 },{
@@ -65,7 +65,7 @@ export class LightsInfoProvider {
   }
 
 }
-  
+
 @Pipe({
   name: 'light',
   pure: false
@@ -75,6 +75,7 @@ export class lightsTypesPipe implements PipeTransform {
   }
   transform(value, args) {
     let arr = li_types.map( data => data[args]);
+    if(args==='name' && value-1===-1) return '關機';
     return arr[value-1];
   }
 }

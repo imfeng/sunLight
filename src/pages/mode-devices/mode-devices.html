@@ -41,7 +41,7 @@
       <ion-range min="40" max="100" [(ngModel)]="fanCtrl.currentFanSpeed"> <!--  (ionBlur)="triggerFan($event)" -->
         <ion-label range-left>風速</ion-label>
         <ion-badge (click)="opneFanPrompt()" color="primary" range-right>{{fanCtrl.currentFanSpeed}}%</ion-badge>
-        <button class="max-height: 30px;max-width: 44px; margin: 5px;" ion-button mini item-end range-right (click)="triggerFan()" color="primary">
+        <button style="max-height: 30px;max-width: 44px; margin: 5px;" ion-button mini item-end range-right (click)="triggerFan()" color="primary">
             傳送
         </button>
       </ion-range>

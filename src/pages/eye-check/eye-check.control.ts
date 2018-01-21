@@ -78,18 +78,18 @@ export class EyeCheckControl {
        });
     profileModal.present();
   }
-  open2(actions:Array<ActionType>) {
+  open2(actions:Array<ActionType>, scheduleListIdx = null) {
     if(actions.length<1) {
       this.toastCtrl.showToast('無動作');
     }else {
       let eyeModal
       = this.modalCtrl
-        .create(EyeCheckPage, { actions: actions },{
+        .create(EyeCheckPage, { actions: actions, scheduleListIdx: scheduleListIdx},{
          showBackdrop: true,
          enableBackdropDismiss: false,
          cssClass: 'my-popup',
         });
-        eyeModal.present();
+      eyeModal.present();
     }
   }
 
@@ -167,6 +167,16 @@ export class EyeCheckControl {
     }));
     this.open2(actions);
   }
+  pScheduleRemove(gids, idx) {
+    let actions = gids.map( gid => ({
+      type: ActionNameEnum.SCHEDULE_REMOVE_LIST,
+          payload: {
+            message:['刪除排程組合後必須清除裡面所有裝置的排程設定',..._DEFAULT_MESSAGE,],
+            gid: gid,
+          }
+    }));
+    this.open2(actions, idx);
+  }
   pSchedule(list) {
     let actions1 = list.rmSchedule.map( cmd => ({
       type: ActionNameEnum.SCHEDULE_REMOVE,
@@ -176,12 +186,13 @@ export class EyeCheckControl {
             cmd: cmd,
           }
     }));
-    let actions2 = list.allSchedule.map( cmd => ({
+    let actions2 = list.allSchedule.map( item => ({
       type: ActionNameEnum.SCHEDULE_ALL,
           payload: {
             message:_DEFAULT_MESSAGE,
-            gid: cmd[4],
-            cmd: cmd,
+            gid: item.cmd[4],
+            cmd: item.cmd,
+            scheduleEnd: item.end,
           }
     }));
     let actions3 = list.currentSchedule.map( cmd => ({
@@ -192,7 +203,19 @@ export class EyeCheckControl {
             cmd: cmd,
           }
     }));
-    this.open2([...actions1,...actions2,...actions3,]);
+    this.open2([...actions1,...actions2,...actions3,],list.scheduleListIdx);
+  }
+  pDisableSchedule(gids:Array<number>, idx:number, toggle = true) {
+    let m = (toggle)?'收到指令後，此燈將會依照所設定的排程設定作動。':'收到指令後，此燈將不會再依照排程設定作動。';
+    let actions = gids.map( gid => ({
+      type: ActionNameEnum.SCHEDULE_DISABLE,
+          payload: {
+            message:[m, ..._DEFAULT_MESSAGE],
+            gid: gid,
+            toggleSchedule:toggle
+          }
+    }));
+    this.open2(actions, idx);
   }
 
 }

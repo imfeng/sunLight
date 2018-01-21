@@ -728,12 +728,19 @@ export class BleCtrlProvider {
                   this.disConnectDevice(item.id);
                   this.showToast('無法重新連結到剛才的裝置，請確認裝置是否在附近！');
                   observer.error(peripheral);
+                  observer.complete();
                 }
               );
             });
           }
         },
-        error => {this._showError(error,'找尋藍芽裝置時發生錯誤。');}
+        error => {
+          this._showError(error,'找尋藍芽裝置時發生錯誤。');
+          this._dismissLoading(loadObj);
+          this.disConnectDevice(item.id);
+          observer.error(error);
+          observer.complete();
+        }
       );
     });
 
@@ -775,16 +782,23 @@ export class BleCtrlProvider {
                               });
                             }
                           },
-                          error => {this._showError(error,'掃描藍芽裝置時發生錯誤。');}
+                          error => {
+                            this._showError(error,'連線到裝置時發生錯誤。(請重新連線)');
+                            observer.error(false);observer.complete();
+                          }
                         );
-                      },500);
+                      },700);
+                    },
+                    err => {
+                      this._showError(err,'連線到裝置時發生錯誤。(請重新連線)');
+                      observer.error(false);observer.complete();
                     }
                   );
                 }
               );
             }else{
               this.showToast('請先與裝置連線！');
-              observer.error(true);observer.complete();
+              observer.error(false);observer.complete();
             }
 
           }
@@ -980,7 +994,7 @@ export class BleCtrlProvider {
                 observer.complete();
               },
               err => {
-                this._showError(err,'傳送失敗');
+                this._showError(err,'傳送失敗 ');
                 this._dismissLoading(loadObj);
                 observer.error(err);
                 observer.complete();
@@ -988,7 +1002,7 @@ export class BleCtrlProvider {
             );
         },(err)=>{
           console.log(err);
-          this._showError(err,'傳送失敗');
+          // this._showError(err,'傳送失敗');
           this._dismissLoading(loadObj);
           observer.error(err);
           observer.complete();
@@ -1120,7 +1134,8 @@ export class BleCtrlProvider {
     let toast = this.toastCtrl.create({
       message: message +' '+JSON.stringify(error),
       position: 'bottom',
-      duration: 3000
+      duration: 3000,
+      showCloseButton:true
     });
     toast.present();
   }

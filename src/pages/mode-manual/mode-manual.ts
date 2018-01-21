@@ -101,7 +101,7 @@ export class ModeManual {
     this.isManual = !this.isManual;
   }
   disableManual(){
-    this.bleCmd.goSyncSchedule().subscribe();
+    // this.bleCmd.goSyncSchedule().subscribe();
     this.curType = 0;
   }
   trigger(event,type:number){

@@ -24,6 +24,9 @@ export interface scheduleType {
     "datasets": Array<any>
   },
   "lastModified":number,
+  "lastSended": number,     // lastSended > lastModified 已同步  else 未同步
+  inScheduleMode: boolean,
+
   "sectionsList":Array<sectionDataType>,
   "checks":Array<boolean>,
 
@@ -76,7 +79,7 @@ export class ScheduleDataProvider {
     console.log('detectRepeatSchedule');
     console.log(this.dataStore.scheduleList[scheIdx].checks);
     console.log(collects);
-    let isRepeat 
+    let isRepeat
       = this.dataStore.scheduleList[scheIdx].checks
         .map( (v,idx) => (v===true && collects[idx]===true))
         .find(v=>v);
@@ -131,7 +134,7 @@ export class ScheduleDataProvider {
               let temp = [];
               Observable.fromPromise(this.storage.setItem(_STORAGE_SYNC_SCHEDULE_NAME,temp))
                 .subscribe(
-                  res => { 
+                  res => {
                     observer.next(temp);
                     observer.complete(); },
                   err => { alert('錯誤!'); }
@@ -167,7 +170,7 @@ export class ScheduleDataProvider {
           chart.labels.push( this.dateHourNumberToString(tmp.time_num[0]) );
         }
       }
-      
+
     }else{
       for(let i =0;i<24;i++){
         if(i>=dateRange[0] && i<=dateRange[1]){
@@ -182,6 +185,38 @@ export class ScheduleDataProvider {
     }
 
     return chart;
+  }
+  modifyInScheduleMode(enable:boolean, idx) {
+    return Observable.create(observer => {
+      this.list
+      .take(1)
+      .subscribe(arr => {
+        arr[idx].inScheduleMode = enable;
+        Observable.fromPromise(this.storage.setItem(_STORAGE_SCHEDULE_NAME,arr))
+        .subscribe(
+          res => { this._list.next(Object.assign({}, this.dataStore).scheduleList); },
+          err => { alert('錯誤，儲存設定發生問題！'); }
+        );
+        observer.next(true);
+        observer.complete();
+      });
+    });
+  }
+  sendedSchedule(idx:number) {
+    return Observable.create(observer => {
+      this.list
+      .take(1)
+      .subscribe(arr => {
+        arr[idx].lastSended = new Date().getTime();
+        Observable.fromPromise(this.storage.setItem(_STORAGE_SCHEDULE_NAME,arr))
+        .subscribe(
+          res => { this._list.next(Object.assign({}, this.dataStore).scheduleList); },
+          err => { alert('錯誤，儲存設定發生問題！'); }
+        );
+        observer.next(true);
+        observer.complete();
+      });
+    });
   }
   modifySchedule(idx:number,sections:Array<sectionDataType>,checks:Array<boolean>,dateRange:Array<number>){
     return Observable.create(
@@ -200,14 +235,14 @@ export class ScheduleDataProvider {
               "colors":this.gChartColorsSet(chart.backgroundColor),
             }
             arr[idx].lastModified = new Date().getTime();
-           
-            
+
+
             Observable.fromPromise(this.storage.setItem(_STORAGE_SCHEDULE_NAME,arr))
               .subscribe(
                 res => { this._list.next(Object.assign({}, this.dataStore).scheduleList); },
-                err => { alert('錯誤!'); }
+                err => { alert('錯誤，儲存設定發生問題！'); }
               );
-            
+
             observer.next(true);
             observer.complete();
 
@@ -256,13 +291,15 @@ export class ScheduleDataProvider {
           "chartDatas":{
             "colors": [ {borderColor: 'rgba(72,138,255,0.5)'},rdnColor],
             //"datasets": [this.getRandomDatasetZero()]
-            "datasets": [ 
+            "datasets": [
               {data:rdnDataset,type:'line'},
               {data:rdnDataset} ]
           },
           "lastModified":new Date().getTime(),
+          lastSended: 0,
+          inScheduleMode: true,
           /*"sectionsList":[
-            
+
           ],*/
           "sectionsList":Array.from({length:24},(v,i)=>({"mode":1,
             "time":'',
@@ -282,6 +319,10 @@ export class ScheduleDataProvider {
       }
     );
   }
+  /** 2018 eye */
+  getSendList(idx: number) {
+
+  }
 
   /* */
   gChartColorsSet(backgroundColor:Array<string>){
@@ -289,8 +330,8 @@ export class ScheduleDataProvider {
   }
   dateRangeToString(dateRange:Array<number>){
     if(dateRange[0] <0 || dateRange[1]<0) return '空';
-    else return this.dateHourNumberToString(dateRange[0]) + 
-      '~' + 
+    else return this.dateHourNumberToString(dateRange[0]) +
+      '~' +
       this.dateHourNumberToString(dateRange[1])
   }
   dateRangeToStringObj(range:Array<number>){

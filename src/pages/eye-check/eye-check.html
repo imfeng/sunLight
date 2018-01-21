@@ -18,18 +18,22 @@
           <div class="status-div">{{_state.currentAction.payload.macAddress}}</div>
           <div class="status-div">編號: {{_state.currentAction.payload.groupID}}</div>
         </ng-container>
+        <ng-container *ngIf="uiControl.scheduleDisableInfo">
+            <div *ngIf="!_state.currentAction.payload.toggleSchedule" class="status-div">關閉排程作動</div>
+            <div *ngIf="_state.currentAction.payload.toggleSchedule" class="status-div">開啟排程作動</div>
+        </ng-container>
         <ng-container *ngIf="uiControl.scheduleRmInfo">
             <div class="status-div">清空排程</div>
         </ng-container>
         <ng-container *ngIf="uiControl.scheduleAllInfo">
-            <div class="status-div">時間: {{_dateFormat(_state.currentAction.payload.cmd[5])}}:{{_dateFormat(_state.currentAction.payload.cmd[6])}}</div>
+            <div class="status-div">時間: {{_dateFormat(_state.currentAction.payload.cmd[5])}}:00{{ ((_state.currentAction.payload.scheduleEnd)?('~'+_dateFormat(_state.currentAction.payload.scheduleEnd)+':00'):'') }}</div>
             <div class="status-div">亮度: {{_state.currentAction.payload.cmd[2]}} steps</div>
             <div class="status-div">{{_state.currentAction.payload.cmd[3] | light:'name' }}</div>
         </ng-container>
         <ng-container *ngIf="uiControl.scheduleCurrentInfo">
             <div class="status-div">目前排程狀態</div>
             <div class="status-div">亮度: {{_state.currentAction.payload.cmd[2]}} steps</div>
-            <div class="status-div">{{_state.currentAction.payload.cmd[3] |light }}</div>
+            <div class="status-div">{{_state.currentAction.payload.cmd[3] | light:'name' }}</div>
         </ng-container>
       </div>
 

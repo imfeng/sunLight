@@ -62,10 +62,16 @@ export class ModeSchedulePage{
     this.navCtrl.push(editSchedulePage,{"idx":idx});
   }
   /** */
-  syncSchedule(){
+  syncSchedule(idx=null){
     // 2018 eye
-    this.bleCmd.goSyncSchedule().subscribe( list => {
+    this.bleCmd.goSyncSchedule(idx).subscribe( list => {
       this.eyeCheckCtrl.pSchedule(list);
+    });
+  }
+  toggleSchedule(checks:Array<boolean>, idx:number, isEnable:boolean) {
+
+    this.bleCmd.collectionsToDeviceGid(checks).subscribe(gids => {
+      this.eyeCheckCtrl.pDisableSchedule(gids, idx, isEnable);
     });
 
   }
@@ -74,8 +80,11 @@ export class ModeSchedulePage{
   addSchedule(){
     this.scheduleProv.addNew();
   }
-  rmSchedule(idx){
-    this.scheduleProv.remove(idx);
+  rmSchedule(idx, checks) {
+    this.bleCmd.collectionsToDeviceGid(checks).subscribe(gids => {
+      this.eyeCheckCtrl.pScheduleRemove(gids, idx);
+    });
+    // this.scheduleProv.remove(idx);
   }
 
   getRandomDatasetArr(){

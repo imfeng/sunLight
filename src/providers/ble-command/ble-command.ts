@@ -24,6 +24,7 @@ const _CMD_SCHEDULE_MODE = 0xAB;// s,cmd, MULTIPLE,TYPE,GROUP,HOUR,MIN,KEY ,e
 const _CMD_DISABLE_EYECEHCK = 0xAE;
 const _CMD_DEV_MODE = 0xAC; // s,cmd, MULTIPLE,GROUP, L1~L12, e
 const _CMD_FAN_SPEED = 0xAD; // s,cmd, fan, e
+const _CMD_SCHEDULE_TOGGLE = 0xA2;
 
 /*
   Generated class for the BleCommandProvider provider.
@@ -44,7 +45,7 @@ export class BleCommandProvider {
     //this.devicesList = this.devicesData.list;
     console.log('Hello BleCommandProvider Provider');
   }
-  goSyncSchedule(){
+  goSyncSchedule(sListIdx = null){
     return Observable.create(
       observer => {
         let sendCmds = [];
@@ -60,35 +61,45 @@ export class BleCommandProvider {
         let nowHour = new Date().getHours();
 
         /** */
-        this.ScheduleProcess1().subscribe(
-          deNor => {
+        this.ScheduleProcess1(sListIdx).subscribe(
+          processed => {
+            let {deNor,deviceChecks} = processed;
             /** deviceRmScheduleList START
              *  清除所有群組內的排程
              * */
-            this.devicesData.list.subscribe(
-              dList => {
-                dList.map(
-                  dd => {
-                    deviceRmScheduleList.push(
-                      new Uint8Array([
-                        _START,
-                        _CMD_SCHEDULE_MODE,
-                        0,
-                        0,
-                        dd.group,
-                        0,
-                        0,
-                        0xaa,
-                        _END])
-                    );
-                  }
-                );
-              }
-            );
+            if(sListIdx) {
+              this.devicesData.list.subscribe(dList => {
+                  dList.map(dd => {
+                      deviceRmScheduleList.push(
+                        new Uint8Array([
+                          _START,
+                          _CMD_SCHEDULE_MODE,
+                          0,0,dd.group,0,0,
+                          0xaa,
+                          _END])
+                      );
+                    });
+              });
+            }else {
+              this.collectionsToDeviceGid(deviceChecks)
+              .take(1)
+              .subscribe(gids => {
+                gids.map(gid => {
+                  deviceRmScheduleList.push(new Uint8Array([
+                    _START,
+                    _CMD_SCHEDULE_MODE,
+                    0,0,gid,0,0,
+                    0xaa,
+                    _END])
+                  );
+                });
+              });
+            }
+
             /** deviceRmScheduleList END */
 
             // 排程模式指令 START
-            console.log(deNor);
+            // console.log(deNor);
             for(let key in deNor){
               let detectNow = {
                 "multiple":0,
@@ -113,18 +124,19 @@ export class BleCommandProvider {
                   if(v.multiple ===0) {
                     end.push({
                       ...v,
-                      end: v.hour + cnt-1,
+                      end: (cnt-1)?(v.time_num[0] + cnt-1):null,
                       mode: 0,
                     });
                   }else {
                     end.push({
                       ...v,
-                      end: v.hour + cnt-1,
+                      end: (cnt-1)?(v.time_num[0] + cnt-1):null,
                     });
                   }
 
                   list.splice(idx, cnt-1);
                 });
+                // console.log(end);
 
 
               deviceScheduleList = deviceScheduleList.concat(
@@ -136,7 +148,9 @@ export class BleCommandProvider {
                       console.log('nowHour');
                     }
 
-                    return (new Uint8Array([
+                    return ({
+                      end: ss.end,
+                      cmd: new Uint8Array([
                         _START,
                         _CMD_SCHEDULE_MODE,
                         ss.multiple,
@@ -145,7 +159,8 @@ export class BleCommandProvider {
                         ss.time_num[0],
                         ss.time_num[1],
                         sid+1,
-                        _END]) );
+                        _END])
+                    });
                   })
               );
               //[_START,_CMD_MANUAL_MODE,multi,type,gid,_END
@@ -186,6 +201,7 @@ export class BleCommandProvider {
               rmSchedule: deviceRmScheduleList,
               allSchedule: deviceScheduleList,
               currentSchedule: deviceSetCurrent,
+              scheduleListIdx: sListIdx,
             });
             observer.complete();
             /*
@@ -285,30 +301,47 @@ export class BleCommandProvider {
       }
     );
   }
-  ScheduleProcess1(){
+  ScheduleProcess1(idx = null){
     return Observable.create(
       observer => {
         let deNormalization = {};
+        let deviceChecks = null;
 
         this.ScheduleProv.list
         .take(1).subscribe(
           ssList=>{
-            ssList.map(ss=>{
-              this.collectionsToDeviceGid(ss.checks).take(1).subscribe(allDevices => {
-                  allDevices.forEach(element => {
-                    if(deNormalization[element])
-                      deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
-                    else {
-                      deNormalization[element] = [];
-                      deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
-                    }
-                  });
+            if(idx) {
+              ssList.map(ss=>{
+                this.collectionsToDeviceGid(ss.checks).take(1).subscribe(allDevices => {
+                    allDevices.forEach(element => {
+                      if(deNormalization[element])
+                        deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
+                      else {
+                        deNormalization[element] = [];
+                        deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
+                      }
+                    });
+                });
               });
-            });
+            }else {
+              let ss = ssList[idx];
+              deviceChecks = ss.checks;
+              this.collectionsToDeviceGid(ss.checks).take(1).subscribe(allDevices => {
+                allDevices.forEach(element => {
+                  if(deNormalization[element])
+                    deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
+                  else {
+                    deNormalization[element] = [];
+                    deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
+                  }
+                });
+              });
+            }
+
             console.log('>>> ScheduleProcess1 > deNormalization');
             console.log(deNormalization);
 
-            observer.next(deNormalization);
+            observer.next({deNor:deNormalization, deviceChecks:deviceChecks});
             observer.complete();
           }
         );
@@ -520,7 +553,15 @@ export class BleCommandProvider {
       }
     );
   }
-
+  eyeRmAllSchedule(gid:number) {
+    let data = new Uint8Array([ _START, _CMD_SCHEDULE_MODE, 0,0,gid,0,0, 0xAA,_END])
+    this.bleCtrl.writeObs(data).subscribe(()=>{},()=>{});
+  }
+  eyeDisableSchedule(gid:number,toggle:boolean) {
+    let code = (toggle)?0x01:0x00;
+    let data = new Uint8Array([_START,_CMD_SCHEDULE_TOGGLE,code,gid,_END]);
+    this.bleCtrl.writeObs(data).subscribe(()=>{},()=>{});
+  }
   /// eyeSchedule(multiple=0, light=0, gid, hour, min, key) {
   eyeSchedule(cmd:Uint8Array) {
     // let data = new Uint8Array([_START,_CMD_SCHEDULE_MODE,multiple,light,gid,hour,min,key,_END]);

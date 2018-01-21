@@ -26,11 +26,15 @@
           <ion-icon name="quote"></ion-icon>
           <!-- R<span class="gidTitle">#1</span>-->
         </ion-avatar>
-        <h2>{{item.name}} ({{getDateRangeTitle(item.dateRange)}})</h2>
+        <h2>{{item.name}}
+          <span *ngIf="item.lastModified >= item.lastSended" style="color:red;">(未同步)</span>
+          <span *ngIf="!(item.lastModified >= item.lastSended)" style="color:blue;">(已同步)</span>
+        </h2> <!-- {{getDateRangeTitle(item.dateRange)}}-->
         <p>last modeified: {{item.lastModified | date: 'dd/MM/yyyy H:mm'}}</p>
-        <button (click)="rmSchedule(idx)" clear ion-button outline item-end><ion-icon name="close"></ion-icon></button>
+        <button (click)="rmSchedule(idx, item.checks)" clear ion-button outline item-end><ion-icon name="close"></ion-icon></button>
       </ion-item>
       <!-- ROW_2 -->
+      <ion-badge *ngFor="let c of item.checks;let ci=index" item-end [color]="(c)?'secondary':'light'">#{{(ci+1) | collection_name}}</ion-badge>
       <div class="lightsChart-cont">
         <canvas height="110px" baseChart [chartType]="'bar'" [datasets]="item.chartDatas.datasets" [labels]="chartLabels" [options]="chartOptions"
           [legend]="false" [colors]="item.chartDatas.colors" (chartClick)="onChartClick($event)">
@@ -43,9 +47,16 @@
       </ion-card-content>-->
       <!-- ROW_4 -->
       <ion-row>
-        <ion-col col-9>
-            <ion-badge *ngFor="let c of item.checks;let ci=index" item-end [color]="(c)?'primary':'light'">#{{(ci+1) | collection_name}}</ion-badge>
+        <ion-col col-3>
+          <button (click)="syncSchedule(idx)" [color]="(!(item.lastModified >= item.lastSended))?'dark':'primary'" ion-button>寫入</button>
         </ion-col>
+        <ion-col col-3>
+          <button (click)="toggleSchedule(item.checks,idx,true)" ion-button [color]="(item.inScheduleMode)?'dark':'secondary'">重啟</button>
+        </ion-col>
+        <ion-col col-3>
+          <button (click)="toggleSchedule(item.checks,idx,false)" ion-button [color]="(item.inScheduleMode)?'danger':'dark'">停止</button>
+        </ion-col>
+
         <ion-col col-3 align-self-center text-center>
           <!-- <ion-note>
               11h ago sended
@@ -53,16 +64,16 @@
         </ion-col>
       </ion-row>
       <div style="position: relative">
-  
+
         <ion-fab right bottom>
           <button ion-fab mini class="fab-map" color="light" (click)="goSchedule(idx)">
-              <ion-icon name="arrow-forward"></ion-icon>            
+              <ion-icon name="arrow-forward"></ion-icon>
             </button>
         </ion-fab>
       </div>
       <!-- -->
       <!-- END ROWS -->
-    
+
     </ion-card>
     <!-- CARD END-->
   </ng-container>
@@ -70,9 +81,11 @@
 
 
 </ion-content>
+<!--
 <ion-footer>
     <ion-toolbar>
         <button (click)="syncSchedule()" ion-button full [color]="this.btnSetting.color">{{ this.btnSetting.message }}</button>
-        
+
     </ion-toolbar>
   </ion-footer>
+-->
