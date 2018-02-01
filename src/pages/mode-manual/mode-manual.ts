@@ -92,6 +92,12 @@ export class ModeManual {
   enableRangeBar() {
     this.isEnableRangeBar = true;
   }
+  syncCurrent() {
+    console.log(this.collectionsChecks);
+    this.bleCmd.goSyncSchedule(null,null,null,this.collectionsChecks).subscribe( list => {
+      this.eyeCheckCtrl.pScheduleCurrent(list);
+    });
+  }
   s() {
     this.bleCmd.goSyncSchedule().subscribe( list => {
       this.eyeCheckCtrl.pSchedule(list);

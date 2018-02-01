@@ -45,7 +45,32 @@ export class BleCommandProvider {
     //this.devicesList = this.devicesData.list;
     console.log('Hello BleCommandProvider Provider');
   }
-  goSyncSchedule(sListIdx = null){
+  deviceAddCollection(rmDevices: Array<number>, addDevices:  Array<number>, cid:number) {
+    return Observable.create(observer => {
+
+      this.goSyncSchedule(null, cid, addDevices)
+      .take(1)
+      .subscribe(list => {
+        let rmDevicesSchedule =null;
+        rmDevicesSchedule = rmDevices.map(v=>
+          new Uint8Array([
+            _START,
+            _CMD_SCHEDULE_MODE,
+            0,0,v,0,0,
+            0xaa,
+            _END])
+        );
+        if(!rmDevicesSchedule) rmDevicesSchedule = [];
+        observer.next({
+          rmDevicesCmds: rmDevicesSchedule,
+          addDevicesCmds: list,
+        });
+        observer.complete();
+      });
+    });
+
+  }
+  goSyncSchedule(sListIdx = null, targetChecksIdx=null, gids=null, targetChecks: Array<boolean>=null){
     return Observable.create(
       observer => {
         let sendCmds = [];
@@ -61,14 +86,15 @@ export class BleCommandProvider {
         let nowHour = new Date().getHours();
 
         /** */
-        this.ScheduleProcess1(sListIdx).subscribe(
+        this.ScheduleProcess1(sListIdx, targetChecksIdx, gids, targetChecks).subscribe(
           processed => {
             let {deNor,deviceChecks} = processed;
             /** deviceRmScheduleList START
              *  清除所有群組內的排程
              * */
-            if(sListIdx) {
-              this.devicesData.list.subscribe(dList => {
+            if(typeof sListIdx === 'number') {
+
+              /*this.devicesData.list.subscribe(dList => {
                   dList.map(dd => {
                       deviceRmScheduleList.push(
                         new Uint8Array([
@@ -79,11 +105,34 @@ export class BleCommandProvider {
                           _END])
                       );
                     });
-              });
+              });*/
+              for(let key in deNor){
+                deviceRmScheduleList.push(
+                  new Uint8Array([
+                    _START,
+                    _CMD_SCHEDULE_MODE,
+                    0,0,parseInt(key),0,0,
+                    0xaa,
+                    _END])
+                );
+              }
+
             }else {
-              this.collectionsToDeviceGid(deviceChecks)
-              .take(1)
-              .subscribe(gids => {
+              if(!targetChecks && !gids){
+                this.collectionsToDeviceGid(deviceChecks)
+                .take(1)
+                .subscribe(gids => {
+                  gids.map(gid => {
+                    deviceRmScheduleList.push(new Uint8Array([
+                      _START,
+                      _CMD_SCHEDULE_MODE,
+                      0,0,gid,0,0,
+                      0xaa,
+                      _END])
+                    );
+                  });
+                });
+              }else if(gids){
                 gids.map(gid => {
                   deviceRmScheduleList.push(new Uint8Array([
                     _START,
@@ -93,7 +142,10 @@ export class BleCommandProvider {
                     _END])
                   );
                 });
-              });
+              }else {
+
+              }
+
             }
 
             /** deviceRmScheduleList END */
@@ -101,6 +153,7 @@ export class BleCommandProvider {
             // 排程模式指令 START
             // console.log(deNor);
             for(let key in deNor){
+
               let detectNow = {
                 "multiple":0,
                 "mode":0,
@@ -222,7 +275,15 @@ export class BleCommandProvider {
             );*/
 
           }
-        );
+        ,err=>{
+          observer.next({
+            rmSchedule: [],
+            allSchedule: [],
+            currentSchedule: [],
+            scheduleListIdx: null,
+          });
+          observer.complete();
+        });
       }
     );
   }/*
@@ -263,17 +324,6 @@ export class BleCommandProvider {
   scheduleCheckNow(){
     let time = new Date();
   }
-  ScheduleProcessGo(){
-    return Observable.create(
-      observer =>{
-        this.ScheduleProcess1().subscribe(
-          deNor => {
-
-          }
-        );
-      }
-    );
-  }
   collectionsToDeviceGid(checks:Array<boolean>){
     return Observable.create(
       observer => {
@@ -301,47 +351,119 @@ export class BleCommandProvider {
       }
     );
   }
-  ScheduleProcess1(idx = null){
+  collectionsSpecifyToDeviceGid(o_checks:Array<boolean>, target:Array<boolean>){
+    return Observable.create(
+      observer => {
+        let finalChecks = o_checks.map((v,idx) => (v&&target[idx]));
+        this.clProv.list.take(1).subscribe(
+          clList => {
+            let allDevices:Array<number> = []; // [groupIds]
+            clList.map(
+              (cl,idx) => {
+                if(finalChecks[idx]){
+                  allDevices = allDevices.concat(cl.devices);
+                }
+              }
+            );
+            allDevices = allDevices.filter(
+              (ele,idx,self) => {
+                return idx == self.indexOf(ele);
+              }
+            );
+            console.log('>>> collectionsSpecifyToDeviceGid');
+            console.log(allDevices);
+            observer.next(allDevices);
+            observer.complete();
+          }
+        );
+      }
+    );
+  }
+  ScheduleProcess1(idx = null, targetChecksIdx: number = null, gids:Array<number>=null, targetChecks: Array<boolean>=null){
     return Observable.create(
       observer => {
         let deNormalization = {};
         let deviceChecks = null;
-
+        console.log(idx);
+        console.log(targetChecksIdx);
+        console.log(gids);
+        console.log(targetChecks);
         this.ScheduleProv.list
         .take(1).subscribe(
           ssList=>{
-            if(idx) {
-              ssList.map(ss=>{
-                this.collectionsToDeviceGid(ss.checks).take(1).subscribe(allDevices => {
-                    allDevices.forEach(element => {
-                      if(deNormalization[element])
-                        deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
-                      else {
-                        deNormalization[element] = [];
-                        deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
-                      }
+            if(!targetChecksIdx && targetChecksIdx!=0) {
+              if(!idx && idx!=0) {
+                if(!targetChecks){ //所有排程組合
+                  ssList.map(ss=>{
+                    console.log('WHTTTTTTTTTT');
+                    console.log(targetChecks);
+                    this.collectionsToDeviceGid(ss.checks).take(1).subscribe(allDevices => {
+                        allDevices.forEach(element => {
+                          if(deNormalization[element])
+                            deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
+                          else {
+                            deNormalization[element] = [];
+                            deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
+                          }
+                        });
                     });
+                  });
+                }else {  // 針對特定群組們
+                  ssList.map(ss=>{
+                    this.collectionsSpecifyToDeviceGid(ss.checks, targetChecks).take(1).subscribe(allDevices => {
+                        allDevices.forEach(element => {
+                          if(deNormalization[element])
+                            deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
+                          else {
+                            deNormalization[element] = [];
+                            deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
+                          }
+                        });
+                    });
+                  });
+                }
+              }else { // 針對特定 排程編號
+                let ss = ssList[idx];
+                deviceChecks = ss.checks;
+                this.collectionsToDeviceGid(ss.checks).take(1).subscribe(allDevices => {
+                  allDevices.forEach(element => {
+                    if(deNormalization[element])
+                      deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
+                    else {
+                      deNormalization[element] = [];
+                      deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
+                    }
+                  });
                 });
+              }
+            }else { // 針對單一群組
+              let has =false;
+              ssList.map(ss=>{
+                if( !ss.checks[targetChecksIdx] ) return false;
+                if(gids) {
+                  has =true;
+                  gids.forEach(element => {
+                    if(deNormalization[element])
+                      deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
+                    else {
+                      deNormalization[element] = [];
+                      deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
+                    }
+                  });
+                }else {
+                }
+
+
               });
-            }else {
-              let ss = ssList[idx];
-              deviceChecks = ss.checks;
-              this.collectionsToDeviceGid(ss.checks).take(1).subscribe(allDevices => {
-                allDevices.forEach(element => {
-                  if(deNormalization[element])
-                    deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
-                  else {
-                    deNormalization[element] = [];
-                    deNormalization[element] = deNormalization[element].concat(ss.sectionsList);
-                  }
-                });
-              });
+              if(!has) deNormalization = null;
             }
 
             console.log('>>> ScheduleProcess1 > deNormalization');
             console.log(deNormalization);
-
-            observer.next({deNor:deNormalization, deviceChecks:deviceChecks});
+            if(deNormalization)
+              observer.next({deNor:deNormalization, deviceChecks:deviceChecks});
+            else
+              observer.error(false);
             observer.complete();
           }
         );

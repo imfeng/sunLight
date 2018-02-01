@@ -83,7 +83,7 @@ export class BleOperatorPage {
         this.blueInfo.details.take(1).subscribe(
           obj => {
             if(obj["isEnabled"]){
-
+              this.bleToggle.checked = true;
             }else{
               alert('請開啟藍芽才能正常運作唷～');
             }
@@ -91,16 +91,20 @@ export class BleOperatorPage {
         );
 
       });
-      this.blueInfo.details.subscribe(
-        obj=>{
-          this.blueInfo.nowStatus.hadConnected = obj.hadConnected;
-          this.blueInfo.nowStatus.device = obj.device;
 
-          this.bleToggle.checked =obj.isEnabled;
-          if(this.bleToggle.checked) this.ionToggle.checked = true;
-          else this.ionToggle.checked = false;
-        }
-      );
+  }
+  ionViewDidLoad() {
+    console.log('ionViewDidLoad BleOperatorPage');
+    this.blueInfo.details.subscribe(
+      obj=>{
+        this.blueInfo.nowStatus.hadConnected = obj.hadConnected;
+        this.blueInfo.nowStatus.device = obj.device;
+
+        this.bleToggle.checked = obj.isEnabled;
+        if(this.bleToggle.checked) this.ionToggle.checked = true;
+        else this.ionToggle.checked = false;
+      }
+    );
   }
   ionViewDidEnter(){
     console.log('>>>>>>>>>>>>>>>>>>>>>>BleOperatorPage ionViewDidEnter');
@@ -154,9 +158,6 @@ export class BleOperatorPage {
   }
   openBleListNav(item){
     this.navCtrl.push(bleListPage, { item: item });
-  }
-  ionViewDidLoad() {
-    console.log('ionViewDidLoad BleOperatorPage');
   }
   dismiss() {
     this.viewCtrl.dismiss();

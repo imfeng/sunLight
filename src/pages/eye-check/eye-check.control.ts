@@ -80,7 +80,8 @@ export class EyeCheckControl {
   }
   open2(actions:Array<ActionType>, scheduleListIdx = null) {
     if(actions.length<1) {
-      this.toastCtrl.showToast('無動作');
+      this.toastCtrl.showToast('無排程指令需要寫入');
+      return null;
     }else {
       let eyeModal
       = this.modalCtrl
@@ -90,6 +91,8 @@ export class EyeCheckControl {
          cssClass: 'my-popup',
         });
       eyeModal.present();
+
+      return eyeModal;
     }
   }
 
@@ -145,7 +148,7 @@ export class EyeCheckControl {
       this.open2(actions);
     });
   }
-  pSetMultipleFan(gids:Array<number>, speed:number) {
+  pSetMultipleFan(gids:Array<number>, speed:number, idxs: Array<number>) {
     let actions = gids.map( gid => ({
       type: ActionNameEnum.FANSPEED,
           payload: {
@@ -154,7 +157,13 @@ export class EyeCheckControl {
             fanSpeed: speed,
           }
     }));
-    this.open2(actions);
+    let modal = this.open2(actions);
+    modal.onDidDismiss(data => {
+      /*console.log(data);
+      if(data) {
+        this.devicesData.modifyFanSpeed(speed,idxs).subscribe();
+      }*/
+    });
   }
   pSetMultipleTime(gids:Array<number>, time:string) {
     let actions = gids.map( gid => ({
@@ -176,6 +185,17 @@ export class EyeCheckControl {
           }
     }));
     this.open2(actions, idx);
+  }
+  pScheduleCurrent(list){
+    let actions3 = list.currentSchedule.map( cmd => ({
+      type: ActionNameEnum.SCHEDULE_CURRENT,
+          payload: {
+            message:_DEFAULT_MESSAGE,
+            gid: cmd[4],
+            cmd: cmd,
+          }
+    }));
+    this.open2(actions3);
   }
   pSchedule(list) {
     let actions1 = list.rmSchedule.map( cmd => ({

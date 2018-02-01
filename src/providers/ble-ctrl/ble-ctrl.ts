@@ -474,7 +474,8 @@ export class BleCtrlProvider {
               },2500);
 
             },
-            peripheral => {
+            err => {
+              this.disConnectDevice(deviceId);
               this._onDeviceDisconnected();
               this._dismissLoading(loadObj);
               observer.error(false);
@@ -707,26 +708,24 @@ export class BleCtrlProvider {
       }
     );
   }
-  fastConnect(item) {
+  fastConnect(id:string) {
     return Observable.create(observer => {
-      let loadObj = this._presentLoading(true,15);
-      this.ble.scan([], 8).subscribe(
+      let loadObj = this._presentLoading(true,12);
+      this.ble.scan([],10).subscribe(
         device => {
-          if(device.id == item.id){
+          if(device.id == id){
             this.ble.stopScan().then(()=>{
-              this.ble.connect(item.id).take(1).subscribe(
+              this.connectDeviceObs(id).subscribe(
                 peripheral => {
-                  this._onConnected(item);
-                  this._change("hadConnected",true);
+
                   this._dismissLoading(loadObj);
                   console.log('快速連線成功！！');
-                  this.showToast('連線成功！');
+                  this.showToast('快速連線成功！');
                   observer.next(peripheral);observer.complete();
                 },
                 peripheral => {
                   this._dismissLoading(loadObj);
-                  this.disConnectDevice(item.id);
-                  this.showToast('無法重新連結到剛才的裝置，請確認裝置是否在附近！');
+                  this.showToast('無法連結到裝置，請確認裝置是否在附近！');
                   observer.error(peripheral);
                   observer.complete();
                 }
@@ -737,7 +736,7 @@ export class BleCtrlProvider {
         error => {
           this._showError(error,'找尋藍芽裝置時發生錯誤。');
           this._dismissLoading(loadObj);
-          this.disConnectDevice(item.id);
+          this.disConnectDevice(id);
           observer.error(error);
           observer.complete();
         }

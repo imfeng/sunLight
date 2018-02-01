@@ -1,22 +1,22 @@
 <ion-header>
     <ion-navbar>
-  
-  
+
+
       <ion-title>
         裝置
       </ion-title>
       <ion-buttons end>
         <button ion-button icon-only color="danger" (click)="delDevice()">
           <ion-icon name="trash"></ion-icon>
-  
+
         </button>
       </ion-buttons>
 
 
     </ion-navbar>
-  
+
   </ion-header>
-  
+
   <ion-content class="outer-content">
     <ion-item-group>
       <ion-item ion-item>
@@ -24,12 +24,12 @@
         <ion-label>群組</ion-label>
         <ion-badge item-end>#{{deviceInfo.data.collection}}</ion-badge>
       </ion-item>
-      <button ion-item (click)="editGroup(deviceInfo.data.id)" >
+      <button ion-item > <!-- (click)="editGroup(deviceInfo.data.id)"  -->
         <ion-icon name="wifi" item-start color="primary"></ion-icon>
         <ion-label>編號</ion-label>
         <ion-note item-end>{{deviceInfo.data.group}}</ion-note>
       </button>
-      
+
       <button (click)="editName()" ion-item>
         <ion-icon name="wifi" item-start color="primary"></ion-icon>
         <ion-label>自訂名稱</ion-label>
@@ -52,7 +52,7 @@
         <ion-note item-end>{{deviceInfo.data.last_sended}}</ion-note>
       </ion-item>
 
-      
+
     </ion-item-group>
   </ion-content>
   <ion-footer>

@@ -60,10 +60,11 @@
   <ion-list>
     <ion-list-header>
       已加入的裝置
+      <button *ngIf="fanCtrl.isFanCheckbox || timeCtrl.isTimeCheckbox" (click)="selectAll()" ion-button outline item-end><ion-icon name="checkbox"></ion-icon></button>
     </ion-list-header>
     <ion-item *ngFor="let item of devices_list|async;let idx =index;">
       <ion-checkbox *ngIf="fanCtrl.isFanCheckbox || timeCtrl.isTimeCheckbox" [(ngModel)]="fanCtrl.checks[idx]" item-start></ion-checkbox>
-      <ion-icon *ngIf="!fanCtrl.isFanCheckbox" [color]="(nowDeviceId === item.id)?'primary':'dark'" (click)="fastConnect(item)" item-start name="bluetooth"></ion-icon>
+      <ion-icon *ngIf="!fanCtrl.isFanCheckbox" [color]="(nowDeviceId === item.id)?'primary':'dark'" (click)="fastConnect(item.id)" item-start name="bluetooth"></ion-icon>
       <h2>{{item.name || item.o_name || "無名稱"}} - {{ item.group || "錯誤"}}</h2>
       <p>{{item.id}}</p>
       <!-- 1 Device to N Collections -->

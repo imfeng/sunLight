@@ -26,7 +26,7 @@
           <ion-icon name="quote"></ion-icon>
           <!-- R<span class="gidTitle">#1</span>-->
         </ion-avatar>
-        <h2>{{item.name}}
+        <h2>{{item.name}}-{{idx+1}}
           <span *ngIf="item.lastModified >= item.lastSended" style="color:red;">(未同步)</span>
           <span *ngIf="!(item.lastModified >= item.lastSended)" style="color:blue;">(已同步)</span>
         </h2> <!-- {{getDateRangeTitle(item.dateRange)}}-->
@@ -40,12 +40,6 @@
           [legend]="false" [colors]="item.chartDatas.colors" (chartClick)="onChartClick($event)">
         </canvas>
       </div>
-      <!-- ROW_3
-      <ion-card-content>
-        <p>Wait a minute. Wait a minute, Doc. Uhhh... Are you telling me that you built a time machine... out of a DeLorean?!
-          Whoa. This is heavy.</p>
-      </ion-card-content>-->
-      <!-- ROW_4 -->
       <ion-row>
         <ion-col col-3>
           <button (click)="syncSchedule(idx)" [color]="(!(item.lastModified >= item.lastSended))?'dark':'primary'" ion-button>寫入</button>

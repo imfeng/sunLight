@@ -61,6 +61,7 @@ export class DevicesDataProvider {
       });
   }
   addCounter(number) {
+    this._ALL_DEVICES_COUNTER = number;
     this.storage.setItem(_STORAGE_DEVICES_COUNTER, number).then();
   }
   loadAll(){
@@ -158,12 +159,12 @@ export class DevicesDataProvider {
                 }
               );
               if(!finded && toAdd){
-                this.addCounter(this._ALL_DEVICES_COUNTER++);
+
                 let newDevice = {
                   "name": device.name,
                   "o_name" :device.name,
                   "id": device.id,
-                  "group":this._ALL_DEVICES_COUNTER,
+                  "group":this._ALL_DEVICES_COUNTER+1,
                   "hadGroupSync":false,
                   "last_sended": 0,
                   "collection": [],
@@ -232,6 +233,7 @@ export class DevicesDataProvider {
   add( dd:lightDeviceType ){
     return Observable.create(
       observer => {
+        this.addCounter(this._ALL_DEVICES_COUNTER+1);
         this.dataStore.deviceList.push(dd);
         let sub = Observable.fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,this.dataStore.deviceList));
         sub.subscribe(
@@ -256,10 +258,9 @@ export class DevicesDataProvider {
       observer => {
         this.list.take(1).subscribe(
           list => {
-            idxs.map(
-              idx => {
-                list[idx].fanSpeed = fanSpeed;
-              });
+            list.filter(v => idxs.find(g=> g===v.group)).map(v => {
+              v.fanSpeed = fanSpeed;
+            });
             Observable
               .fromPromise(this.storage.setItem(_STORAGE_DEVICES_NAME,list))
               .subscribe(

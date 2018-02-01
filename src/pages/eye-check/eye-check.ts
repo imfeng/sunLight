@@ -9,6 +9,7 @@ import { Action } from 'rxjs/scheduler/Action';
 import { ToastCtrlProvider } from  '../../providers/toast-ctrl/toast-ctrl';
 import { lightsTypesPipe } from  '../../providers/lights-info/lights-info';
 import { ScheduleDataProvider } from './../../providers/schedule-data/schedule-data';
+import { DevicesDataProvider } from '../../providers/devices-data/devices-data';
 
 export enum ActionNameEnum {
   NONE = 'NONE',
@@ -82,6 +83,7 @@ export class EyeCheckPage {
   timeWidgetValue = '00:00:00';
   actions: Array<ActionType> = [];
   constructor(
+    private devicesData:DevicesDataProvider,
     private scheduleProv:ScheduleDataProvider,
     public scheData: ScheduleDataProvider,
     public L:lightsTypesPipe,
@@ -99,11 +101,12 @@ export class EyeCheckPage {
     let idx = this.navParams.get('scheduleListIdx');
     if(typeof idx === 'number') {
       switch(this.actions[0].type) {
+
         case ActionNameEnum.SCHEDULE_DISABLE:
           this.scheData.modifyInScheduleMode(this.actions[0].payload.toggleSchedule, idx).subscribe(()=>{});;
           break;
         case ActionNameEnum.SCHEDULE_REMOVE_LIST:
-        this.scheduleProv.remove(idx);
+          this.scheduleProv.remove(idx);
           break;
         default:
           this.scheData.sendedSchedule(idx).subscribe(()=>{});
@@ -111,7 +114,7 @@ export class EyeCheckPage {
       }
 
     }
-    this.viewCtrl.dismiss();
+    this.viewCtrl.dismiss(true);
   }
   ionViewDidLoad() {
     console.log('>>> ionViewDidLoad EyeCheckPage');
@@ -164,13 +167,14 @@ export class EyeCheckPage {
         this.uiControl.timeWidget = true;
         break;
       case ActionNameEnum.FANSPEED:
+        this.uiControl.fanWidget = true;
         if(this._state.currentAction.payload.fanSpeed) {
           this.fanWidgettValue = this._state.currentAction.payload.fanSpeed;
         }else {
           this.fanWidgettValue = 50;
         }
 
-        this.uiControl.fanWidget = true;
+
         break;
       case ActionNameEnum.SCHEDULE_REMOVE:
         this.uiControl.scheduleRmInfo = true;
@@ -218,6 +222,7 @@ export class EyeCheckPage {
         console.log(this.fanWidgettValue);
         this.bleCmd.eyeFan(this.fanWidgettValue, gid);
         this._state.finalMessages.push(`Sunlight-${gid} 設置風速： ${this.fanWidgettValue}%`);
+        this.devicesData.modifyFanSpeed(this.fanWidgettValue,[gid]).subscribe();
         break;
       case ActionNameEnum.SCHEDULE_REMOVE:
         this.bleCmd.eyeSchedule(this._state.currentAction.payload.cmd);

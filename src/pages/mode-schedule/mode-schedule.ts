@@ -81,9 +81,14 @@ export class ModeSchedulePage{
     this.scheduleProv.addNew();
   }
   rmSchedule(idx, checks) {
-    this.bleCmd.collectionsToDeviceGid(checks).subscribe(gids => {
-      this.eyeCheckCtrl.pScheduleRemove(gids, idx);
-    });
+    if(!checks.find(v => v)) {
+      this.scheduleProv.remove(idx);
+    }else {
+      this.bleCmd.collectionsToDeviceGid(checks).subscribe(gids => {
+        this.eyeCheckCtrl.pScheduleRemove(gids, idx);
+      });
+    }
+
     // this.scheduleProv.remove(idx);
   }
 

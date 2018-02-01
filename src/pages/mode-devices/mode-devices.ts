@@ -56,7 +56,10 @@ export class ModeDevicesPage {
       this.devices_list.subscribe(
         list => {
           this.fanCtrl.checks = Array.from(new Array(list.length), ()=>false);
-          let tmp:Array<lightDeviceType> = Array.from({length: (list.length<=6)?(6-list.length):0},
+          if(list.length>=6) {
+            this.wtfDevices.list = list;
+          }else {
+            let tmp:Array<lightDeviceType> = Array.from({length: (list.length<=6)?(6-list.length):0},
             (v, i) => ({
               "name":'bulb'+(list.length+i+1),
               "o_name" :'bulb'+(list.length+i+1),
@@ -68,9 +71,11 @@ export class ModeDevicesPage {
               "collection": [],
               "fanSpeed":null,
               })
-          );
-          //console.log(tmp);
-          this.wtfDevices.list = tmp;
+            );
+            //console.log(tmp);
+            this.wtfDevices.list = tmp;
+          }
+
         }
       );
 
@@ -81,6 +86,9 @@ export class ModeDevicesPage {
     }else{
       return `${num}`
     }
+  }
+  selectAll() {
+    this.fanCtrl.checks.map((v,i) => {this.fanCtrl.checks[i]=true});
   }
   toggleTimeCheckbox(){
     this.fanCtrl.checks.map((v,idx) => {
@@ -167,7 +175,7 @@ export class ModeDevicesPage {
             if(this.fanCtrl.checks[idx]) {idxs.push(idx); return true; }
             else return false}
         ).map( (v)=>v.group );
-        this.eyeCheckCtrl.pSetMultipleFan(gids, this.fanCtrl.currentFanSpeed);
+        this.eyeCheckCtrl.pSetMultipleFan(gids, this.fanCtrl.currentFanSpeed, idxs);
         /*this.bleCmd
         .goFanMultipleEye(gids,this.fanCtrl.currentFanSpeed)
         .subscribe();*/
@@ -196,9 +204,9 @@ export class ModeDevicesPage {
    /* let modal = this.modalCtrl.create(BleOperatorPage);
     modal.present();*/
   }
-  fastConnect(item) {  // TODO 要先搜尋才能連
-    console.log(item);
-    this.bleCtrl.fastConnect(item.id).subscribe(()=>{});
+  fastConnect(id: string) {  // TODO 要先搜尋才能連
+    console.log(id);
+    this.bleCtrl.fastConnect(id).subscribe(()=>{});
   }
 
   nowBluetoothEnable = false;

@@ -10,6 +10,8 @@ import { LightsInfoProvider,lightsTypesPipe } from  '../../providers/lights-info
 import { collectsChecksToSting,CollectionsDataProvider,collectionType } from '../../providers/collections-data/collections-data';
 
 import { AppStateProvider } from  '../../providers/app-state/app-state';
+import { EyeCheckControl } from '../eye-check/eye-check.control';
+import { BleCommandProvider } from './../../providers/ble-command/ble-command';
 @Component({
   templateUrl: './edit-schedule.html',
 })
@@ -51,7 +53,7 @@ export class editSchedulePage {
       e._elementRef.nativeElement.lastChild.firstChild.innerHTML = String.fromCharCode(65+i);
     });*/
   }
-  collectionsListTest = Array.from({length: 12}, 
+  collectionsListTest = Array.from({length: 12},
     (v, i) => ({
         "name":(i+1),
         "cid": (i+1),
@@ -80,7 +82,7 @@ export class editSchedulePage {
     "tmpLightType":1,
     "tmpMulti":0,
   }
-  
+
   @ViewChild('typeselect') typeselect:any;
   lightsTypes:Array<string>;
   collectionsList:Observable<collectionType[]>;
@@ -149,12 +151,12 @@ export class editSchedulePage {
               console.log('HIGHT: ' + plat.height());
               a.height =  plat.height() - 70;
             },300);
-          
+
           }
         }else{
           return function(){}
         }
-        
+
       })(this.platform,this.touchStatus.isFullScreen),
     },
   }
@@ -176,6 +178,8 @@ export class editSchedulePage {
   }
   thisIdx: number;
   constructor(
+    public eyeCheckCtrl: EyeCheckControl,
+    private bleCmd: BleCommandProvider,
     private platform: Platform,
     private screenOrientation: ScreenOrientation,
     private ELE: ElementRef,
@@ -197,8 +201,8 @@ export class editSchedulePage {
       this.touchStatus.window_w = this.platform.width();
     });
     this.lightsTypes = this.lightsType.getTypes();
-    
-    
+
+
     this.collectionsList = this.clProv.list;
 
     this.thisIdx = this.navParams.get("idx");
@@ -219,7 +223,7 @@ export class editSchedulePage {
 
         console.log(this.data);
           this.changeSectionsEvent();
-          
+
       }
     );
   }
@@ -227,6 +231,7 @@ export class editSchedulePage {
   ionViewDidEnter() {
   }
   ionViewWillLeave(){
+    console.log('ionViewWillLeave');
     this.showConfirm();
   }
   /** CHARTJS */
@@ -238,7 +243,7 @@ export class editSchedulePage {
       this.touchStatus.curItem = item;
       this.touchStatus.curIndex = item._index;
       this.touchStatus.curIndexNowStep = this.data.sections[item._index];
-  
+
       this.touchStatus.canvas_h = item._chart.height-70;
       this.touchStatus.curCtrl_y = $e.touches[0].pageY;
       this.touchStatus.curStep = this.data.sections[item._index].multiple;
@@ -246,7 +251,7 @@ export class editSchedulePage {
       console.log(item);
       console.log(this.touchStatus);
 
-    } 
+    }
   }
   countMoveRate(curY){
     console.log('curY: ' + curY);
@@ -300,12 +305,12 @@ export class editSchedulePage {
     return {
       "type":'line',
       "data":data,
-      borderWidth: 3,
+      borderWidth: 4,
       borderColor: 'rgba(0,0,255,0.2)',
-      pointRadius:5 ,
-      pointHoverRadius: 10,
+      pointRadius:6 ,
+      pointHoverRadius: 18,
       pointHoverBorderColor: 'rgba(0, 0, 255,0.8)',
-      pointDotWidth: 3,
+      pointDotWidth: 4,
       pointBorderColor: 'rgba(255, 30, 30,0.5)',
       pointBackgroundColor: 'rgba(255,255,255,.2)',
       backgroundColor: 'rgba(0,0,0,0)',
@@ -322,14 +327,14 @@ export class editSchedulePage {
               this.data.checks[idx] =false;
             },500
           );
-          
+
           alert(
             `
             "時間"或"群組"和其他排程衝突！
             ( ${ this.scheduleProv.dateRangeToString(isRepeat.dateRange)},群組${collectsChecksToSting(isRepeat.checks)}
                )
             `);
-            
+
         }
       }
     );
@@ -345,17 +350,17 @@ export class editSchedulePage {
       return false;
     }else{
       if(this.datePicker.start > this.datePicker.end){
-        let tmp = this.datePicker.start 
+        let tmp = this.datePicker.start
         this.datePicker.start = this.datePicker.end;
         this.datePicker.end = tmp;
       }else{}
-      let dateTmp = [ 
+      let dateTmp = [
         parseInt(this.datePicker.start.split(':')[0]),
         parseInt(this.datePicker.end.split(':')[0]),
       ];
       this.datePicker.range = dateTmp;
       this.data.sections = [];
-  
+
       this.scheduleProv.detectDateRange(dateTmp,this.thisIdx,this.data.checks).subscribe(
         isRepeat => {
           if(!isRepeat){
@@ -383,7 +388,7 @@ export class editSchedulePage {
               ( ${ this.scheduleProv.dateRangeToString(isRepeat.dateRange)},群組${collectsChecksToSting(isRepeat.checks)}
                  )
               `);
-              
+
           }
         }
       );
@@ -404,6 +409,7 @@ export class editSchedulePage {
   }
 
   showConfirm() {
+    console.log('WhTTTTTTTT');
     if(!this.touchStatus.isSaved){
       let confirm = this.alertCtrl.create({
         title: '尚未儲存',
@@ -416,18 +422,47 @@ export class editSchedulePage {
           {
             text: '儲存',
             handler: () => {
+              this.showWriteConfirm();
               this.saveSections();
+
             }
           }
         ]
       });
       confirm.present();
+    }else {
+      this.showWriteConfirm();
     }
+
+  }
+  showWriteConfirm() {
+    console.log('???????');
+    let confirm = this.alertCtrl.create({
+      title: '尚未寫入',
+      message: '您忘記寫入，請問需要寫入方才的設定嗎？',
+      buttons: [
+        {
+          text: '取消',
+          handler: () => {}
+        },
+        {
+          text: '寫入',
+          handler: () => {
+            this.bleCmd.goSyncSchedule(this.thisIdx).subscribe( list => {
+              this.eyeCheckCtrl.pSchedule(list);
+            });
+
+          }
+        }
+      ]
+    });
+    confirm.present();
+
 
   }
   saveSections(isSended=false){
 
-    
+
     this.scheduleProv.modifySchedule(this.thisIdx,this.data.sections,this.data.checks,this.datePicker.range).subscribe(
         res => {
           this.touchStatus.isSaved = true;
@@ -453,7 +488,7 @@ export class editSchedulePage {
       /** DEPRECATED START*/
       let repeated = this.detectRepeat(data)
       /** DEPRECATED END*/
-      
+
       if (data && !repeated) {
         this.touchStatus.isSaved = false;
         //this.data.sections.push(data);
@@ -469,7 +504,7 @@ export class editSchedulePage {
         this.toastCtrl.showToast('「開始時間」重複，請試試別的時間唷');
       } else {
       }
-      
+
 
       //console.log(this.data.sections);
     });
@@ -494,7 +529,7 @@ export class editSchedulePage {
             (a, b) =>
             ((a.time_num[0] == b.time_num[0]) ? (a.time_num[1] - b.time_num[1]) : (a.time_num[0] - b.time_num[0]))
           );
-          
+
         } else if (repeated) {
           this.toastCtrl.showToast('「開始時間」重複，請試試別的時間唷');
         } else {
@@ -514,7 +549,7 @@ export class editSchedulePage {
     }else{
       return false;
     }*/
-    
+
   }
 
   openChartEdit(){
@@ -528,7 +563,7 @@ export class editSchedulePage {
     });
     modal.present();
   }
-  
+
 }
 @Component({
     templateUrl:'./nav-main/modal-section-edit.html',
@@ -539,7 +574,7 @@ export class modalSectionEdit{
     settings:sectionDataType ;
     lightsTypes:Array<string>;
     constructor(
-      
+
       private lightsType: LightsInfoProvider,
       public viewCtrl: ViewController,
       public navParams: NavParams) {
@@ -553,7 +588,7 @@ export class modalSectionEdit{
       }
     add(){
       //this.settings["mode"] = parseInt(this.settings["mode"]);
-      this.settings["time_num"] = 
+      this.settings["time_num"] =
         this.settings["time"].split(':').map( (val,idx)=>{ if(idx<2){return parseInt(val,10);} } )
       this.viewCtrl.dismiss(this.settings);
     }
@@ -569,7 +604,7 @@ export class chartEditModal{
   constructor(
     public viewCtrl: ViewController,
   ){
-    
+
   }
   dismiss(){
     this.viewCtrl.dismiss(false);

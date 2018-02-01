@@ -5,6 +5,9 @@ import { Observable } from 'rxjs/Observable';
 
 import { DevicesDataProvider,lightDeviceType } from '../../providers/devices-data/devices-data';
 import { CollectionsDataProvider,collectionType } from '../../providers/collections-data/collections-data';
+import { BleCommandProvider } from './../../providers/ble-command/ble-command';
+import { EyeCheckControl } from '../eye-check/eye-check.control';
+import { ToastCtrlProvider } from '../../providers/toast-ctrl/toast-ctrl';
 
 @IonicPage()
 @Component({
@@ -12,10 +15,11 @@ import { CollectionsDataProvider,collectionType } from '../../providers/collecti
   templateUrl: 'collections.html'
 })
 export class CollectionsPage {
-  
+
   collectionsList : Observable<collectionType[]>;
 
   constructor(
+    private toastCtrl:ToastCtrlProvider,
     private clProv : CollectionsDataProvider,
     public navCtrl: NavController,
     public navParams: NavParams
@@ -46,6 +50,9 @@ export class cListPage{
     "data":Array<any>
   };
   constructor(
+    private toastCtrl:ToastCtrlProvider,
+    public eyeCheckCtrl: EyeCheckControl,
+    private bleCmd: BleCommandProvider,
     private clProv : CollectionsDataProvider,
     private devicesProv:DevicesDataProvider,
     public navCtrl: NavController,
@@ -60,7 +67,7 @@ export class cListPage{
       "data":[]
     }
     this.load();
-    
+
   }
   load(){
     this.devicesProv.list.take(1).subscribe(
@@ -89,6 +96,8 @@ export class cListPage{
   }
   save(){
     let devices = [];
+    let rmDevices = [];
+    let addDevices = [];
     //console.log(this.devices_list.data);
     this.devices_list.data
       .map(
@@ -97,25 +106,57 @@ export class cListPage{
           if(( (v.isCheck==false) && cidFinded )){
             this.devicesProv.modify(v.id,null,null,true, v.collection.filter(v=>v!==this.thisCid) ).take(1).subscribe();
 
-
+            rmDevices.push(v.group);
           }else if( v.isCheck && !cidFinded ){
             v.collection.push(this.thisCid);
-            this.devicesProv.modify(v.id,null,null,true, v.collection ).take(1).subscribe();
+            this.devicesProv
+              .modify(v.id,null,null,true, v.collection )
+              .take(1).subscribe();
+
             devices.push(v.group);
+            addDevices.push(v.group);
           }else if(  v.isCheck && cidFinded ){
             devices.push(v.group);
           }else{
           }
         }
       );
-  
-    this.clProv.modify(this.thisCid,devices).take(1).subscribe(
-      res => {
-        if(res){
-          alert('儲存成功！');
-          this.navCtrl.pop();
-        }
+      console.log('devices:');
+      console.log(devices);
+      console.log('rmDevices:');
+      console.log(rmDevices);
+      console.log('addDevices:');
+      console.log(addDevices);
+      console.log('CID');
+      console.log(this.thisCid);
+      if(rmDevices.length>0 || addDevices.length>0) {
+
+        this.bleCmd.deviceAddCollection(rmDevices, addDevices, this.thisCid-1)
+        .subscribe(obj => {
+          console.log(obj);
+          obj.addDevicesCmds.rmSchedule = [
+            ...obj.rmDevicesCmds, ...obj.addDevicesCmds.rmSchedule,
+          ]
+          this.eyeCheckCtrl.pSchedule(obj.addDevicesCmds);
+        });
       }
-    );
+
+/*
+      this.bleCmd.goSyncSchedule(null, this.thisCid,devices).take(1).subscribe(list=>{
+        this.eyeCheckCtrl.pSchedule(list);
+      },()=>{});*/
+
+      this.clProv.modify(this.thisCid,devices).take(1).subscribe(
+        res => {
+          if(res){
+            // alert('儲存成功！');
+            this.toastCtrl.showToast('儲存成功！');
+            this.navCtrl.pop();
+          }
+        }
+      );
+
+
+
   }
 }
